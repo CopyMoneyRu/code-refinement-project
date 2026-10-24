@@ -182,7 +182,7 @@ export default function CourseForm({
             </div>
 
             <div>
-              <Label>Автор</Label>
+              <Label hint="Новых авторов добавляйте в разделе «Авторы»">Автор</Label>
               <select className={inputCls} value={form.authorId ?? ""} onChange={(e) => set("authorId", Number(e.target.value) || null)}>
                 <option value="">Без автора</option>
                 {authors.map((a) => (

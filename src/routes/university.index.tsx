@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import CourseCard from "@/components/university/CourseCard";
+import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
 import { catalogFn } from "@/lib/courses";
 import { cn } from "@/lib/utils";
@@ -19,18 +20,10 @@ export const Route = createFileRoute("/university/")({
   component: UniversityPage,
 });
 
-const initialsOf = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("") || "?";
-
 function UniversityPage() {
   const { courses: COURSES, authors } = Route.useLoaderData();
   const AUTHORS = useMemo(
-    () => authors.filter((a) => COURSES.some((c) => c.author?.id === a.id)).map((a) => ({ ...a, initials: initialsOf(a.name) })),
+    () => authors.filter((a) => COURSES.some((c) => c.author?.id === a.id)),
     [authors, COURSES],
   );
   const CATEGORIES = useMemo(() => ["Все", ...[...new Set(COURSES.map((c) => c.category))].sort()], [COURSES]);
@@ -38,6 +31,7 @@ function UniversityPage() {
   const [q, setQ] = useState("");
   const [author, setAuthor] = useState<number | null>(null);
   const [authorView, setAuthorView] = useState<"cards" | "list">("cards");
+  const selected = AUTHORS.find((a) => a.id === author) ?? null;
 
   const list = useMemo(
     () =>
@@ -108,21 +102,21 @@ function UniversityPage() {
 
             {authorView === "cards" ? (
               <div className="-mx-1 mt-5 flex gap-3 overflow-x-auto px-1 pb-1">
-                <AuthorChip active={!author} onClick={() => setAuthor(null)} initials="Все" name="Все авторы" />
+                <AuthorChip active={!author} onClick={() => setAuthor(null)} name="Все авторы" />
                 {AUTHORS.map((a) => (
                   <AuthorChip
                     key={a.id}
                     active={author === a.id}
                     onClick={() => setAuthor(author === a.id ? null : a.id)}
-                    initials={a.initials}
                     name={a.name}
                     role={a.role}
+                    photoUrl={a.photoUrl}
                   />
                 ))}
               </div>
             ) : (
               <ul className="mt-5 divide-y divide-brand-ink/10 overflow-hidden rounded-xl border border-brand-ink/10 bg-white">
-                {[{ id: null as number | null, name: "Все авторы", role: "" }, ...AUTHORS].map((a) => {
+                {[{ id: null as number | null, name: "Все авторы", role: "", photoUrl: "" }, ...AUTHORS].map((a) => {
                   const count = a.id ? COURSES.filter((c) => c.author?.id === a.id).length : COURSES.length;
                   return (
                     <li key={a.id ?? "all"}>
@@ -133,9 +127,18 @@ function UniversityPage() {
                           author === a.id ? "bg-brand-surface" : "hover:bg-brand-light",
                         )}
                       >
-                        <span>
-                          <span className="block font-medium text-brand-ink">{a.name}</span>
-                          {a.role && <span className="block text-sm text-brand-muted">{a.role}</span>}
+                        <span className="flex items-center gap-3.5">
+                          {a.id ? (
+                            <AuthorAvatar name={a.name} photoUrl={a.photoUrl} className="h-10 w-10" textClassName="text-sm" />
+                          ) : (
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-surface text-brand-muted">
+                              <Icon name="Users" size={17} />
+                            </span>
+                          )}
+                          <span>
+                            <span className="block font-medium text-brand-ink">{a.name}</span>
+                            {a.role && <span className="block text-sm text-brand-muted">{a.role}</span>}
+                          </span>
                         </span>
                         <span className="shrink-0 text-sm text-brand-muted">{count} курс.</span>
                       </button>
@@ -143,6 +146,17 @@ function UniversityPage() {
                   );
                 })}
               </ul>
+            )}
+
+            {selected && (selected.bio || selected.photoUrl) && (
+              <div className="mt-5 flex flex-col gap-5 rounded-2xl border border-brand-ink/10 bg-white p-6 sm:flex-row sm:items-start">
+                <AuthorAvatar name={selected.name} photoUrl={selected.photoUrl} className="h-20 w-20" textClassName="text-xl" />
+                <div className="min-w-0">
+                  <div className="font-display text-lg font-semibold text-brand-ink">{selected.name}</div>
+                  {selected.role && <div className="text-sm text-brand-muted">{selected.role}</div>}
+                  {selected.bio && <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-brand-ink/80">{selected.bio}</p>}
+                </div>
+              </div>
             )}
           </div>
 
@@ -164,16 +178,17 @@ function UniversityPage() {
 function AuthorChip({
   active,
   onClick,
-  initials,
   name,
   role,
+  photoUrl,
 }: {
   active: boolean;
   onClick: () => void;
-  initials: string;
   name: string;
   role?: string;
+  photoUrl?: string;
 }) {
+  const isAll = !role && !photoUrl && name === "Все авторы";
   return (
     <button
       onClick={onClick}
@@ -182,14 +197,23 @@ function AuthorChip({
         active ? "border-brand-blue ring-1 ring-brand-blue" : "border-brand-ink/10 hover:border-brand-blue/40",
       )}
     >
-      <span
-        className={cn(
-          "flex h-14 w-14 items-center justify-center rounded-full font-display text-base font-semibold",
-          active ? "bg-brand-blue text-white" : "bg-brand-surface text-brand-ink",
-        )}
-      >
-        {initials}
-      </span>
+      {isAll ? (
+        <span
+          className={cn(
+            "flex h-14 w-14 items-center justify-center rounded-full font-display text-base font-semibold",
+            active ? "bg-brand-blue text-white" : "bg-brand-surface text-brand-ink",
+          )}
+        >
+          Все
+        </span>
+      ) : (
+        <AuthorAvatar
+          name={name}
+          photoUrl={photoUrl}
+          className={cn("h-14 w-14", active && !photoUrl && "bg-brand-blue text-white", active && photoUrl && "ring-2 ring-brand-blue ring-offset-2")}
+          textClassName="font-display text-base"
+        />
+      )}
       <span className="mt-3 text-sm font-medium leading-snug text-brand-ink">{name}</span>
       {role && <span className="mt-1 text-xs leading-snug text-brand-muted">{role}</span>}
     </button>

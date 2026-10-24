@@ -66,13 +66,13 @@ def session_user(cur, token):
     return cur.fetchone()
 
 
-def can_manage_courses(user) -> bool:
+def has_perm(user, perm: str) -> bool:
     if not user:
         return False
     if user['role'] == 'superadmin':
         return True
     perms = [p for p in (user.get('permissions') or '').split(',') if p in PERMISSIONS]
-    return user['role'] == 'admin' and 'courses' in perms
+    return user['role'] == 'admin' and perm in perms
 
 
 def slugify(text: str) -> str:
@@ -106,13 +106,16 @@ def course_out(r: dict) -> dict:
         'coverUrl': r['cover_url'],
         'published': r['published'],
         'modules': r['modules'] or [],
-        'author': {'id': r['author_id'], 'slug': r.get('author_slug') or '', 'name': r.get('author_name') or '', 'role': r.get('author_role') or ''}
-        if r['author_id'] else None,
+        'author': {
+            'id': r['author_id'], 'slug': r.get('author_slug') or '', 'name': r.get('author_name') or '',
+            'role': r.get('author_role') or '', 'photoUrl': r.get('author_photo') or '', 'bio': r.get('author_bio') or '',
+        } if r['author_id'] else None,
         'updatedAt': r['updated_at'],
     }
 
 
-COURSE_SELECT = """SELECT c.*, a.slug AS author_slug, a.name AS author_name, a.role AS author_role
+COURSE_SELECT = """SELECT c.*, a.slug AS author_slug, a.name AS author_name, a.role AS author_role,
+    a.photo_url AS author_photo, a.bio AS author_bio
     FROM {courses} c LEFT JOIN {authors} a ON a.id = c.author_id"""
 
 
@@ -122,9 +125,21 @@ def select_courses(cur, where: str = '', params: tuple = ()):
     return [course_out(r) for r in cur.fetchall()]
 
 
-def authors_out(cur):
-    cur.execute(f"SELECT id, slug, name, role FROM {t('authors')} ORDER BY id")
-    return [dict(r) for r in cur.fetchall()]
+def authors_out(cur, with_counts: bool = False):
+    cur.execute(
+        f"""SELECT a.id, a.slug, a.name, a.role, a.photo_url, a.bio,
+                   (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id) AS courses_total,
+                   (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id AND c.published) AS courses_published
+            FROM {t('authors')} a ORDER BY a.id"""
+    )
+    out = []
+    for r in cur.fetchall():
+        item = {'id': r['id'], 'slug': r['slug'], 'name': r['name'], 'role': r['role'], 'photoUrl': r['photo_url'], 'bio': r['bio']}
+        if with_counts:
+            item['coursesTotal'] = r['courses_total']
+            item['coursesPublished'] = r['courses_published']
+        out.append(item)
+    return out
 
 
 def clean_modules(raw):
@@ -247,6 +262,14 @@ def a_save(cur, body, user):
 
 
 def a_upload_cover(cur, body, user):
+    return upload_image(body, 'courses/covers', 'Обложка')
+
+
+def a_upload_author_photo(cur, body, user):
+    return upload_image(body, 'authors/photos', 'Фото')
+
+
+def upload_image(body, folder: str, what: str):
     ctype = str(body.get('contentType', ''))
     ext = COVER_TYPES.get(ctype)
     if not ext:
@@ -258,8 +281,8 @@ def a_upload_cover(cur, body, user):
     if not data:
         return err(400, 'bad_file', 'Файл пустой')
     if len(data) > MAX_COVER_BYTES:
-        return err(400, 'too_large', 'Обложка должна быть не больше 5 МБ')
-    key = f'courses/covers/{uuid.uuid4().hex}.{ext}'
+        return err(400, 'too_large', f'{what} должно быть не больше 5 МБ' if what == 'Фото' else f'{what} должна быть не больше 5 МБ')
+    key = f'{folder}/{uuid.uuid4().hex}.{ext}'
     s3 = boto3.client(
         's3',
         endpoint_url='https://bucket.poehali.dev',
@@ -271,12 +294,67 @@ def a_upload_cover(cur, body, user):
     return resp(200, {'ok': True, 'url': url})
 
 
+def a_admin_authors(cur, _body, user):
+    return resp(200, {'ok': True, 'authors': authors_out(cur, with_counts=True)})
+
+
+def unique_author_slug(cur, base: str, exclude_id=None) -> str:
+    slug, n = base, 2
+    while True:
+        cur.execute(f"SELECT id FROM {t('authors')} WHERE slug = %s", (slug,))
+        row = cur.fetchone()
+        if not row or row['id'] == exclude_id:
+            return slug
+        slug = f'{base}-{n}'
+        n += 1
+
+
+def a_save_author(cur, body, user):
+    name = str(body.get('name', '')).strip()[:120]
+    role = str(body.get('role', '')).strip()[:160]
+    bio = str(body.get('bio', '')).strip()[:5000]
+    photo = str(body.get('photoUrl', '')).strip()[:500]
+    if len(name) < 2:
+        return err(400, 'invalid_name', 'Укажите имя автора')
+    if photo and not photo.startswith('https://'):
+        return err(400, 'invalid_photo', 'Некорректная ссылка на фото')
+    aid = body.get('id')
+    if aid:
+        try:
+            aid = int(aid)
+        except (TypeError, ValueError):
+            return err(400, 'bad_author', 'Некорректный автор')
+        cur.execute(f"SELECT id FROM {t('authors')} WHERE id = %s", (aid,))
+        if not cur.fetchone():
+            return err(404, 'not_found', 'Автор не найден')
+        cur.execute(
+            f"UPDATE {t('authors')} SET name = %s, role = %s, bio = %s, photo_url = %s, updated_at = NOW() WHERE id = %s",
+            (name, role, bio, photo, aid),
+        )
+    else:
+        slug = unique_author_slug(cur, slugify(name)[:50] or 'avtor')
+        cur.execute(
+            f"INSERT INTO {t('authors')} (slug, name, role, bio, photo_url) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+            (slug, name, role, bio, photo),
+        )
+        aid = cur.fetchone()['id']
+    author = next(a for a in authors_out(cur, with_counts=True) if a['id'] == aid)
+    return resp(200, {'ok': True, 'author': author})
+
+
 PUBLIC = {'list': a_list, 'get': a_get}
-ADMIN = {'admin_list': a_admin_list, 'save': a_save, 'upload_cover': a_upload_cover}
+ADMIN = {
+    'admin_list': ('courses', a_admin_list),
+    'save': ('courses', a_save),
+    'upload_cover': ('courses', a_upload_cover),
+    'admin_authors': ('authors', a_admin_authors),
+    'save_author': ('authors', a_save_author),
+    'upload_author_photo': ('authors', a_upload_author_photo),
+}
 
 
 def handler(event: dict, context) -> dict:
-    """Каталог курсов JETRA University: публичный просмотр и управление курсами из админки."""
+    """Каталог JETRA University: публичный просмотр, управление курсами и авторами из админки."""
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS, 'body': ''}
     if event.get('httpMethod') != 'POST':
@@ -299,9 +377,10 @@ def handler(event: dict, context) -> dict:
             user = session_user(cur, headers.get('x-session-token'))
             if not user:
                 return err(401, 'unauthorized', 'Требуется вход')
-            if not can_manage_courses(user):
-                return err(403, 'forbidden', 'Недостаточно прав для управления курсами')
-            return ADMIN[action](cur, body, user)
+            perm, fn = ADMIN[action]
+            if not has_perm(user, perm):
+                return err(403, 'forbidden', 'Недостаточно прав для этого раздела')
+            return fn(cur, body, user)
         return err(400, 'unknown_action', 'Неизвестное действие')
     finally:
         conn.close()

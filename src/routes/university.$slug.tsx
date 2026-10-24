@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import { AccessBadge } from "@/components/university/CourseCard";
+import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { courseBySlugFn, formatPrice, lessonsTotal } from "@/lib/courses";
@@ -135,15 +136,18 @@ function CoursePage() {
                 </ul>
               </div>
               {course.author && (
-                <div className="mt-5 flex items-center gap-4 rounded-2xl border border-brand-ink/10 bg-white p-6">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-blue/15 text-brand-blue">
-                    <Icon name="UserRound" size={22} />
+                <div className="mt-5 rounded-2xl border border-brand-ink/10 bg-white p-6">
+                  <div className="text-xs uppercase tracking-[0.14em] text-brand-muted">Автор курса</div>
+                  <div className="mt-4 flex items-center gap-4">
+                    <AuthorAvatar name={course.author.name} photoUrl={course.author.photoUrl} className="h-14 w-14" textClassName="text-base" />
+                    <div className="min-w-0">
+                      <div className="font-medium text-brand-ink">{course.author.name}</div>
+                      {course.author.role && <div className="text-sm text-brand-muted">{course.author.role}</div>}
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.14em] text-brand-muted">Автор курса</div>
-                    <div className="mt-0.5 font-medium text-brand-ink">{course.author.name}</div>
-                    {course.author.role && <div className="text-sm text-brand-muted">{course.author.role}</div>}
-                  </div>
+                  {course.author.bio && (
+                    <p className="mt-4 whitespace-pre-line border-t border-brand-ink/10 pt-4 text-sm leading-relaxed text-brand-muted">{course.author.bio}</p>
+                  )}
                 </div>
               )}
             </aside>

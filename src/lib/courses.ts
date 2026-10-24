@@ -6,7 +6,9 @@ export const LEVELS: CourseLevel[] = ["Начальный", "Средний", "�
 
 export type DbLesson = { title: string; duration: string; hasFiles: boolean };
 export type DbModule = { title: string; lessons: DbLesson[] };
-export type DbAuthor = { id: number; slug: string; name: string; role: string };
+export type DbAuthor = { id: number; slug: string; name: string; role: string; photoUrl: string; bio: string };
+export type AdminAuthor = DbAuthor & { coursesTotal: number; coursesPublished: number };
+export type AuthorInput = { id?: number; name: string; role: string; bio: string; photoUrl: string };
 
 export type DbCourse = {
   id: number;
@@ -116,5 +118,39 @@ export const uploadCoverFn = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ ok: true; url: string } | Fail> => {
     const { callCourses } = await import("./courses.server");
     const r = await callCourses<{ url: string }>("upload_cover", data, true);
+    return r.ok ? { ok: true, url: r.url } : { ok: false, error: r.error, message: r.message };
+  });
+
+export const adminAuthorsFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { callCourses } = await import("./courses.server");
+  const r = await callCourses<{ authors: AdminAuthor[] }>("admin_authors", {}, true);
+  return r.ok ? r.authors : ([] as AdminAuthor[]);
+});
+
+export const saveAuthorFn = createServerFn({ method: "POST" })
+  .validator((input: unknown): AuthorInput => {
+    const o = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+    return {
+      id: Number(o.id) || undefined,
+      name: str(o.name, 120),
+      role: str(o.role, 160),
+      bio: str(o.bio, 5000),
+      photoUrl: str(o.photoUrl, 500),
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true; author: AdminAuthor } | Fail> => {
+    const { callCourses } = await import("./courses.server");
+    const r = await callCourses<{ author: AdminAuthor }>("save_author", data as unknown as Record<string, unknown>, true);
+    return r.ok ? { ok: true, author: r.author } : { ok: false, error: r.error, message: r.message };
+  });
+
+export const uploadAuthorPhotoFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) => {
+    const o = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+    return { contentType: str(o.contentType, 40), data: str(o.data, 7_200_000) };
+  })
+  .handler(async ({ data }): Promise<{ ok: true; url: string } | Fail> => {
+    const { callCourses } = await import("./courses.server");
+    const r = await callCourses<{ url: string }>("upload_author_photo", data, true);
     return r.ok ? { ok: true, url: r.url } : { ok: false, error: r.error, message: r.message };
   });
