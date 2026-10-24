@@ -16,6 +16,7 @@ const empty = (moduleId: number): LessonInput => ({
   duration: "",
   videoType: "none",
   videoUrl: "",
+  isFree: false,
   materials: [],
 });
 
@@ -25,12 +26,14 @@ export default function LessonForm({
   open,
   moduleId,
   lesson,
+  paidCourse,
   onClose,
   onSaved,
 }: {
   open: boolean;
   moduleId: number;
   lesson: LessonFull | null;
+  paidCourse: boolean;
   onClose: () => void;
   onSaved: (modules: ModuleFull[], created: boolean, title: string) => void;
 }) {
@@ -55,6 +58,7 @@ export default function LessonForm({
             duration: lesson.duration,
             videoType: lesson.videoType,
             videoUrl: lesson.videoUrl,
+            isFree: lesson.isFree,
             materials: lesson.materials,
           }
         : empty(moduleId),
@@ -144,6 +148,16 @@ export default function LessonForm({
                 <input className={inputCls} value={form.duration} maxLength={30} onChange={(e) => set("duration", e.target.value)} placeholder="15 мин" />
               </div>
             </div>
+
+            {paidCourse && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4">
+                <input type="checkbox" checked={form.isFree} onChange={(e) => set("isFree", e.target.checked)} className="mt-0.5 h-4 w-4 accent-emerald-600" />
+                <span>
+                  <span className="block text-sm font-medium">Бесплатный урок</span>
+                  <span className="block text-xs text-brand-muted">Доступен всем зарегистрированным пользователям без оплаты курса</span>
+                </span>
+              </label>
+            )}
 
             <div>
               <div className="mb-2 text-sm font-medium">Видео</div>

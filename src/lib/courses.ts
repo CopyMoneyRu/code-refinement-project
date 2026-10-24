@@ -4,7 +4,7 @@ import { notFound } from "@tanstack/react-router";
 export type CourseLevel = "Начальный" | "Средний" | "Продвинутый";
 export const LEVELS: CourseLevel[] = ["Начальный", "Средний", "Продвинутый"];
 
-export type DbLesson = { title: string; duration: string; hasFiles: boolean; hasVideo?: boolean };
+export type DbLesson = { title: string; duration: string; hasFiles: boolean; hasVideo?: boolean; isFree?: boolean };
 export type DbModule = { title: string; lessons: DbLesson[] };
 export type AuthorLink = { title: string; url: string };
 export type AuthorFact = { value: string; label: string };

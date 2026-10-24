@@ -39,7 +39,7 @@ function LessonPage() {
       l.error === "locked"
         ? "Этот урок откроется после прохождения предыдущих уроков модуля."
         : l.error === "paid"
-          ? "Доступ к этому курсу пока не открыт."
+          ? "Этот урок доступен после оплаты курса. Бесплатные уроки отмечены в программе курса."
           : "Урок не найден или недоступен.";
     return (
       <WsCard className="mx-auto max-w-lg text-center">
@@ -54,9 +54,11 @@ function LessonPage() {
     );
   }
 
-  const { lesson, module, position, prev, next } = l;
+  const { lesson, module, position, prev, next, state } = l;
+  const trial = state === "paid";
   const paragraphs = lesson.description.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-  const isLast = !next;
+  const nextPaid = !!next?.paidLocked;
+  const isLast = !next || (trial && nextPaid);
 
   const toggleComplete = async (completed: boolean, goNext: boolean) => {
     setSaving(true);
@@ -215,7 +217,7 @@ function LessonPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
               >
                 {saving ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="Check" size={16} />}
-                {isLast ? "Урок пройден — завершить курс" : "Урок пройден, дальше"}
+                {!next ? "Урок пройден — завершить курс" : nextPaid ? "Урок пройден" : "Урок пройден, дальше"}
               </button>
             )}
             <div className="flex gap-2">
@@ -229,6 +231,7 @@ function LessonPage() {
                 </Link>
               )}
               {next &&
+                !next.paidLocked &&
                 (next.locked ? (
                   <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-brand-ink/10 px-4 py-2.5 text-sm text-brand-muted" title="Отметьте текущий урок пройденным">
                     <Icon name="Lock" size={15} /> Далее
@@ -242,14 +245,25 @@ function LessonPage() {
                     Далее <Icon name="ArrowRight" size={16} />
                   </Link>
                 ))}
-              {isLast && lesson.completed && (
+              {!next && lesson.completed && (
                 <Link to="/cabinet/learn/$slug" params={{ slug }} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white">
                   К программе
                 </Link>
               )}
             </div>
           </div>
-          {next?.locked && !lesson.completed && (
+          {trial && nextPaid && (
+            <div className="mt-4 flex items-start gap-3 rounded-lg border border-brand-blue/20 bg-brand-blue/5 p-4 text-sm">
+              <Icon name="Lock" size={17} className="mt-0.5 shrink-0 text-brand-blue" />
+              <div>
+                <div className="font-medium">Следующие уроки доступны после оплаты курса</div>
+                <Link to="/cabinet/learn/$slug" params={{ slug }} className="mt-1 inline-block text-brand-blue hover:underline">
+                  Вернуться к программе
+                </Link>
+              </div>
+            </div>
+          )}
+          {next?.locked && !next.paidLocked && !lesson.completed && (
             <p className="mt-3 text-xs text-brand-muted">Следующий урок откроется, когда вы отметите этот урок пройденным.</p>
           )}
         </WsCard>

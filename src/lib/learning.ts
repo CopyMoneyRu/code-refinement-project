@@ -10,8 +10,10 @@ export type LessonBrief = {
   duration: string;
   hasVideo: boolean;
   materialsCount: number;
+  isFree: boolean;
   completed?: boolean;
   locked?: boolean;
+  paidLocked?: boolean;
 };
 export type LessonFull = LessonBrief & {
   description: string;
@@ -54,7 +56,10 @@ async function call<T>(action: string, data: Record<string, unknown> = {}): Prom
 export const courseLearnFn = createServerFn({ method: "GET" })
   .validator((i: unknown) => ({ slug: str(obj(i).slug, 120) }))
   .handler(({ data }) =>
-    call<{ course: CourseHead; state: AccessState; preview: boolean; modules: ModuleBrief[]; progress: Progress }>("course_learn", data),
+    call<{ course: CourseHead; state: AccessState; preview: boolean; modules: ModuleBrief[]; progress: Progress; freeLessons: number }>(
+      "course_learn",
+      data,
+    ),
   );
 
 export const lessonGetFn = createServerFn({ method: "GET" })
@@ -64,8 +69,9 @@ export const lessonGetFn = createServerFn({ method: "GET" })
       lesson: LessonFull;
       module: { id: number; title: string; unlockMode: UnlockMode };
       position: { index: number; total: number };
-      prev: { id: number; title: string; locked: boolean } | null;
-      next: { id: number; title: string; locked: boolean } | null;
+      prev: { id: number; title: string; locked: boolean; paidLocked: boolean } | null;
+      next: { id: number; title: string; locked: boolean; paidLocked: boolean } | null;
+      state: AccessState;
     }>("lesson_get", data),
   );
 
@@ -73,7 +79,7 @@ export const lessonCompleteFn = createServerFn({ method: "POST" })
   .validator((i: unknown) => ({ lessonId: num(obj(i).lessonId), completed: obj(i).completed !== false }))
   .handler(({ data }) => call<{ modules: ModuleBrief[]; progress: Progress }>("lesson_complete", data));
 
-export type MyCourse = CourseHead & { progress: Progress; lastActivity: string | null };
+export type MyCourse = CourseHead & { progress: Progress; lastActivity: string | null; state: AccessState };
 export const myCoursesFn = createServerFn({ method: "GET" }).handler(async () => {
   const r = await call<{ courses: MyCourse[] }>("my_courses");
   return r.ok ? r.courses : ([] as MyCourse[]);
@@ -120,6 +126,7 @@ export type LessonInput = {
   duration: string;
   videoType: VideoType;
   videoUrl: string;
+  isFree: boolean;
   materials: Material[];
 };
 
@@ -135,6 +142,7 @@ export const lessonSaveFn = createServerFn({ method: "POST" })
       duration: str(o.duration, 30),
       videoType: vt,
       videoUrl: str(o.videoUrl, 1000),
+      isFree: o.isFree === true,
       materials: (Array.isArray(o.materials) ? o.materials : []).slice(0, 30).map((m) => {
         const mo = obj(m);
         return { title: str(mo.title, 200), kind: mo.kind === "link" ? "link" : "file", url: str(mo.url, 1000), fileSize: num(mo.fileSize) };
@@ -177,3 +185,13 @@ export const accessGrantFn = createServerFn({ method: "POST" })
 export const accessRevokeFn = createServerFn({ method: "POST" })
   .validator((i: unknown) => ({ id: num(obj(i).id) }))
   .handler(({ data }) => call<Record<string, never>>("access_revoke", data));
+
+const freeToggle = (i: unknown) => ({ id: num(obj(i).id), isFree: obj(i).isFree === true });
+
+export const lessonSetFreeFn = createServerFn({ method: "POST" })
+  .validator(freeToggle)
+  .handler(({ data }) => call<{ modules: ModuleFull[] }>("lesson_set_free", data));
+
+export const moduleSetFreeFn = createServerFn({ method: "POST" })
+  .validator(freeToggle)
+  .handler(({ data }) => call<{ modules: ModuleFull[] }>("module_set_free", data));

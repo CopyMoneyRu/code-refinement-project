@@ -16,8 +16,11 @@ export const Route = createFileRoute("/cabinet/learn/$slug/")({
 });
 
 function CourseProgram() {
-  const { course, state, preview, modules, progress } = Route.useLoaderData();
+  const { course, state, preview, modules, progress, freeLessons } = Route.useLoaderData();
   const open = state === "open";
+  const trial = state === "paid" && freeLessons > 0;
+  const canLearn = open || trial;
+  const freeDone = modules.reduce((n, m) => n + m.lessons.filter((l) => l.isFree && l.completed).length, 0);
   const started = progress.done > 0;
   const finished = progress.total > 0 && progress.done === progress.total;
 
@@ -34,7 +37,7 @@ function CourseProgram() {
             <h1 className="mt-3 font-display text-[28px] font-bold leading-tight md:text-[34px]">{course.title}</h1>
             {course.author && <div className="mt-2 text-brand-muted">Автор: {course.author.name}</div>}
 
-            {open ? (
+            {canLearn ? (
               <>
                 <div className="mt-7 flex items-center justify-between text-sm">
                   <span className="font-medium">{finished ? "Курс пройден" : `Пройдено ${progress.done} из ${progress.total} уроков`}</span>
@@ -51,11 +54,26 @@ function CourseProgram() {
                   >
                     <Icon name="Play" size={16} /> {started ? "Продолжить обучение" : "Начать обучение"}
                   </Link>
+                ) : trial && freeDone >= freeLessons ? (
+                  <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-brand-blue/10 px-4 py-3 text-sm font-medium text-brand-ink">
+                    <Icon name="Gift" size={17} className="text-brand-blue" /> Бесплатные уроки пройдены
+                  </div>
                 ) : finished ? (
                   <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
                     <Icon name="Award" size={17} /> Поздравляем! Все уроки пройдены
                   </div>
                 ) : null}
+                {trial && (
+                  <div className="mt-5 rounded-xl border border-brand-blue/20 bg-brand-blue/5 p-4 text-sm">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Icon name="Gift" size={16} className="text-brand-blue" /> Бесплатно доступно {freeLessons}{" "}
+                      {freeLessons === 1 ? "урок" : freeLessons < 5 ? "урока" : "уроков"}
+                    </div>
+                    <p className="mt-1.5 text-brand-muted">
+                      Остальные уроки откроются после оплаты курса{course.price ? ` (${formatPrice(course.price)})` : ""}. Пока доступ выдаёт администратор.
+                    </p>
+                  </div>
+                )}
                 {preview && (
                   <p className="mt-4 text-xs text-brand-muted">Вы видите курс как администратор: все уроки открыты без ограничений.</p>
                 )}
@@ -98,13 +116,13 @@ function CourseProgram() {
                       <span className="font-semibold">{m.title}</span>
                     </div>
                     {m.description && <p className="mt-1.5 text-sm text-brand-muted">{m.description}</p>}
-                    {open && m.unlockMode === "sequential" && m.lessons.length > 1 && (
+                    {canLearn && m.unlockMode === "sequential" && m.lessons.length > 1 && (
                       <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-brand-muted">
                         <Icon name="ListOrdered" size={13} /> Уроки открываются по порядку
                       </p>
                     )}
                   </div>
-                  {open && m.lessons.length > 0 && (
+                  {canLearn && m.lessons.length > 0 && (
                     <span className="shrink-0 text-sm tabular-nums text-brand-muted">
                       {doneInModule}/{m.lessons.length}
                     </span>
@@ -112,7 +130,7 @@ function CourseProgram() {
                 </div>
                 <ul className="p-2">
                   {m.lessons.map((l) => {
-                    const clickable = open && !l.locked;
+                    const clickable = canLearn && !l.locked;
                     const inner = (
                       <>
                         <span
@@ -121,13 +139,17 @@ function CourseProgram() {
                             l.completed ? "bg-emerald-500 text-white" : clickable ? "bg-brand-blue/10 text-brand-blue" : "bg-brand-surface text-brand-muted",
                           )}
                         >
-                          <Icon name={l.completed ? "Check" : !open || l.locked ? "Lock" : l.hasVideo ? "Play" : "FileText"} size={15} />
+                          <Icon name={l.completed ? "Check" : !canLearn || l.locked ? "Lock" : l.hasVideo ? "Play" : "FileText"} size={15} />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className={cn("block truncate text-[15px]", clickable ? "text-brand-ink" : "text-brand-muted")}>{l.title}</span>
-                          {l.locked && open && <span className="block text-xs text-brand-muted">Откроется после предыдущего урока</span>}
+                          {canLearn && l.paidLocked && <span className="block text-xs text-brand-muted">Доступен после оплаты</span>}
+                          {canLearn && l.locked && !l.paidLocked && <span className="block text-xs text-brand-muted">Откроется после предыдущего урока</span>}
                         </span>
                         <span className="flex shrink-0 items-center gap-3 text-sm text-brand-muted">
+                          {l.isFree && course.access === "paid" && !open && (
+                            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700">Бесплатно</span>
+                          )}
                           {l.materialsCount > 0 && (
                             <span className="inline-flex items-center gap-1" title="Материалы к уроку">
                               <Icon name="Paperclip" size={14} /> {l.materialsCount}

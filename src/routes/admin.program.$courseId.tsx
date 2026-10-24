@@ -9,7 +9,9 @@ import { requirePermission } from "@/lib/adminGuard";
 import {
   lessonDeleteFn,
   lessonMoveFn,
+  lessonSetFreeFn,
   moduleDeleteFn,
+  moduleSetFreeFn,
   moduleMoveFn,
   programGetFn,
   type LessonFull,
@@ -62,6 +64,8 @@ function ProgramEditor() {
   };
 
   const totalLessons = modules.reduce((n, m) => n + m.lessons.length, 0);
+  const paid = course.access === "paid";
+  const freeTotal = modules.reduce((n, m) => n + m.lessons.filter((l) => l.isFree).length, 0);
 
   return (
     <>
@@ -92,6 +96,17 @@ function ProgramEditor() {
           </div>
         }
       />
+      {paid && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-brand-blue/20 bg-brand-blue/5 p-4 text-sm">
+          <Icon name="Gift" size={18} className="mt-0.5 shrink-0 text-brand-blue" />
+          <div>
+            <span className="font-medium">Курс платный.</span>{" "}
+            {freeTotal > 0
+              ? `Бесплатных уроков: ${freeTotal} из ${totalLessons} — они открыты всем зарегистрированным, остальные после оплаты.`
+              : "Отметьте галочкой «Бесплатно» уроки, которые можно пройти без оплаты — например, первый модуль."}
+          </div>
+        </div>
+      )}
       {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
@@ -121,6 +136,27 @@ function ProgramEditor() {
                     </span>
                   </button>
                   <div className="flex shrink-0 items-center gap-1">
+                    {paid && m.lessons.length > 0 && (() => {
+                      const allFree = m.lessons.every((l) => l.isFree);
+                      return (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() =>
+                            run(
+                              () => moduleSetFreeFn({ data: { id: m.id, isFree: !allFree } }),
+                              allFree ? `Модуль «${m.title}» снова платный` : `Все уроки модуля «${m.title}» открыты бесплатно`,
+                            )
+                          }
+                          className={
+                            "mr-1 inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 " +
+                            (allFree ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-brand-ink/15 text-brand-muted hover:text-brand-ink")
+                          }
+                        >
+                          <Icon name={allFree ? "CheckSquare" : "Square"} size={14} /> Весь модуль бесплатно
+                        </button>
+                      );
+                    })()}
                     <IconBtn icon="ChevronUp" label="Модуль выше" disabled={busy || mi === 0} onClick={() => run(() => moduleMoveFn({ data: { id: m.id, direction: -1 } }))} />
                     <IconBtn icon="ChevronDown" label="Модуль ниже" disabled={busy || mi === modules.length - 1} onClick={() => run(() => moduleMoveFn({ data: { id: m.id, direction: 1 } }))} />
                     <IconBtn icon="Settings2" label="Настройки модуля" onClick={() => setModuleForm({ open: true, module: m })} />
@@ -135,6 +171,24 @@ function ProgramEditor() {
                         {m.lessons.map((l, li) => (
                           <li key={l.id} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-brand-light">
                             <span className="w-6 shrink-0 text-center text-sm tabular-nums text-brand-muted">{li + 1}</span>
+                            {paid && (
+                              <label
+                                className={
+                                  "flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium " +
+                                  (l.isFree ? "bg-emerald-50 text-emerald-700" : "text-brand-muted hover:bg-brand-surface")
+                                }
+                                title={l.isFree ? "Урок бесплатный — открыт всем зарегистрированным" : "Сделать урок бесплатным"}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={l.isFree}
+                                  disabled={busy}
+                                  onChange={(e) => run(() => lessonSetFreeFn({ data: { id: l.id, isFree: e.target.checked } }))}
+                                  className="h-3.5 w-3.5 accent-emerald-600"
+                                />
+                                Бесплатно
+                              </label>
+                            )}
                             <button onClick={() => setLessonForm({ open: true, moduleId: m.id, lesson: l })} className="min-w-0 flex-1 text-left">
                               <span className="block truncate text-[15px] font-medium hover:text-brand-blue">{l.title}</span>
                               <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-brand-muted">
@@ -189,6 +243,7 @@ function ProgramEditor() {
         open={lessonForm.open}
         moduleId={lessonForm.moduleId}
         lesson={lessonForm.lesson}
+        paidCourse={paid}
         onClose={() => setLessonForm((s) => ({ ...s, open: false }))}
         onSaved={(mods, created, title) => {
           setModules(mods);

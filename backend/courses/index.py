@@ -132,7 +132,7 @@ def attach_programs(cur, rows):
     lessons = {}
     if modules:
         cur.execute(
-            f"""SELECT l.module_id, l.title, l.duration,
+            f"""SELECT l.module_id, l.title, l.duration, l.is_free,
                        (l.video_type <> 'none' AND l.video_url <> '') AS has_video,
                        EXISTS (SELECT 1 FROM {t('lesson_materials')} lm WHERE lm.lesson_id = l.id) AS has_files
                 FROM {t('lessons')} l WHERE l.module_id IN %s ORDER BY l.position, l.id""",
@@ -140,7 +140,7 @@ def attach_programs(cur, rows):
         )
         for l in cur.fetchall():
             lessons.setdefault(l['module_id'], []).append(
-                {'title': l['title'], 'duration': l['duration'], 'hasFiles': l['has_files'], 'hasVideo': l['has_video']}
+                {'title': l['title'], 'duration': l['duration'], 'hasFiles': l['has_files'], 'hasVideo': l['has_video'], 'isFree': l['is_free']}
             )
     by_course = {}
     for m in modules:

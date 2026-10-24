@@ -34,6 +34,7 @@ function CoursePage() {
   const user = rootApi.useLoaderData();
   const { course } = Route.useLoaderData();
   const total = lessonsTotal(course);
+  const freeCount = course.modules.reduce((n, m) => n + m.lessons.filter((l) => l.isFree).length, 0);
 
   return (
     <PublicLayout>
@@ -97,8 +98,11 @@ function CoursePage() {
                         {mod.lessons.map((l, li) => (
                           <li key={li} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-[15px] text-brand-ink/85">
                             <span className="flex items-center gap-3">
-                              <Icon name={course.access === "free" ? "PlayCircle" : "Lock"} size={16} className="shrink-0 text-brand-ink/50" />
+                              <Icon name={course.access === "free" || l.isFree ? "PlayCircle" : "Lock"} size={16} className="shrink-0 text-brand-ink/50" />
                               {l.title}
+                              {course.access === "paid" && l.isFree && (
+                                <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700">Бесплатно</span>
+                              )}
                             </span>
                             <span className="flex shrink-0 items-center gap-3 text-sm text-brand-ink/50">
                               {l.hasVideo && <Icon name="PlayCircle" size={14} />}
@@ -127,7 +131,9 @@ function CoursePage() {
                     ? user
                       ? "Проходите уроки в своём темпе — прогресс сохраняется автоматически."
                       : "Зарегистрируйтесь, чтобы начать обучение и сохранять прогресс."
-                    : "Доступ открывается после оплаты. Если доступ уже выдан — курс откроется в личном кабинете."}
+                    : freeCount > 0
+                      ? `${freeCount} ${freeCount === 1 ? "урок доступен" : freeCount < 5 ? "урока доступны" : "уроков доступны"} бесплатно после регистрации, остальные — после оплаты.`
+                      : "Доступ открывается после оплаты. Если доступ уже выдан — курс откроется в личном кабинете."}
                 </p>
                 {user ? (
                   <Link
@@ -135,7 +141,7 @@ function CoursePage() {
                     params={{ slug: course.slug }}
                     className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue py-3.5 font-medium text-white transition-colors hover:bg-[#3271B0]"
                   >
-                    <Icon name="Play" size={17} /> {course.access === "free" ? "Перейти к обучению" : "Открыть курс"}
+                    <Icon name="Play" size={17} /> {course.access === "free" ? "Перейти к обучению" : freeCount > 0 ? "Смотреть бесплатные уроки" : "Открыть курс"}
                   </Link>
                 ) : (
                   <>
@@ -143,7 +149,7 @@ function CoursePage() {
                       to="/register"
                       className="mt-6 flex w-full items-center justify-center rounded-lg bg-brand-blue py-3.5 font-medium text-white transition-colors hover:bg-[#3271B0]"
                     >
-                      {course.access === "free" ? "Начать обучение" : "Записаться"}
+                      {course.access === "free" ? "Начать обучение" : freeCount > 0 ? "Начать бесплатно" : "Записаться"}
                     </Link>
                     <Link to="/login" className="mt-3 block text-center text-sm text-brand-muted hover:text-brand-ink">
                       Уже есть аккаунт? <span className="font-medium text-brand-blue">Войти</span>
