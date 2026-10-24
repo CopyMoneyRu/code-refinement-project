@@ -18,7 +18,21 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['"Golos Text"', 'system-ui', 'sans-serif'],
+				display: ['Manrope', '"Golos Text"', 'sans-serif'],
+			},
 			colors: {
+				brand: {
+					navy: '#0B1424',
+					card: '#18263B',
+					blue: '#397FC4',
+					light: '#F5F7FA',
+					surface: '#E6ECF3',
+					ink: '#17263C',
+					muted: '#5A6B82',
+					snow: '#F4F7FC',
+				},
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

@@ -10,33 +10,293 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CabinetRouteImport } from './routes/cabinet'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as StrategiesRouteImport } from './routes/strategies'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAccessRouteImport } from './routes/admin.access'
+import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
+import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
+import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
+import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as CabinetIndexRouteImport } from './routes/cabinet.index'
+import { Route as CabinetCoursesRouteImport } from './routes/cabinet.courses'
+import { Route as CabinetLearnRouteImport } from './routes/cabinet.learn'
+import { Route as CabinetProgressRouteImport } from './routes/cabinet.progress'
+import { Route as CabinetPurchasesRouteImport } from './routes/cabinet.purchases'
+import { Route as CabinetSettingsRouteImport } from './routes/cabinet.settings'
+import { Route as UniversityIndexRouteImport } from './routes/university.index'
+import { Route as UniversitySlugRouteImport } from './routes/university.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CabinetRoute = CabinetRouteImport.update({
+  id: '/cabinet',
+  path: '/cabinet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StrategiesRoute = StrategiesRouteImport.update({
+  id: '/strategies',
+  path: '/strategies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAccessRoute = AdminAccessRouteImport.update({
+  id: '/access',
+  path: '/access',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCoursesRoute = AdminCoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLessonsRoute = AdminLessonsRouteImport.update({
+  id: '/lessons',
+  path: '/lessons',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPurchasesRoute = AdminPurchasesRouteImport.update({
+  id: '/purchases',
+  path: '/purchases',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTeachersRoute = AdminTeachersRouteImport.update({
+  id: '/teachers',
+  path: '/teachers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const CabinetIndexRoute = CabinetIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CabinetRoute,
+} as any)
+const CabinetCoursesRoute = CabinetCoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => CabinetRoute,
+} as any)
+const CabinetLearnRoute = CabinetLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => CabinetRoute,
+} as any)
+const CabinetProgressRoute = CabinetProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => CabinetRoute,
+} as any)
+const CabinetPurchasesRoute = CabinetPurchasesRouteImport.update({
+  id: '/purchases',
+  path: '/purchases',
+  getParentRoute: () => CabinetRoute,
+} as any)
+const CabinetSettingsRoute = CabinetSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => CabinetRoute,
+} as any)
+const UniversityIndexRoute = UniversityIndexRouteImport.update({
+  id: '/university/',
+  path: '/university/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UniversitySlugRoute = UniversitySlugRouteImport.update({
+  id: '/university/$slug',
+  path: '/university/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/cabinet': typeof CabinetRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/strategies': typeof StrategiesRoute
+  '/admin/access': typeof AdminAccessRoute
+  '/admin/courses': typeof AdminCoursesRoute
+  '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/teachers': typeof AdminTeachersRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/cabinet/courses': typeof CabinetCoursesRoute
+  '/cabinet/learn': typeof CabinetLearnRoute
+  '/cabinet/progress': typeof CabinetProgressRoute
+  '/cabinet/purchases': typeof CabinetPurchasesRoute
+  '/cabinet/settings': typeof CabinetSettingsRoute
+  '/university/$slug': typeof UniversitySlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/cabinet/': typeof CabinetIndexRoute
+  '/university/': typeof UniversityIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/strategies': typeof StrategiesRoute
+  '/admin/access': typeof AdminAccessRoute
+  '/admin/courses': typeof AdminCoursesRoute
+  '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/teachers': typeof AdminTeachersRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/cabinet/courses': typeof CabinetCoursesRoute
+  '/cabinet/learn': typeof CabinetLearnRoute
+  '/cabinet/progress': typeof CabinetProgressRoute
+  '/cabinet/purchases': typeof CabinetPurchasesRoute
+  '/cabinet/settings': typeof CabinetSettingsRoute
+  '/university/$slug': typeof UniversitySlugRoute
+  '/admin': typeof AdminIndexRoute
+  '/cabinet': typeof CabinetIndexRoute
+  '/university': typeof UniversityIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/cabinet': typeof CabinetRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/strategies': typeof StrategiesRoute
+  '/admin/access': typeof AdminAccessRoute
+  '/admin/courses': typeof AdminCoursesRoute
+  '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/teachers': typeof AdminTeachersRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/cabinet/courses': typeof CabinetCoursesRoute
+  '/cabinet/learn': typeof CabinetLearnRoute
+  '/cabinet/progress': typeof CabinetProgressRoute
+  '/cabinet/purchases': typeof CabinetPurchasesRoute
+  '/cabinet/settings': typeof CabinetSettingsRoute
+  '/university/$slug': typeof UniversitySlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/cabinet/': typeof CabinetIndexRoute
+  '/university/': typeof UniversityIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/cabinet'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/strategies'
+    | '/admin/access'
+    | '/admin/courses'
+    | '/admin/lessons'
+    | '/admin/purchases'
+    | '/admin/teachers'
+    | '/admin/users'
+    | '/cabinet/courses'
+    | '/cabinet/learn'
+    | '/cabinet/progress'
+    | '/cabinet/purchases'
+    | '/cabinet/settings'
+    | '/university/$slug'
+    | '/admin/'
+    | '/cabinet/'
+    | '/university/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/strategies'
+    | '/admin/access'
+    | '/admin/courses'
+    | '/admin/lessons'
+    | '/admin/purchases'
+    | '/admin/teachers'
+    | '/admin/users'
+    | '/cabinet/courses'
+    | '/cabinet/learn'
+    | '/cabinet/progress'
+    | '/cabinet/purchases'
+    | '/cabinet/settings'
+    | '/university/$slug'
+    | '/admin'
+    | '/cabinet'
+    | '/university'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/cabinet'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/strategies'
+    | '/admin/access'
+    | '/admin/courses'
+    | '/admin/lessons'
+    | '/admin/purchases'
+    | '/admin/teachers'
+    | '/admin/users'
+    | '/cabinet/courses'
+    | '/cabinet/learn'
+    | '/cabinet/progress'
+    | '/cabinet/purchases'
+    | '/cabinet/settings'
+    | '/university/$slug'
+    | '/admin/'
+    | '/cabinet/'
+    | '/university/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  CabinetRoute: typeof CabinetRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  StrategiesRoute: typeof StrategiesRoute
+  UniversitySlugRoute: typeof UniversitySlugRoute
+  UniversityIndexRoute: typeof UniversityIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +308,209 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cabinet': {
+      id: '/cabinet'
+      path: '/cabinet'
+      fullPath: '/cabinet'
+      preLoaderRoute: typeof CabinetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/strategies': {
+      id: '/strategies'
+      path: '/strategies'
+      fullPath: '/strategies'
+      preLoaderRoute: typeof StrategiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/access': {
+      id: '/admin/access'
+      path: '/access'
+      fullPath: '/admin/access'
+      preLoaderRoute: typeof AdminAccessRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/courses': {
+      id: '/admin/courses'
+      path: '/courses'
+      fullPath: '/admin/courses'
+      preLoaderRoute: typeof AdminCoursesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/lessons': {
+      id: '/admin/lessons'
+      path: '/lessons'
+      fullPath: '/admin/lessons'
+      preLoaderRoute: typeof AdminLessonsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/purchases': {
+      id: '/admin/purchases'
+      path: '/purchases'
+      fullPath: '/admin/purchases'
+      preLoaderRoute: typeof AdminPurchasesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/teachers': {
+      id: '/admin/teachers'
+      path: '/teachers'
+      fullPath: '/admin/teachers'
+      preLoaderRoute: typeof AdminTeachersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/cabinet/': {
+      id: '/cabinet/'
+      path: '/'
+      fullPath: '/cabinet/'
+      preLoaderRoute: typeof CabinetIndexRouteImport
+      parentRoute: typeof CabinetRoute
+    }
+    '/cabinet/courses': {
+      id: '/cabinet/courses'
+      path: '/courses'
+      fullPath: '/cabinet/courses'
+      preLoaderRoute: typeof CabinetCoursesRouteImport
+      parentRoute: typeof CabinetRoute
+    }
+    '/cabinet/learn': {
+      id: '/cabinet/learn'
+      path: '/learn'
+      fullPath: '/cabinet/learn'
+      preLoaderRoute: typeof CabinetLearnRouteImport
+      parentRoute: typeof CabinetRoute
+    }
+    '/cabinet/progress': {
+      id: '/cabinet/progress'
+      path: '/progress'
+      fullPath: '/cabinet/progress'
+      preLoaderRoute: typeof CabinetProgressRouteImport
+      parentRoute: typeof CabinetRoute
+    }
+    '/cabinet/purchases': {
+      id: '/cabinet/purchases'
+      path: '/purchases'
+      fullPath: '/cabinet/purchases'
+      preLoaderRoute: typeof CabinetPurchasesRouteImport
+      parentRoute: typeof CabinetRoute
+    }
+    '/cabinet/settings': {
+      id: '/cabinet/settings'
+      path: '/settings'
+      fullPath: '/cabinet/settings'
+      preLoaderRoute: typeof CabinetSettingsRouteImport
+      parentRoute: typeof CabinetRoute
+    }
+    '/university/': {
+      id: '/university/'
+      path: '/university'
+      fullPath: '/university/'
+      preLoaderRoute: typeof UniversityIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/university/$slug': {
+      id: '/university/$slug'
+      path: '/university/$slug'
+      fullPath: '/university/$slug'
+      preLoaderRoute: typeof UniversitySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAccessRoute: typeof AdminAccessRoute
+  AdminCoursesRoute: typeof AdminCoursesRoute
+  AdminLessonsRoute: typeof AdminLessonsRoute
+  AdminPurchasesRoute: typeof AdminPurchasesRoute
+  AdminTeachersRoute: typeof AdminTeachersRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAccessRoute: AdminAccessRoute,
+  AdminCoursesRoute: AdminCoursesRoute,
+  AdminLessonsRoute: AdminLessonsRoute,
+  AdminPurchasesRoute: AdminPurchasesRoute,
+  AdminTeachersRoute: AdminTeachersRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface CabinetRouteChildren {
+  CabinetCoursesRoute: typeof CabinetCoursesRoute
+  CabinetLearnRoute: typeof CabinetLearnRoute
+  CabinetProgressRoute: typeof CabinetProgressRoute
+  CabinetPurchasesRoute: typeof CabinetPurchasesRoute
+  CabinetSettingsRoute: typeof CabinetSettingsRoute
+  CabinetIndexRoute: typeof CabinetIndexRoute
+}
+
+const CabinetRouteChildren: CabinetRouteChildren = {
+  CabinetCoursesRoute: CabinetCoursesRoute,
+  CabinetLearnRoute: CabinetLearnRoute,
+  CabinetProgressRoute: CabinetProgressRoute,
+  CabinetPurchasesRoute: CabinetPurchasesRoute,
+  CabinetSettingsRoute: CabinetSettingsRoute,
+  CabinetIndexRoute: CabinetIndexRoute,
+}
+
+const CabinetRouteWithChildren =
+  CabinetRoute._addFileChildren(CabinetRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  CabinetRoute: CabinetRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  StrategiesRoute: StrategiesRoute,
+  UniversitySlugRoute: UniversitySlugRoute,
+  UniversityIndexRoute: UniversityIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
