@@ -27,8 +27,6 @@ const initialsOf = (name: string) =>
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("") || "?";
 
-type AccessFilter = "all" | "free" | "paid";
-
 function UniversityPage() {
   const { courses: COURSES, authors } = Route.useLoaderData();
   const AUTHORS = useMemo(
@@ -37,7 +35,6 @@ function UniversityPage() {
   );
   const CATEGORIES = useMemo(() => ["Все", ...[...new Set(COURSES.map((c) => c.category))].sort()], [COURSES]);
   const [cat, setCat] = useState<string>("Все");
-  const [access, setAccess] = useState<AccessFilter>("all");
   const [q, setQ] = useState("");
   const [author, setAuthor] = useState<number | null>(null);
   const [authorView, setAuthorView] = useState<"cards" | "list">("cards");
@@ -48,17 +45,44 @@ function UniversityPage() {
         (c) =>
           (!author || c.author?.id === author) &&
           (cat === "Все" || c.category === cat) &&
-          (access === "all" || c.access === access) &&
           c.title.toLowerCase().includes(q.trim().toLowerCase()),
       ),
-    [COURSES, cat, access, q, author],
+    [COURSES, cat, q, author],
   );
 
   return (
     <PublicLayout>
       <section className="pb-24 pt-10 md:pt-14">
         <div className="container-x">
-          <div className="mb-8 border-b border-brand-ink/10 pb-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCat(c)}
+                  className={cn(
+                    "whitespace-nowrap rounded-lg px-4 py-2 text-sm transition-colors",
+                    cat === c ? "bg-brand-blue text-white" : "bg-white text-brand-muted hover:text-brand-ink",
+                  )}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+            <div className="shrink-0">
+              <label className="relative">
+                <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-ink/50" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Поиск курса"
+                  className="h-10 w-full rounded-lg border border-brand-ink/10 bg-transparent pl-9 pr-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-blue focus:outline-none sm:w-56"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-8 border-b border-brand-ink/10 pb-8">
             <div className="flex items-center justify-between gap-4">
               <h2 className="font-display text-xl font-semibold text-brand-ink">Авторы</h2>
               <div className="flex rounded-lg bg-white p-1">
@@ -120,52 +144,6 @@ function UniversityPage() {
                 })}
               </ul>
             )}
-          </div>
-
-          <div className="flex flex-col gap-4 border-b border-brand-ink/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCat(c)}
-                  className={cn(
-                    "whitespace-nowrap rounded-lg px-4 py-2 text-sm transition-colors",
-                    cat === c ? "bg-brand-blue text-white" : "bg-white text-brand-muted hover:text-brand-ink",
-                  )}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="flex rounded-lg bg-white p-1 text-sm">
-                {([
-                  ["all", "Все"],
-                  ["free", "Бесплатные"],
-                  ["paid", "Платные"],
-                ] as const).map(([v, l]) => (
-                  <button
-                    key={v}
-                    onClick={() => setAccess(v)}
-                    className={cn(
-                      "flex-1 rounded-md px-3 py-1.5 transition-colors",
-                      access === v ? "bg-brand-surface text-brand-ink" : "text-brand-muted hover:text-brand-ink",
-                    )}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-              <label className="relative">
-                <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-ink/50" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Поиск курса"
-                  className="h-10 w-full rounded-lg border border-brand-ink/10 bg-transparent pl-9 pr-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-blue focus:outline-none sm:w-56"
-                />
-              </label>
-            </div>
           </div>
 
           {list.length ? (
