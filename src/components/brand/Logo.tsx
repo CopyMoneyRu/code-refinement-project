@@ -8,27 +8,29 @@ type LogoProps = {
   tone?: "light" | "dark";
 };
 
-/** Оригинальный знак JETRA — квадратное изображение, пропорции 1:1 не меняются. */
-export default function Logo({ className, size = 36, withWordmark = true, tone = "dark" }: LogoProps) {
+const FULL_RATIO = 1286 / 337;
+
+export default function Logo({ className, size = 40, withWordmark = true }: LogoProps) {
   return (
-    <Link to="/" className={cn("inline-flex items-center gap-3", className)} aria-label="JETRA — на главную">
-      <img
-        src="/brand/jetra-mark.png"
-        alt="JETRA"
-        width={size}
-        height={size}
-        style={{ width: size, height: size }}
-        className="rounded-md object-contain"
-      />
-      {withWordmark && (
-        <span
-          className={cn(
-            "font-display text-[22px] font-extrabold tracking-[0.18em] sm:text-[24px]",
-            tone === "light" ? "text-brand-ink" : "text-brand-ink",
-          )}
-        >
-          JETRA
-        </span>
+    <Link to="/" className={cn("inline-flex items-center", className)} aria-label="JETRA — на главную">
+      {withWordmark ? (
+        <img
+          src="/brand/jetra-logo-full.png"
+          alt="JETRA"
+          width={Math.round(size * FULL_RATIO)}
+          height={size}
+          style={{ height: size, width: "auto" }}
+          className="object-contain"
+        />
+      ) : (
+        <img
+          src="/brand/jetra-mark.png"
+          alt="JETRA"
+          width={size}
+          height={size}
+          style={{ width: size, height: size }}
+          className="object-contain"
+        />
       )}
     </Link>
   );
