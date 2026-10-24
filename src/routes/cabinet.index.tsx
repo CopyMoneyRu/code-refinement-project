@@ -2,6 +2,8 @@ import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { COURSES } from "@/data/catalog";
+import { ADMIN_SECTIONS } from "@/lib/adminSections";
+import { can, ROLE_LABEL } from "@/lib/permissions";
 
 export const Route = createFileRoute("/cabinet/")({
   component: CabinetHome,
@@ -16,9 +18,36 @@ function CabinetHome() {
     { label: "Пройдено уроков", icon: "CheckCircle2" },
     { label: "Сертификатов", icon: "Award" },
   ];
+  const adminSections = ADMIN_SECTIONS.filter((s) => can(user, s.perm));
   return (
     <>
       <WsTitle title={`Добро пожаловать, ${user.name}`} text="Здесь будут ваши курсы, прогресс обучения и покупки." />
+      {user.role !== "user" && (
+        <WsCard className="mb-6">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 font-semibold">
+              <Icon name="ShieldCheck" size={18} className="text-brand-blue" /> Управление платформой
+            </div>
+            <span className="text-sm text-brand-muted">Ваша роль: {ROLE_LABEL[user.role]}</span>
+          </div>
+          {adminSections.length ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {adminSections.map((s) => (
+                <Link
+                  key={s.to}
+                  to={s.to}
+                  className="flex items-center gap-3 rounded-lg border border-brand-ink/10 px-4 py-3 text-sm font-medium transition-colors hover:border-brand-blue/40 hover:bg-brand-light"
+                >
+                  <Icon name={s.icon} size={18} className="text-brand-blue" />
+                  {s.label}
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-brand-muted">Вам пока не назначены права. Обратитесь к супер администратору.</p>
+          )}
+        </WsCard>
+      )}
       <div className="grid gap-4 sm:grid-cols-3">
         {tiles.map((t) => (
           <WsCard key={t.label}>

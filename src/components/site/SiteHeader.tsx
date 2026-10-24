@@ -48,10 +48,7 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-blue text-[15px] font-semibold text-white">
                 {initial(user.name)}
               </span>
-              <span className="min-w-0 text-left leading-tight">
-                <span className="block truncate text-[15px] font-medium">{firstName(user.name)}</span>
-                <span className="block text-xs text-brand-muted">Личный кабинет</span>
-              </span>
+              <span className="min-w-0 truncate text-[15px] font-medium">{firstName(user.name)}</span>
             </Link>
           ) : (
             <Link
@@ -109,10 +106,7 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-blue font-semibold text-white">
                     {initial(user.name)}
                   </span>
-                  <span className="min-w-0 leading-tight">
-                    <span className="block truncate font-medium">{user.name}</span>
-                    <span className="block text-sm text-brand-muted">Личный кабинет</span>
-                  </span>
+                  <span className="min-w-0 truncate font-medium">{user.name}</span>
                   <Icon name="ChevronRight" size={18} className="ml-auto text-brand-muted" />
                 </Link>
               ) : (
