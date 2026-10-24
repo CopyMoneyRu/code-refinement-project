@@ -32,8 +32,18 @@ export type Course = {
   level: string;
   access: "free" | "paid";
   teacher: { name: string; role: string };
+  authorId: string;
   modules: CourseModule[];
 };
+
+export type Author = { id: string; name: string; role: string; initials: string };
+
+export const AUTHORS: Author[] = [
+  { id: "invest", name: "Эксперт по инвестициям", role: "Основы и личные финансы", initials: "ЭИ" },
+  { id: "portfolio", name: "Портфельный аналитик", role: "Финансовые инструменты", initials: "ПА" },
+  { id: "data", name: "Аналитик данных", role: "Аналитика и технологии", initials: "АД" },
+  { id: "risk", name: "Риск-менеджер", role: "Управление рисками", initials: "РМ" },
+];
 
 export const CATEGORIES = ["Все", "Основы", "Инструменты", "Аналитика", "Управление рисками"] as const;
 
@@ -58,6 +68,7 @@ export const COURSES: Course[] = [
     level: "Начальный",
     access: "free",
     teacher: { name: "Преподаватель JETRA", role: "Эксперт по инвестициям" },
+    authorId: "invest",
     modules: m("c1", [
       ["Введение", ["Как устроен финансовый рынок", "Классы активов", "Риск и доходность"]],
       ["Портфель", ["Диверсификация", "Горизонт инвестирования"]],
@@ -71,6 +82,7 @@ export const COURSES: Course[] = [
     level: "Средний",
     access: "paid",
     teacher: { name: "Преподаватель JETRA", role: "Портфельный аналитик" },
+    authorId: "portfolio",
     modules: m("c2", [
       ["Долевые инструменты", ["Акции", "Фонды"]],
       ["Долговые инструменты", ["Облигации", "Кривая доходности"]],
@@ -85,6 +97,7 @@ export const COURSES: Course[] = [
     level: "Средний",
     access: "paid",
     teacher: { name: "Преподаватель JETRA", role: "Аналитик данных" },
+    authorId: "data",
     modules: m("c3", [
       ["Фундаментальный анализ", ["Отчётность компаний", "Мультипликаторы"]],
       ["Количественный подход", ["Работа с данными", "Модели и проверка гипотез"]],
@@ -98,6 +111,7 @@ export const COURSES: Course[] = [
     level: "Продвинутый",
     access: "paid",
     teacher: { name: "Преподаватель JETRA", role: "Риск-менеджер" },
+    authorId: "risk",
     modules: m("c4", [
       ["Оценка риска", ["Виды рисков", "Метрики риска"]],
       ["Контроль", ["Лимиты и правила", "Хеджирование"]],
@@ -111,6 +125,7 @@ export const COURSES: Course[] = [
     level: "Средний",
     access: "free",
     teacher: { name: "Преподаватель JETRA", role: "Инженер-аналитик" },
+    authorId: "data",
     modules: m("c5", [["Обзор", ["Автоматизация решений", "Данные и инфраструктура"]]]),
   },
   {
@@ -121,6 +136,7 @@ export const COURSES: Course[] = [
     level: "Начальный",
     access: "free",
     teacher: { name: "Преподаватель JETRA", role: "Финансовый консультант" },
+    authorId: "invest",
     modules: m("c6", [["План", ["Постановка целей", "Резерв и структура"]]]),
   },
 ];
