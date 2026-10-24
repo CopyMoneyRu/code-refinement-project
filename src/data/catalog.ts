@@ -8,18 +8,29 @@ export type Strategy = {
   horizon: string;
   icon: string;
   description: string;
+  market: Market;
 };
 
+export type Market = "crypto" | "stocks" | "realty" | "other";
+
+export const MARKETS: { id: Market | "all"; label: string; icon: string }[] = [
+  { id: "all", label: "Все", icon: "LayoutGrid" },
+  { id: "crypto", label: "Крипторынок", icon: "Bitcoin" },
+  { id: "stocks", label: "Фондовый рынок", icon: "CandlestickChart" },
+  { id: "realty", label: "Недвижимость", icon: "Building2" },
+  { id: "other", label: "Прочее", icon: "Shapes" },
+];
+
 export const STRATEGIES: Strategy[] = [
-  { id: "s1", name: "Консервативная", focus: "Сохранение капитала", horizon: "Долгосрочно", icon: "Shield", description: "Акцент на устойчивость портфеля и контроль рисков." },
-  { id: "s2", name: "Сбалансированная", focus: "Диверсификация", horizon: "Среднесрочно", icon: "Scale", description: "Распределение капитала между классами активов." },
-  { id: "s3", name: "Динамичная", focus: "Рост капитала", horizon: "Среднесрочно", icon: "TrendingUp", description: "Активное управление с адаптацией к рынку." },
-  { id: "s4", name: "Алгоритмическая", focus: "Системные правила", horizon: "Гибко", icon: "Cpu", description: "Решения на основе формализованных алгоритмов." },
-  { id: "s5", name: "Квантовая аналитика", focus: "Модели данных", horizon: "Среднесрочно", icon: "BrainCircuit", description: "Количественные модели и анализ рыночных данных." },
-  { id: "s6", name: "Дивидендная", focus: "Денежный поток", horizon: "Долгосрочно", icon: "Landmark", description: "Компании с устойчивой дивидендной политикой." },
-  { id: "s7", name: "Глобальная", focus: "Мировые рынки", horizon: "Долгосрочно", icon: "Globe", description: "Географическая диверсификация портфеля." },
-  { id: "s8", name: "Технологическая", focus: "Сектор технологий", horizon: "Долгосрочно", icon: "CircuitBoard", description: "Компании, формирующие технологическую повестку." },
-  { id: "s9", name: "Защитная", focus: "Управление рисками", horizon: "Гибко", icon: "LockKeyhole", description: "Инструменты хеджирования и защиты капитала." },
+  { id: "s1", market: "realty", name: "Консервативная", focus: "Сохранение капитала", horizon: "Долгосрочно", icon: "Shield", description: "Акцент на устойчивость портфеля и контроль рисков." },
+  { id: "s2", market: "other", name: "Сбалансированная", focus: "Диверсификация", horizon: "Среднесрочно", icon: "Scale", description: "Распределение капитала между классами активов." },
+  { id: "s3", market: "stocks", name: "Динамичная", focus: "Рост капитала", horizon: "Среднесрочно", icon: "TrendingUp", description: "Активное управление с адаптацией к рынку." },
+  { id: "s4", market: "crypto", name: "Алгоритмическая", focus: "Системные правила", horizon: "Гибко", icon: "Cpu", description: "Решения на основе формализованных алгоритмов." },
+  { id: "s5", market: "crypto", name: "Квантовая аналитика", focus: "Модели данных", horizon: "Среднесрочно", icon: "BrainCircuit", description: "Количественные модели и анализ рыночных данных." },
+  { id: "s6", market: "stocks", name: "Дивидендная", focus: "Денежный поток", horizon: "Долгосрочно", icon: "Landmark", description: "Компании с устойчивой дивидендной политикой." },
+  { id: "s7", market: "stocks", name: "Глобальная", focus: "Мировые рынки", horizon: "Долгосрочно", icon: "Globe", description: "Географическая диверсификация портфеля." },
+  { id: "s8", market: "realty", name: "Технологическая", focus: "Сектор технологий", horizon: "Долгосрочно", icon: "CircuitBoard", description: "Компании, формирующие технологическую повестку." },
+  { id: "s9", market: "other", name: "Защитная", focus: "Управление рисками", horizon: "Гибко", icon: "LockKeyhole", description: "Инструменты хеджирования и защиты капитала." },
 ];
 
 export type Lesson = { id: string; title: string; duration: string; hasFiles?: boolean };

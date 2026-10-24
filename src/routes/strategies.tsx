@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
-import StrategyCard from "@/components/strategies/StrategyCard";
-import { STRATEGIES } from "@/data/catalog";
+import StrategiesCatalog from "@/components/strategies/StrategiesCatalog";
 
 export const Route = createFileRoute("/strategies")({
   head: () => ({
@@ -19,10 +18,8 @@ function StrategiesPage() {
   return (
     <PublicLayout>
       <section className="pb-24 pt-10 md:pt-14">
-        <div className="container-x grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {STRATEGIES.map((s, i) => (
-            <StrategyCard key={s.id} s={s} index={i} />
-          ))}
+        <div className="container-x">
+          <StrategiesCatalog />
         </div>
       </section>
     </PublicLayout>
