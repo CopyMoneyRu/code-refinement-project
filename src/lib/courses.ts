@@ -6,9 +6,30 @@ export const LEVELS: CourseLevel[] = ["Начальный", "Средний", "�
 
 export type DbLesson = { title: string; duration: string; hasFiles: boolean };
 export type DbModule = { title: string; lessons: DbLesson[] };
-export type DbAuthor = { id: number; slug: string; name: string; role: string; photoUrl: string; bio: string };
+export type AuthorLink = { title: string; url: string };
+export type AuthorFact = { value: string; label: string };
+export type DbAuthor = {
+  id: number;
+  slug: string;
+  name: string;
+  role: string;
+  photoUrl: string;
+  bio: string;
+  about: string;
+  links: AuthorLink[];
+  facts: AuthorFact[];
+};
 export type AdminAuthor = DbAuthor & { coursesTotal: number; coursesPublished: number };
-export type AuthorInput = { id?: number; name: string; role: string; bio: string; photoUrl: string };
+export type AuthorInput = {
+  id?: number;
+  name: string;
+  role: string;
+  bio: string;
+  about: string;
+  photoUrl: string;
+  links: AuthorLink[];
+  facts: AuthorFact[];
+};
 
 export type DbCourse = {
   id: number;
@@ -134,8 +155,17 @@ export const saveAuthorFn = createServerFn({ method: "POST" })
       id: Number(o.id) || undefined,
       name: str(o.name, 120),
       role: str(o.role, 160),
-      bio: str(o.bio, 5000),
+      bio: str(o.bio, 500),
+      about: str(o.about, 30000),
       photoUrl: str(o.photoUrl, 500),
+      links: (Array.isArray(o.links) ? o.links : []).slice(0, 20).map((l) => {
+        const lo = (l && typeof l === "object" ? l : {}) as Record<string, unknown>;
+        return { title: str(lo.title, 80), url: str(lo.url, 500) };
+      }),
+      facts: (Array.isArray(o.facts) ? o.facts : []).slice(0, 12).map((f) => {
+        const fo = (f && typeof f === "object" ? f : {}) as Record<string, unknown>;
+        return { value: str(fo.value, 40), label: str(fo.label, 120) };
+      }),
     };
   })
   .handler(async ({ data }): Promise<{ ok: true; author: AdminAuthor } | Fail> => {
@@ -153,4 +183,13 @@ export const uploadAuthorPhotoFn = createServerFn({ method: "POST" })
     const { callCourses } = await import("./courses.server");
     const r = await callCourses<{ url: string }>("upload_author_photo", data, true);
     return r.ok ? { ok: true, url: r.url } : { ok: false, error: r.error, message: r.message };
+  });
+
+export const authorBySlugFn = createServerFn({ method: "GET" })
+  .validator((input: unknown) => ({ slug: typeof input === "object" && input && typeof (input as { slug?: unknown }).slug === "string" ? (input as { slug: string }).slug.slice(0, 60) : "" }))
+  .handler(async ({ data }) => {
+    const { callCourses } = await import("./courses.server");
+    const r = await callCourses<{ author: DbAuthor; courses: DbCourse[] }>("author", { slug: data.slug });
+    if (!r.ok) throw notFound();
+    return { author: r.author, courses: r.courses };
   });

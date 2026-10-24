@@ -138,16 +138,23 @@ function CoursePage() {
               {course.author && (
                 <div className="mt-5 rounded-2xl border border-brand-ink/10 bg-white p-6">
                   <div className="text-xs uppercase tracking-[0.14em] text-brand-muted">Автор курса</div>
-                  <div className="mt-4 flex items-center gap-4">
+                  <Link to="/university/authors/$slug" params={{ slug: course.author.slug }} className="group mt-4 flex items-center gap-4">
                     <AuthorAvatar name={course.author.name} photoUrl={course.author.photoUrl} className="h-14 w-14" textClassName="text-base" />
                     <div className="min-w-0">
-                      <div className="font-medium text-brand-ink">{course.author.name}</div>
+                      <div className="font-medium text-brand-ink group-hover:text-brand-blue">{course.author.name}</div>
                       {course.author.role && <div className="text-sm text-brand-muted">{course.author.role}</div>}
                     </div>
-                  </div>
+                  </Link>
                   {course.author.bio && (
-                    <p className="mt-4 whitespace-pre-line border-t border-brand-ink/10 pt-4 text-sm leading-relaxed text-brand-muted">{course.author.bio}</p>
+                    <p className="mt-4 line-clamp-4 whitespace-pre-line border-t border-brand-ink/10 pt-4 text-sm leading-relaxed text-brand-muted">{course.author.bio}</p>
                   )}
+                  <Link
+                    to="/university/authors/$slug"
+                    params={{ slug: course.author.slug }}
+                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-blue hover:underline"
+                  >
+                    Подробнее об авторе <Icon name="ArrowRight" size={15} />
+                  </Link>
                 </div>
               )}
             </aside>

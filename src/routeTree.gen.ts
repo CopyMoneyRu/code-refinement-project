@@ -33,6 +33,7 @@ import { Route as CabinetSettingsRouteImport } from './routes/cabinet.settings'
 import { Route as OauthProviderRouteImport } from './routes/oauth.$provider'
 import { Route as UniversityIndexRouteImport } from './routes/university.index'
 import { Route as UniversitySlugRouteImport } from './routes/university.$slug'
+import { Route as UniversityAuthorsSlugRouteImport } from './routes/university.authors.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -154,6 +155,11 @@ const UniversitySlugRoute = UniversitySlugRouteImport.update({
   path: '/university/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UniversityAuthorsSlugRoute = UniversityAuthorsSlugRouteImport.update({
+  id: '/university/authors/$slug',
+  path: '/university/authors/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
   '/university/': typeof UniversityIndexRoute
+  '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/cabinet': typeof CabinetIndexRoute
   '/university': typeof UniversityIndexRoute
+  '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -231,6 +239,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
   '/university/': typeof UniversityIndexRoute
+  '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -259,6 +268,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/cabinet/'
     | '/university/'
+    | '/university/authors/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cabinet'
     | '/university'
+    | '/university/authors/$slug'
   id:
     | '__root__'
     | '/'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/cabinet/'
     | '/university/'
+    | '/university/authors/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   OauthProviderRoute: typeof OauthProviderRoute
   UniversitySlugRoute: typeof UniversitySlugRoute
   UniversityIndexRoute: typeof UniversityIndexRoute
+  UniversityAuthorsSlugRoute: typeof UniversityAuthorsSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -494,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UniversitySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/university/authors/$slug': {
+      id: '/university/authors/$slug'
+      path: '/university/authors/$slug'
+      fullPath: '/university/authors/$slug'
+      preLoaderRoute: typeof UniversityAuthorsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -553,6 +573,7 @@ const rootRouteChildren: RootRouteChildren = {
   OauthProviderRoute: OauthProviderRoute,
   UniversitySlugRoute: UniversitySlugRoute,
   UniversityIndexRoute: UniversityIndexRoute,
+  UniversityAuthorsSlugRoute: UniversityAuthorsSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

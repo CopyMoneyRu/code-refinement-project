@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import AuthorForm from "@/components/workspace/AuthorForm";
@@ -62,7 +62,7 @@ function AuthorsAdmin() {
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
                 <tr>
-                  {["Автор", "Описание", "Курсов", "В университете", ""].map((c) => (
+                  {["Автор", "Кратко", "Курсов", "В университете", ""].map((c) => (
                     <th key={c} className="px-5 py-3.5 font-medium">{c}</th>
                   ))}
                 </tr>
@@ -91,12 +91,25 @@ function AuthorsAdmin() {
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="inline-flex items-center gap-2">
+                      {a.coursesPublished > 0 && (
+                        <Link
+                          to="/university/authors/$slug"
+                          params={{ slug: a.slug }}
+                          target="_blank"
+                          title="Открыть страницу автора"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-ink/15 text-brand-muted hover:bg-brand-surface hover:text-brand-ink"
+                        >
+                          <Icon name="ExternalLink" size={15} />
+                        </Link>
+                      )}
                       <button
                         onClick={() => openForm(a)}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-brand-ink/15 px-3 py-1.5 text-xs font-medium hover:bg-brand-surface"
                       >
                         <Icon name="Pencil" size={14} /> Изменить
                       </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

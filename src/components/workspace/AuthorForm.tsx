@@ -5,7 +5,7 @@ import AuthorAvatar from "@/components/university/AuthorAvatar";
 import { saveAuthorFn, uploadAuthorPhotoFn, type AdminAuthor, type AuthorInput } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 
-const EMPTY: AuthorInput = { name: "", role: "", bio: "", photoUrl: "" };
+const EMPTY: AuthorInput = { name: "", role: "", bio: "", about: "", photoUrl: "", links: [], facts: [] };
 
 const inputCls =
   "h-11 w-full rounded-lg border border-brand-ink/15 bg-white px-3.5 text-[15px] text-brand-ink focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/15";
@@ -37,7 +37,20 @@ export default function AuthorForm({
 
   useEffect(() => {
     if (!open) return;
-    setForm(author ? { id: author.id, name: author.name, role: author.role, bio: author.bio, photoUrl: author.photoUrl } : EMPTY);
+    setForm(
+      author
+        ? {
+            id: author.id,
+            name: author.name,
+            role: author.role,
+            bio: author.bio,
+            about: author.about,
+            photoUrl: author.photoUrl,
+            links: author.links,
+            facts: author.facts,
+          }
+        : EMPTY,
+    );
     setError("");
   }, [open, author]);
 
@@ -61,8 +74,13 @@ export default function AuthorForm({
     e.preventDefault();
     setError("");
     if (form.name.trim().length < 2) return setError("Укажите имя автора");
+    const links = form.links.filter((l) => l.title.trim() || l.url.trim());
+    const badLink = links.find((l) => !/^https?:\/\/\S+\.\S+/i.test(l.url.trim()));
+    if (badLink) return setError(`Проверьте адрес ссылки «${badLink.title || badLink.url}» — он должен начинаться с https://`);
+    const facts = form.facts.filter((f) => f.value.trim() || f.label.trim());
+    if (facts.some((f) => !f.value.trim() || !f.label.trim())) return setError("У каждого факта заполните и значение, и подпись");
     setSaving(true);
-    const r = await saveAuthorFn({ data: form });
+    const r = await saveAuthorFn({ data: { ...form, links, facts } });
     setSaving(false);
     if (!r.ok) return setError(r.message);
     onSaved(r.author, !form.id);
@@ -74,7 +92,9 @@ export default function AuthorForm({
         <form onSubmit={submit} className="flex min-h-full flex-col">
           <div className="sticky top-0 z-10 border-b border-brand-ink/10 bg-white px-6 py-5">
             <SheetTitle className="font-display text-xl text-brand-ink">{form.id ? "Редактирование автора" : "Новый автор"}</SheetTitle>
-            <SheetDescription className="text-brand-muted">Автор появится в университете, когда у него будет хотя бы один опубликованный курс.</SheetDescription>
+            <SheetDescription className="text-brand-muted">
+              Автор и его страница появятся в университете, когда у него будет хотя бы один опубликованный курс.
+            </SheetDescription>
           </div>
 
           <div className="flex-1 space-y-6 px-6 py-6">
@@ -122,16 +142,119 @@ export default function AuthorForm({
 
             <div>
               <div className="mb-1.5 flex items-baseline justify-between">
-                <span className="text-sm font-medium">Описание</span>
-                <span className="text-xs text-brand-muted">{form.bio.length}/5000</span>
+                <span className="text-sm font-medium">Кратко об авторе</span>
+                <span className="text-xs text-brand-muted">{form.bio.length}/500 · в каталоге и на курсах</span>
               </div>
               <textarea
-                className={cn(inputCls, "h-auto min-h-[180px] py-2.5")}
-                maxLength={5000}
+                className={cn(inputCls, "h-auto min-h-[90px] py-2.5")}
+                maxLength={500}
                 value={form.bio}
                 onChange={(e) => set("bio", e.target.value)}
-                placeholder="Опыт, достижения, чем автор может быть полезен слушателям"
+                placeholder="2–3 предложения: кто автор и чем полезен слушателям"
               />
+            </div>
+
+            <div>
+              <div className="mb-1.5 flex items-baseline justify-between">
+                <span className="text-sm font-medium">Подробный рассказ</span>
+                <span className="text-xs text-brand-muted">на странице автора</span>
+              </div>
+              <textarea
+                className={cn(inputCls, "h-auto min-h-[220px] py-2.5")}
+                maxLength={30000}
+                value={form.about}
+                onChange={(e) => set("about", e.target.value)}
+                placeholder={"Опыт, образование, достижения, подход к обучению.\n\nПустая строка начинает новый абзац."}
+              />
+            </div>
+
+            <div>
+              <div className="mb-1.5 flex items-baseline justify-between">
+                <span className="text-sm font-medium">Факты в цифрах</span>
+                <span className="text-xs text-brand-muted">до 12, например «15 лет» — «на финансовых рынках»</span>
+              </div>
+              <div className="space-y-2">
+                {form.facts.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      className={cn(inputCls, "h-10 w-32 shrink-0")}
+                      value={f.value}
+                      maxLength={40}
+                      placeholder="15 лет"
+                      onChange={(e) => set("facts", form.facts.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))}
+                    />
+                    <input
+                      className={cn(inputCls, "h-10")}
+                      value={f.label}
+                      maxLength={120}
+                      placeholder="на финансовых рынках"
+                      onChange={(e) => set("facts", form.facts.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Удалить факт"
+                      onClick={() => set("facts", form.facts.filter((_, j) => j !== i))}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-brand-muted hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Icon name="X" size={16} />
+                    </button>
+                  </div>
+                ))}
+                {form.facts.length < 12 && (
+                  <button
+                    type="button"
+                    onClick={() => set("facts", [...form.facts, { value: "", label: "" }])}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-blue hover:underline"
+                  >
+                    <Icon name="Plus" size={14} /> Добавить факт
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1.5 flex items-baseline justify-between">
+                <span className="text-sm font-medium">Ссылки</span>
+                <span className="text-xs text-brand-muted">соцсети, сайт, YouTube, публикации</span>
+              </div>
+              <div className="space-y-2">
+                {form.links.map((l, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      className={cn(inputCls, "h-10 w-36 shrink-0")}
+                      value={l.title}
+                      maxLength={80}
+                      placeholder="Telegram"
+                      onChange={(e) => set("links", form.links.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
+                    />
+                    <input
+                      className={cn(inputCls, "h-10")}
+                      value={l.url}
+                      maxLength={500}
+                      inputMode="url"
+                      placeholder="https://t.me/username"
+                      onChange={(e) => set("links", form.links.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Удалить ссылку"
+                      onClick={() => set("links", form.links.filter((_, j) => j !== i))}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-brand-muted hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Icon name="X" size={16} />
+                    </button>
+                  </div>
+                ))}
+                {form.links.length < 20 && (
+                  <button
+                    type="button"
+                    onClick={() => set("links", [...form.links, { title: "", url: "" }])}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-blue hover:underline"
+                  >
+                    <Icon name="Plus" size={14} /> Добавить ссылку
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

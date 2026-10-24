@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import CourseCard from "@/components/university/CourseCard";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
@@ -148,14 +148,21 @@ function UniversityPage() {
               </ul>
             )}
 
-            {selected && (selected.bio || selected.photoUrl) && (
-              <div className="mt-5 flex flex-col gap-5 rounded-2xl border border-brand-ink/10 bg-white p-6 sm:flex-row sm:items-start">
+            {selected && (
+              <div className="mt-5 flex flex-col gap-5 rounded-2xl border border-brand-ink/10 bg-white p-6 sm:flex-row sm:items-center">
                 <AuthorAvatar name={selected.name} photoUrl={selected.photoUrl} className="h-20 w-20" textClassName="text-xl" />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="font-display text-lg font-semibold text-brand-ink">{selected.name}</div>
                   {selected.role && <div className="text-sm text-brand-muted">{selected.role}</div>}
-                  {selected.bio && <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-brand-ink/80">{selected.bio}</p>}
+                  {selected.bio && <p className="mt-3 line-clamp-3 whitespace-pre-line text-[15px] leading-relaxed text-brand-ink/80">{selected.bio}</p>}
                 </div>
+                <Link
+                  to="/university/authors/$slug"
+                  params={{ slug: selected.slug }}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-blue px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#3271B0]"
+                >
+                  Подробнее об авторе <Icon name="ArrowRight" size={16} />
+                </Link>
               </div>
             )}
           </div>

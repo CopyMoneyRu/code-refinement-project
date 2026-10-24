@@ -125,16 +125,23 @@ def select_courses(cur, where: str = '', params: tuple = ()):
     return [course_out(r) for r in cur.fetchall()]
 
 
+def author_profile(r: dict) -> dict:
+    return {
+        'id': r['id'], 'slug': r['slug'], 'name': r['name'], 'role': r['role'], 'photoUrl': r['photo_url'],
+        'bio': r['bio'], 'about': r.get('about') or '', 'links': r.get('links') or [], 'facts': r.get('facts') or [],
+    }
+
+
 def authors_out(cur, with_counts: bool = False):
     cur.execute(
-        f"""SELECT a.id, a.slug, a.name, a.role, a.photo_url, a.bio,
+        f"""SELECT a.id, a.slug, a.name, a.role, a.photo_url, a.bio, a.about, a.links, a.facts,
                    (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id) AS courses_total,
                    (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id AND c.published) AS courses_published
             FROM {t('authors')} a ORDER BY a.id"""
     )
     out = []
     for r in cur.fetchall():
-        item = {'id': r['id'], 'slug': r['slug'], 'name': r['name'], 'role': r['role'], 'photoUrl': r['photo_url'], 'bio': r['bio']}
+        item = author_profile(r)
         if with_counts:
             item['coursesTotal'] = r['courses_total']
             item['coursesPublished'] = r['courses_published']
@@ -224,6 +231,18 @@ def a_get(cur, body, _user):
     return resp(200, {'ok': True, 'course': rows[0]})
 
 
+def a_author(cur, body, _user):
+    slug = str(body.get('slug', ''))[:60]
+    cur.execute(f"SELECT * FROM {t('authors')} WHERE slug = %s", (slug,))
+    row = cur.fetchone()
+    if not row:
+        return err(404, 'not_found', 'Автор не найден')
+    courses = select_courses(cur, 'WHERE c.published AND c.author_id = %s', (row['id'],))
+    if not courses:
+        return err(404, 'not_found', 'Автор не найден')
+    return resp(200, {'ok': True, 'author': author_profile(row), 'courses': courses})
+
+
 def a_admin_list(cur, _body, user):
     return resp(200, {'ok': True, 'courses': select_courses(cur), 'authors': authors_out(cur)})
 
@@ -309,15 +328,56 @@ def unique_author_slug(cur, base: str, exclude_id=None) -> str:
         n += 1
 
 
+def clean_links(raw):
+    if not isinstance(raw, list):
+        return None, 'Некорректный список ссылок'
+    out = []
+    for item in raw[:20]:
+        if not isinstance(item, dict):
+            return None, 'Некорректный список ссылок'
+        title = str(item.get('title', '')).strip()[:80]
+        url = str(item.get('url', '')).strip()[:500]
+        if not title and not url:
+            continue
+        if not re.match(r'^https?://[^\s/$.?#].[^\s]*$', url, re.I):
+            return None, f'Проверьте адрес ссылки «{title or url}» — он должен начинаться с https://'
+        out.append({'title': title or re.sub(r'^https?://(www\.)?', '', url).split('/')[0], 'url': url})
+    return out, None
+
+
+def clean_facts(raw):
+    if not isinstance(raw, list):
+        return None, 'Некорректный список фактов'
+    out = []
+    for item in raw[:12]:
+        if not isinstance(item, dict):
+            return None, 'Некорректный список фактов'
+        value = str(item.get('value', '')).strip()[:40]
+        label = str(item.get('label', '')).strip()[:120]
+        if not value and not label:
+            continue
+        if not value or not label:
+            return None, 'У каждого факта заполните и значение, и подпись'
+        out.append({'value': value, 'label': label})
+    return out, None
+
+
 def a_save_author(cur, body, user):
     name = str(body.get('name', '')).strip()[:120]
     role = str(body.get('role', '')).strip()[:160]
-    bio = str(body.get('bio', '')).strip()[:5000]
+    bio = str(body.get('bio', '')).strip()[:500]
     photo = str(body.get('photoUrl', '')).strip()[:500]
     if len(name) < 2:
         return err(400, 'invalid_name', 'Укажите имя автора')
     if photo and not photo.startswith('https://'):
         return err(400, 'invalid_photo', 'Некорректная ссылка на фото')
+    about = str(body.get('about', '')).strip()[:30000]
+    links, problem = clean_links(body.get('links', []))
+    if problem:
+        return err(400, 'invalid_links', problem)
+    facts, problem = clean_facts(body.get('facts', []))
+    if problem:
+        return err(400, 'invalid_facts', problem)
     aid = body.get('id')
     if aid:
         try:
@@ -328,21 +388,23 @@ def a_save_author(cur, body, user):
         if not cur.fetchone():
             return err(404, 'not_found', 'Автор не найден')
         cur.execute(
-            f"UPDATE {t('authors')} SET name = %s, role = %s, bio = %s, photo_url = %s, updated_at = NOW() WHERE id = %s",
-            (name, role, bio, photo, aid),
+            f"""UPDATE {t('authors')} SET name = %s, role = %s, bio = %s, photo_url = %s, about = %s,
+                links = %s::jsonb, facts = %s::jsonb, updated_at = NOW() WHERE id = %s""",
+            (name, role, bio, photo, about, json.dumps(links, ensure_ascii=False), json.dumps(facts, ensure_ascii=False), aid),
         )
     else:
         slug = unique_author_slug(cur, slugify(name)[:50] or 'avtor')
         cur.execute(
-            f"INSERT INTO {t('authors')} (slug, name, role, bio, photo_url) VALUES (%s, %s, %s, %s, %s) RETURNING id",
-            (slug, name, role, bio, photo),
+            f"""INSERT INTO {t('authors')} (slug, name, role, bio, photo_url, about, links, facts)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb) RETURNING id""",
+            (slug, name, role, bio, photo, about, json.dumps(links, ensure_ascii=False), json.dumps(facts, ensure_ascii=False)),
         )
         aid = cur.fetchone()['id']
     author = next(a for a in authors_out(cur, with_counts=True) if a['id'] == aid)
     return resp(200, {'ok': True, 'author': author})
 
 
-PUBLIC = {'list': a_list, 'get': a_get}
+PUBLIC = {'list': a_list, 'get': a_get, 'author': a_author}
 ADMIN = {
     'admin_list': ('courses', a_admin_list),
     'save': ('courses', a_save),
