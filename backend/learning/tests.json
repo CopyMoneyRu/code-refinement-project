@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {"name": "CORS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "Course program for guest", "method": "POST", "path": "/", "body": {"action": "course_learn", "slug": "osnovy-investiciy"}, "expectedStatus": 200, "expectedBody": {"ok": true, "state": "login"}, "bodyMatcher": "partial"},
+    {"name": "Unknown course", "method": "POST", "path": "/", "body": {"action": "course_learn", "slug": "no-such-course"}, "expectedStatus": 404, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
+    {"name": "Lesson without session", "method": "POST", "path": "/", "body": {"action": "lesson_get", "lessonId": 1}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
+    {"name": "Save lesson without session", "method": "POST", "path": "/", "body": {"action": "lesson_save", "title": "Test"}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
+    {"name": "Upload chunk bad token", "method": "POST", "path": "/", "body": {"action": "upload_chunk", "uploadId": "x", "token": "y", "index": 0, "data": ""}, "expectedStatus": 403, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
+    {"name": "Grant access without session", "method": "POST", "path": "/", "body": {"action": "access_grant", "email": "a@b.cd", "courseId": 1}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"}
+  ]
+}

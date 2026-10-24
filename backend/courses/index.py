@@ -119,10 +119,42 @@ COURSE_SELECT = """SELECT c.*, a.slug AS author_slug, a.name AS author_name, a.r
     FROM {courses} c LEFT JOIN {authors} a ON a.id = c.author_id"""
 
 
+def attach_programs(cur, rows):
+    if not rows:
+        return rows
+    ids = tuple(r['id'] for r in rows)
+    cur.execute(
+        f"""SELECT m.id, m.course_id, m.title FROM {t('course_modules')} m
+            WHERE m.course_id IN %s ORDER BY m.course_id, m.position, m.id""",
+        (ids,),
+    )
+    modules = cur.fetchall()
+    lessons = {}
+    if modules:
+        cur.execute(
+            f"""SELECT l.module_id, l.title, l.duration,
+                       (l.video_type <> 'none' AND l.video_url <> '') AS has_video,
+                       EXISTS (SELECT 1 FROM {t('lesson_materials')} lm WHERE lm.lesson_id = l.id) AS has_files
+                FROM {t('lessons')} l WHERE l.module_id IN %s ORDER BY l.position, l.id""",
+            (tuple(m['id'] for m in modules),),
+        )
+        for l in cur.fetchall():
+            lessons.setdefault(l['module_id'], []).append(
+                {'title': l['title'], 'duration': l['duration'], 'hasFiles': l['has_files'], 'hasVideo': l['has_video']}
+            )
+    by_course = {}
+    for m in modules:
+        by_course.setdefault(m['course_id'], []).append({'title': m['title'], 'lessons': lessons.get(m['id'], [])})
+    for r in rows:
+        r['modules'] = by_course.get(r['id'], [])
+    return rows
+
+
 def select_courses(cur, where: str = '', params: tuple = (), public: bool = False):
     sql = COURSE_SELECT.format(courses=t('courses'), authors=t('authors'))
     cur.execute(f'{sql} {where} ORDER BY c.id', params)
-    return [course_out(r, public) for r in cur.fetchall()]
+    rows = attach_programs(cur, [dict(r) for r in cur.fetchall()])
+    return [course_out(r, public) for r in rows]
 
 
 def author_profile(r: dict) -> dict:
@@ -211,12 +243,9 @@ def validate(cur, body):
     cover = str(body.get('coverUrl', '')).strip()[:500]
     if cover and not cover.startswith('https://'):
         return None, err(400, 'invalid_cover', 'Некорректная ссылка на обложку')
-    modules = clean_modules(body.get('modules', []))
-    if modules is None:
-        return None, err(400, 'invalid_modules', 'У каждого модуля и урока должно быть название')
     return {
         'title': title, 'category': category, 'short': short, 'description': description, 'level': level,
-        'access': access, 'price': price, 'author_id': author_id, 'cover_url': cover, 'modules': modules,
+        'access': access, 'price': price, 'author_id': author_id, 'cover_url': cover,
         'published': bool(body.get('published', True)),
     }, None
 
@@ -259,7 +288,7 @@ def a_save(cur, body, user):
         return problem
     cid = body.get('id')
     fields = ('title', 'category', 'short', 'description', 'level', 'access', 'price', 'author_id', 'cover_url', 'published')
-    values = [data[f] for f in fields] + [json.dumps(data['modules'], ensure_ascii=False)]
+    values = [data[f] for f in fields]
     if cid:
         try:
             cid = int(cid)
@@ -270,7 +299,7 @@ def a_save(cur, body, user):
             return err(404, 'not_found', 'Курс не найден')
         sets = ', '.join(f'{f} = %s' for f in fields)
         cur.execute(
-            f"UPDATE {t('courses')} SET {sets}, modules = %s::jsonb, updated_at = NOW() WHERE id = %s",
+            f"UPDATE {t('courses')} SET {sets}, updated_at = NOW() WHERE id = %s",
             (*values, cid),
         )
     else:
@@ -278,7 +307,7 @@ def a_save(cur, body, user):
         cols = ', '.join(fields)
         marks = ', '.join(['%s'] * len(fields))
         cur.execute(
-            f"INSERT INTO {t('courses')} (slug, {cols}, modules) VALUES (%s, {marks}, %s::jsonb) RETURNING id",
+            f"INSERT INTO {t('courses')} (slug, {cols}) VALUES (%s, {marks}) RETURNING id",
             (slug, *values),
         )
         cid = cur.fetchone()['id']
@@ -437,10 +466,17 @@ def a_delete_course(cur, body, user):
     cid = parse_id(body)
     if not cid:
         return err(400, 'bad_course', 'Некорректный курс')
-    cur.execute(f"DELETE FROM {t('courses')} WHERE id = %s RETURNING title", (cid,))
+    cur.execute(f"SELECT title FROM {t('courses')} WHERE id = %s", (cid,))
     row = cur.fetchone()
     if not row:
         return err(404, 'not_found', 'Курс не найден')
+    lessons_sub = f"SELECT l.id FROM {t('lessons')} l JOIN {t('course_modules')} m ON m.id = l.module_id WHERE m.course_id = %s"
+    cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE lesson_id IN ({lessons_sub})", (cid,))
+    cur.execute(f"DELETE FROM {t('lesson_materials')} WHERE lesson_id IN ({lessons_sub})", (cid,))
+    cur.execute(f"DELETE FROM {t('lessons')} WHERE module_id IN (SELECT id FROM {t('course_modules')} WHERE course_id = %s)", (cid,))
+    cur.execute(f"DELETE FROM {t('course_modules')} WHERE course_id = %s", (cid,))
+    cur.execute(f"DELETE FROM {t('course_access')} WHERE course_id = %s", (cid,))
+    cur.execute(f"DELETE FROM {t('courses')} WHERE id = %s", (cid,))
     return resp(200, {'ok': True, 'title': row['title']})
 
 

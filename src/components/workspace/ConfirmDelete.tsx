@@ -17,6 +17,7 @@ export default function ConfirmDelete({
   busy,
   onCancel,
   onConfirm,
+  confirmLabel = "Удалить навсегда",
 }: {
   open: boolean;
   title: string;
@@ -24,6 +25,7 @@ export default function ConfirmDelete({
   busy: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  confirmLabel?: string;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={(o) => !o && !busy && onCancel()}>
@@ -44,7 +46,7 @@ export default function ConfirmDelete({
             }}
             className="bg-red-600 text-white hover:bg-red-700"
           >
-            {busy ? "Удаляю…" : "Удалить навсегда"}
+            {busy ? "Подождите…" : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

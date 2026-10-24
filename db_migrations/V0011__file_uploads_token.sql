@@ -1,0 +1,2 @@
+ALTER TABLE file_uploads ADD COLUMN token_hash CHAR(64) NOT NULL DEFAULT '';
+ALTER TABLE file_uploads ADD COLUMN chunks_received INTEGER NOT NULL DEFAULT 0;

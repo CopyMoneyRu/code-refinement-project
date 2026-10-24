@@ -26,14 +26,16 @@ import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as CabinetIndexRouteImport } from './routes/cabinet.index'
 import { Route as CabinetCoursesRouteImport } from './routes/cabinet.courses'
-import { Route as CabinetLearnRouteImport } from './routes/cabinet.learn'
 import { Route as CabinetProgressRouteImport } from './routes/cabinet.progress'
 import { Route as CabinetPurchasesRouteImport } from './routes/cabinet.purchases'
 import { Route as CabinetSettingsRouteImport } from './routes/cabinet.settings'
 import { Route as OauthProviderRouteImport } from './routes/oauth.$provider'
 import { Route as UniversityIndexRouteImport } from './routes/university.index'
 import { Route as UniversitySlugRouteImport } from './routes/university.$slug'
+import { Route as AdminProgramCourseIdRouteImport } from './routes/admin.program.$courseId'
 import { Route as UniversityAuthorsSlugRouteImport } from './routes/university.authors.$slug'
+import { Route as CabinetLearnSlugIndexRouteImport } from './routes/cabinet.learn.$slug.index'
+import { Route as CabinetLearnSlugLessonIdRouteImport } from './routes/cabinet.learn.$slug.$lessonId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -120,11 +122,6 @@ const CabinetCoursesRoute = CabinetCoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => CabinetRoute,
 } as any)
-const CabinetLearnRoute = CabinetLearnRouteImport.update({
-  id: '/learn',
-  path: '/learn',
-  getParentRoute: () => CabinetRoute,
-} as any)
 const CabinetProgressRoute = CabinetProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
@@ -155,11 +152,27 @@ const UniversitySlugRoute = UniversitySlugRouteImport.update({
   path: '/university/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminProgramCourseIdRoute = AdminProgramCourseIdRouteImport.update({
+  id: '/program/$courseId',
+  path: '/program/$courseId',
+  getParentRoute: () => AdminRoute,
+} as any)
 const UniversityAuthorsSlugRoute = UniversityAuthorsSlugRouteImport.update({
   id: '/university/authors/$slug',
   path: '/university/authors/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CabinetLearnSlugIndexRoute = CabinetLearnSlugIndexRouteImport.update({
+  id: '/learn/$slug/',
+  path: '/learn/$slug/',
+  getParentRoute: () => CabinetRoute,
+} as any)
+const CabinetLearnSlugLessonIdRoute =
+  CabinetLearnSlugLessonIdRouteImport.update({
+    id: '/learn/$slug/$lessonId',
+    path: '/learn/$slug/$lessonId',
+    getParentRoute: () => CabinetRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -177,7 +190,6 @@ export interface FileRoutesByFullPath {
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
-  '/cabinet/learn': typeof CabinetLearnRoute
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
@@ -186,7 +198,10 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
   '/university/': typeof UniversityIndexRoute
+  '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
   '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
+  '/cabinet/learn/$slug/$lessonId': typeof CabinetLearnSlugLessonIdRoute
+  '/cabinet/learn/$slug/': typeof CabinetLearnSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -202,7 +217,6 @@ export interface FileRoutesByTo {
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
-  '/cabinet/learn': typeof CabinetLearnRoute
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
@@ -211,7 +225,10 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/cabinet': typeof CabinetIndexRoute
   '/university': typeof UniversityIndexRoute
+  '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
   '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
+  '/cabinet/learn/$slug/$lessonId': typeof CabinetLearnSlugLessonIdRoute
+  '/cabinet/learn/$slug': typeof CabinetLearnSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -230,7 +247,6 @@ export interface FileRoutesById {
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
-  '/cabinet/learn': typeof CabinetLearnRoute
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
@@ -239,7 +255,10 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
   '/university/': typeof UniversityIndexRoute
+  '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
   '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
+  '/cabinet/learn/$slug/$lessonId': typeof CabinetLearnSlugLessonIdRoute
+  '/cabinet/learn/$slug/': typeof CabinetLearnSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -259,7 +278,6 @@ export interface FileRouteTypes {
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
-    | '/cabinet/learn'
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
@@ -268,7 +286,10 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/cabinet/'
     | '/university/'
+    | '/admin/program/$courseId'
     | '/university/authors/$slug'
+    | '/cabinet/learn/$slug/$lessonId'
+    | '/cabinet/learn/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -284,7 +305,6 @@ export interface FileRouteTypes {
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
-    | '/cabinet/learn'
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
@@ -293,7 +313,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cabinet'
     | '/university'
+    | '/admin/program/$courseId'
     | '/university/authors/$slug'
+    | '/cabinet/learn/$slug/$lessonId'
+    | '/cabinet/learn/$slug'
   id:
     | '__root__'
     | '/'
@@ -311,7 +334,6 @@ export interface FileRouteTypes {
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
-    | '/cabinet/learn'
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
@@ -320,7 +342,10 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/cabinet/'
     | '/university/'
+    | '/admin/program/$courseId'
     | '/university/authors/$slug'
+    | '/cabinet/learn/$slug/$lessonId'
+    | '/cabinet/learn/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -458,13 +483,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CabinetCoursesRouteImport
       parentRoute: typeof CabinetRoute
     }
-    '/cabinet/learn': {
-      id: '/cabinet/learn'
-      path: '/learn'
-      fullPath: '/cabinet/learn'
-      preLoaderRoute: typeof CabinetLearnRouteImport
-      parentRoute: typeof CabinetRoute
-    }
     '/cabinet/progress': {
       id: '/cabinet/progress'
       path: '/progress'
@@ -507,12 +525,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UniversitySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/program/$courseId': {
+      id: '/admin/program/$courseId'
+      path: '/program/$courseId'
+      fullPath: '/admin/program/$courseId'
+      preLoaderRoute: typeof AdminProgramCourseIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/university/authors/$slug': {
       id: '/university/authors/$slug'
       path: '/university/authors/$slug'
       fullPath: '/university/authors/$slug'
       preLoaderRoute: typeof UniversityAuthorsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/cabinet/learn/$slug/': {
+      id: '/cabinet/learn/$slug/'
+      path: '/learn/$slug'
+      fullPath: '/cabinet/learn/$slug/'
+      preLoaderRoute: typeof CabinetLearnSlugIndexRouteImport
+      parentRoute: typeof CabinetRoute
+    }
+    '/cabinet/learn/$slug/$lessonId': {
+      id: '/cabinet/learn/$slug/$lessonId'
+      path: '/learn/$slug/$lessonId'
+      fullPath: '/cabinet/learn/$slug/$lessonId'
+      preLoaderRoute: typeof CabinetLearnSlugLessonIdRouteImport
+      parentRoute: typeof CabinetRoute
     }
   }
 }
@@ -526,6 +565,7 @@ interface AdminRouteChildren {
   AdminTeachersRoute: typeof AdminTeachersRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminProgramCourseIdRoute: typeof AdminProgramCourseIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -537,26 +577,29 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminTeachersRoute: AdminTeachersRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminProgramCourseIdRoute: AdminProgramCourseIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface CabinetRouteChildren {
   CabinetCoursesRoute: typeof CabinetCoursesRoute
-  CabinetLearnRoute: typeof CabinetLearnRoute
   CabinetProgressRoute: typeof CabinetProgressRoute
   CabinetPurchasesRoute: typeof CabinetPurchasesRoute
   CabinetSettingsRoute: typeof CabinetSettingsRoute
   CabinetIndexRoute: typeof CabinetIndexRoute
+  CabinetLearnSlugLessonIdRoute: typeof CabinetLearnSlugLessonIdRoute
+  CabinetLearnSlugIndexRoute: typeof CabinetLearnSlugIndexRoute
 }
 
 const CabinetRouteChildren: CabinetRouteChildren = {
   CabinetCoursesRoute: CabinetCoursesRoute,
-  CabinetLearnRoute: CabinetLearnRoute,
   CabinetProgressRoute: CabinetProgressRoute,
   CabinetPurchasesRoute: CabinetPurchasesRoute,
   CabinetSettingsRoute: CabinetSettingsRoute,
   CabinetIndexRoute: CabinetIndexRoute,
+  CabinetLearnSlugLessonIdRoute: CabinetLearnSlugLessonIdRoute,
+  CabinetLearnSlugIndexRoute: CabinetLearnSlugIndexRoute,
 }
 
 const CabinetRouteWithChildren =

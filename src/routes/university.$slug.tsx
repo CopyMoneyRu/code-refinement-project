@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Link, notFound } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import { AccessBadge } from "@/components/university/CourseCard";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
@@ -28,7 +28,10 @@ export const Route = createFileRoute("/university/$slug")({
   component: CoursePage,
 });
 
+const rootApi = getRouteApi("__root__");
+
 function CoursePage() {
+  const user = rootApi.useLoaderData();
   const { course } = Route.useLoaderData();
   const total = lessonsTotal(course);
 
@@ -98,6 +101,7 @@ function CoursePage() {
                               {l.title}
                             </span>
                             <span className="flex shrink-0 items-center gap-3 text-sm text-brand-ink/50">
+                              {l.hasVideo && <Icon name="PlayCircle" size={14} />}
                               {l.hasFiles && <Icon name="Paperclip" size={14} />}
                               {l.duration}
                             </span>
@@ -120,15 +124,32 @@ function CoursePage() {
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-brand-muted">
                   {course.access === "free"
-                    ? "Зарегистрируйтесь, чтобы начать обучение и сохранять прогресс."
-                    : "Оплата и автоматическое открытие доступа появятся на следующем этапе."}
+                    ? user
+                      ? "Проходите уроки в своём темпе — прогресс сохраняется автоматически."
+                      : "Зарегистрируйтесь, чтобы начать обучение и сохранять прогресс."
+                    : "Доступ открывается после оплаты. Если доступ уже выдан — курс откроется в личном кабинете."}
                 </p>
-                <Link
-                  to="/register"
-                  className="mt-6 flex w-full items-center justify-center rounded-lg bg-brand-blue py-3.5 font-medium text-white transition-colors hover:bg-[#3271B0]"
-                >
-                  {course.access === "free" ? "Начать обучение" : "Записаться"}
-                </Link>
+                {user ? (
+                  <Link
+                    to="/cabinet/learn/$slug"
+                    params={{ slug: course.slug }}
+                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue py-3.5 font-medium text-white transition-colors hover:bg-[#3271B0]"
+                  >
+                    <Icon name="Play" size={17} /> {course.access === "free" ? "Перейти к обучению" : "Открыть курс"}
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/register"
+                      className="mt-6 flex w-full items-center justify-center rounded-lg bg-brand-blue py-3.5 font-medium text-white transition-colors hover:bg-[#3271B0]"
+                    >
+                      {course.access === "free" ? "Начать обучение" : "Записаться"}
+                    </Link>
+                    <Link to="/login" className="mt-3 block text-center text-sm text-brand-muted hover:text-brand-ink">
+                      Уже есть аккаунт? <span className="font-medium text-brand-blue">Войти</span>
+                    </Link>
+                  </>
+                )}
                 <ul className="mt-6 space-y-3 border-t border-brand-ink/10 pt-6 text-sm text-brand-muted">
                   <li className="flex items-center gap-3"><Icon name="Video" size={16} className="text-brand-blue" />Видеоуроки</li>
                   <li className="flex items-center gap-3"><Icon name="FileText" size={16} className="text-brand-blue" />Дополнительные материалы</li>

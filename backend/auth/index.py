@@ -519,6 +519,11 @@ def a_admin_delete_user(cur, body, token):
         return err(403, 'forbidden', 'Удалять администраторов может только супер администратор')
     cur.execute(f"DELETE FROM {t('sessions')} WHERE user_id = %s", (uid,))
     cur.execute(f"DELETE FROM {t('email_tokens')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('oauth_accounts')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('course_access')} WHERE user_id = %s", (uid,))
+    cur.execute(f"UPDATE {t('course_access')} SET granted_by = NULL WHERE granted_by = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('file_uploads')} WHERE user_id = %s", (uid,))
     cur.execute(f"DELETE FROM {t('users')} WHERE id = %s", (uid,))
     return resp(200, {'ok': True})
 

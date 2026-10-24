@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import Icon from "@/components/ui/icon";
-import { LEVELS, saveCourseFn, uploadCoverFn, type CourseInput, type DbAuthor, type DbCourse, type DbModule } from "@/lib/courses";
+import { LEVELS, saveCourseFn, uploadCoverFn, type CourseInput, type DbAuthor, type DbCourse } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 
 const EMPTY: CourseInput = {
@@ -81,7 +82,6 @@ export default function CourseForm({
   }, [open, course]);
 
   const set = <K extends keyof CourseInput>(k: K, v: CourseInput[K]) => setForm((f) => ({ ...f, [k]: v }));
-  const setModules = (fn: (m: DbModule[]) => DbModule[]) => setForm((f) => ({ ...f, modules: fn(f.modules) }));
 
   const pickCover = async (file: File | undefined) => {
     if (!file) return;
@@ -103,8 +103,6 @@ export default function CourseForm({
     if (form.title.trim().length < 3) return setError("Укажите название курса (не короче 3 символов)");
     if (form.category.trim().length < 2) return setError("Укажите категорию");
     if (form.access === "paid" && form.price < 1) return setError("Укажите цену платного курса");
-    if (form.modules.some((m) => !m.title.trim() || m.lessons.some((l) => !l.title.trim())))
-      return setError("Заполните названия всех модулей и уроков или удалите пустые");
     setSaving(true);
     const r = await saveCourseFn({ data: { ...form, price: form.access === "free" ? 0 : form.price } });
     setSaving(false);
@@ -251,67 +249,26 @@ export default function CourseForm({
               />
             </div>
 
-            <div>
-              <Label hint={`${form.modules.length} мод.`}>Программа курса</Label>
-              <div className="space-y-3">
-                {form.modules.map((m, mi) => (
-                  <div key={mi} className="rounded-lg border border-brand-ink/10 bg-white p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 shrink-0 font-display text-sm tabular-nums text-brand-blue">{String(mi + 1).padStart(2, "0")}</span>
-                      <input
-                        className={cn(inputCls, "h-10")}
-                        value={m.title}
-                        maxLength={200}
-                        onChange={(e) => setModules((ms) => ms.map((x, i) => (i === mi ? { ...x, title: e.target.value } : x)))}
-                        placeholder="Название модуля"
-                      />
-                      <button
-                        type="button"
-                        aria-label="Удалить модуль"
-                        onClick={() => setModules((ms) => ms.filter((_, i) => i !== mi))}
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-brand-muted hover:bg-red-50 hover:text-red-600"
-                      >
-                        <Icon name="Trash2" size={16} />
-                      </button>
-                    </div>
-                    <div className="mt-3 space-y-2 pl-8">
-                      {m.lessons.map((l, li) => {
-                        const upd = (patch: Partial<typeof l>) =>
-                          setModules((ms) => ms.map((x, i) => (i === mi ? { ...x, lessons: x.lessons.map((y, j) => (j === li ? { ...y, ...patch } : y)) } : x)));
-                        return (
-                          <div key={li} className="flex items-center gap-2">
-                            <input className={cn(inputCls, "h-9 text-sm")} value={l.title} maxLength={200} onChange={(e) => upd({ title: e.target.value })} placeholder="Название урока" />
-                            <input className={cn(inputCls, "h-9 w-24 shrink-0 text-sm")} value={l.duration} maxLength={30} onChange={(e) => upd({ duration: e.target.value })} placeholder="15 мин" />
-                            <button
-                              type="button"
-                              aria-label="Удалить урок"
-                              onClick={() => setModules((ms) => ms.map((x, i) => (i === mi ? { ...x, lessons: x.lessons.filter((_, j) => j !== li) } : x)))}
-                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-brand-muted hover:bg-red-50 hover:text-red-600"
-                            >
-                              <Icon name="X" size={15} />
-                            </button>
-                          </div>
-                        );
-                      })}
-                      <button
-                        type="button"
-                        onClick={() => setModules((ms) => ms.map((x, i) => (i === mi ? { ...x, lessons: [...x.lessons, { title: "", duration: "", hasFiles: false }] } : x)))}
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-blue hover:underline"
-                      >
-                        <Icon name="Plus" size={14} /> Урок
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setModules((ms) => [...ms, { title: "", lessons: [] }])}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-brand-ink/20 py-3 text-sm font-medium text-brand-muted hover:border-brand-blue hover:text-brand-blue"
-                >
-                  <Icon name="Plus" size={15} /> Добавить модуль
-                </button>
-              </div>
-            </div>
+            {form.id ? (
+              <Link
+                to="/admin/program/$courseId"
+                params={{ courseId: String(form.id) }}
+                className="flex items-center justify-between gap-3 rounded-lg border border-brand-ink/10 bg-white p-4 transition-colors hover:border-brand-blue/40"
+              >
+                <span className="flex items-center gap-3">
+                  <Icon name="Layers" size={19} className="text-brand-blue" />
+                  <span>
+                    <span className="block text-sm font-medium">Программа курса</span>
+                    <span className="block text-xs text-brand-muted">Модули, уроки, видео, материалы и порядок открытия</span>
+                  </span>
+                </span>
+                <Icon name="ChevronRight" size={17} className="text-brand-muted" />
+              </Link>
+            ) : (
+              <p className="rounded-lg border border-dashed border-brand-ink/15 p-4 text-sm text-brand-muted">
+                Модули и уроки добавляются после создания курса — в разделе «Уроки».
+              </p>
+            )}
 
             <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-brand-ink/10 bg-white p-4">
               <input type="checkbox" checked={form.published} onChange={(e) => set("published", e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#397FC4]" />
