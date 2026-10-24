@@ -4,6 +4,7 @@ import Logo from "@/components/brand/Logo";
 import Icon from "@/components/ui/icon";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { logoutFn, type AuthUser } from "@/lib/auth";
+import { isStaff, ROLE_LABEL } from "@/lib/permissions";
 
 export type NavItem = { to: string; label: string; icon: string; exact?: boolean };
 
@@ -57,7 +58,7 @@ export default function WorkspaceLayout({
         <Link to="/" onClick={onNavigate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink">
           <Icon name="Globe" size={17} /> На сайт
         </Link>
-        {user.role === "admin" && (
+        {isStaff(user.role) && (
           <Link
             to={section === "Администрирование" ? "/cabinet" : "/admin"}
             onClick={onNavigate}
@@ -97,7 +98,7 @@ export default function WorkspaceLayout({
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block">
               <div className="text-sm font-medium leading-tight">{user.name}</div>
-              <div className="text-xs text-brand-muted">{user.role === "admin" ? "Администратор" : user.email}</div>
+              <div className="text-xs text-brand-muted">{user.role === "user" ? user.email : ROLE_LABEL[user.role]}</div>
             </div>
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-blue text-sm font-semibold text-white">
               {user.name.trim().charAt(0).toUpperCase() || "?"}

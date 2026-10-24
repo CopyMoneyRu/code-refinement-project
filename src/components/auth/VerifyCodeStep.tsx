@@ -36,7 +36,7 @@ export default function VerifyCodeStep({ email, sent = true, onBack }: { email: 
       if (r.error === "too_many_attempts" || r.error === "code_expired") setCode("");
       return;
     }
-    navigate({ to: r.role === "admin" ? "/admin" : "/cabinet" });
+    navigate({ to: r.role && r.role !== "user" ? "/admin" : "/cabinet" });
   };
 
   const resend = async () => {

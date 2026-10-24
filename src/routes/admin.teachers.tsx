@@ -1,20 +1,22 @@
+import { requirePermission } from "@/lib/adminGuard";
 import { createFileRoute } from "@tanstack/react-router";
 import AdminTable from "@/components/workspace/AdminTable";
 
 export const Route = createFileRoute("/admin/teachers")({
+  beforeLoad: ({ context }) => requirePermission(context, "authors"),
   component: TeachersAdmin,
 });
 
 function TeachersAdmin() {
   return (
     <AdminTable
-      title="Преподаватели"
-      text="Профили преподавателей и их курсы."
-      columns={['Преподаватель', 'Специализация', 'Курсов', 'Статус']}
-      addLabel="Добавить преподавателя"
+      title="Авторы"
+      text="Профили авторов курсов и преподавателей."
+      columns={['Автор', 'Специализация', 'Курсов', 'Статус']}
+      addLabel="Добавить автора"
       emptyIcon="UserRound"
-      emptyTitle="Преподавателей пока нет"
-      emptyText="Добавленные преподаватели будут отображаться на страницах курсов."
+      emptyTitle="Авторов пока нет"
+      emptyText="Добавленные авторы будут отображаться в каталоге курсов."
     />
   );
 }

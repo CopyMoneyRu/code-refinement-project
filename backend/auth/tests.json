@@ -108,6 +108,24 @@
         "ok": false
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Set role without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "admin_set_role",
+        "userId": 1,
+        "role": "admin",
+        "permissions": [
+          "users"
+        ]
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

@@ -1,7 +1,9 @@
+import { requirePermission } from "@/lib/adminGuard";
 import { createFileRoute } from "@tanstack/react-router";
 import AdminTable from "@/components/workspace/AdminTable";
 
 export const Route = createFileRoute("/admin/purchases")({
+  beforeLoad: ({ context }) => requirePermission(context, "purchases"),
   component: PurchasesAdmin,
 });
 

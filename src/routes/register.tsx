@@ -8,7 +8,7 @@ export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Регистрация — JETRA" }, { name: "description", content: "Создайте аккаунт на платформе JETRA." }] }),
   beforeLoad: async () => {
     const user = await getMe();
-    if (user) throw redirect({ to: user.role === "admin" ? "/admin" : "/cabinet" });
+    if (user) throw redirect({ to: user.role !== "user" ? "/admin" : "/cabinet" });
   },
   component: RegisterPage,
 });

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { requirePermission } from "@/lib/adminGuard";
 import { createFileRoute, getRouteApi, useRouter } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
@@ -14,8 +15,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { adminDeleteUserFn, adminSetRoleFn, adminUsersFn, type AuthUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import RoleDialog from "@/components/workspace/RoleDialog";
+import { PERMISSIONS, ROLE_LABEL, type Permission } from "@/lib/permissions";
 
 export const Route = createFileRoute("/admin/users")({
+  beforeLoad: ({ context }) => requirePermission(context, "users"),
   loader: () => adminUsersFn(),
   component: UsersAdmin,
 });
@@ -31,19 +35,26 @@ function UsersAdmin() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [toDelete, setToDelete] = useState<AuthUser | null>(null);
+  const [editing, setEditing] = useState<AuthUser | null>(null);
+  const isSuper = me.role === "superadmin";
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
     return s ? users.filter((u) => u.email.toLowerCase().includes(s) || u.name.toLowerCase().includes(s)) : users;
   }, [users, q]);
 
-  const toggleRole = async (id: number, role: "user" | "admin") => {
-    setBusy(id);
+  const saveRole = async (role: "user" | "admin", permissions: Permission[]) => {
+    if (!editing) return;
+    const target = editing;
+    setBusy(target.id);
     setError("");
-    const r = await adminSetRoleFn({ data: { userId: id, role } });
+    setNotice("");
+    const r = await adminSetRoleFn({ data: { userId: target.id, role, permissions } });
     setBusy(null);
-    if (!r.ok) setError(r.message);
-    else router.invalidate();
+    if (!r.ok) return setError(r.message);
+    setEditing(null);
+    setNotice(`Роль пользователя ${target.email} обновлена`);
+    router.invalidate();
   };
 
   const confirmDelete = async () => {
@@ -64,7 +75,7 @@ function UsersAdmin() {
 
   return (
     <>
-      <WsTitle title="Пользователи" text="Зарегистрированные пользователи, роли и подтверждение email." />
+      <WsTitle title="Пользователи" text={isSuper ? "Пользователи, роли и права администраторов. Новые пользователи регистрируются с ролью «Пользователь»." : "Зарегистрированные пользователи и подтверждение email."} />
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
       {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
       <WsCard className="p-0">
@@ -98,12 +109,23 @@ function UsersAdmin() {
                     <td className="px-5 py-3.5">
                       <span
                         className={cn(
-                          "rounded-md px-2.5 py-1 text-xs font-medium",
-                          u.role === "admin" ? "bg-brand-blue/10 text-brand-blue" : "bg-brand-surface text-brand-muted",
+                          "whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium",
+                          u.role === "superadmin"
+                            ? "bg-brand-ink text-white"
+                            : u.role === "admin"
+                              ? "bg-brand-blue/10 text-brand-blue"
+                              : "bg-brand-surface text-brand-muted",
                         )}
                       >
-                        {u.role === "admin" ? "Администратор" : "Пользователь"}
+                        {ROLE_LABEL[u.role]}
                       </span>
+                      {u.role === "admin" && (
+                        <div className="mt-1.5 max-w-[220px] text-xs leading-snug text-brand-muted">
+                          {u.permissions.length
+                            ? PERMISSIONS.filter((p) => u.permissions.includes(p.id)).map((p) => p.label).join(", ")
+                            : "Права не выбраны"}
+                        </div>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
                       {u.emailVerified ? (
@@ -116,15 +138,17 @@ function UsersAdmin() {
                       {u.createdAt ? new Date(u.createdAt).toLocaleDateString("ru-RU") : "—"}
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      {u.id !== me.id && (
+                      {u.id !== me.id && u.role !== "superadmin" && (isSuper || u.role === "user") && (
                         <div className="inline-flex items-center gap-2">
-                          <button
-                            disabled={busy === u.id}
-                            onClick={() => toggleRole(u.id, u.role === "admin" ? "user" : "admin")}
-                            className="whitespace-nowrap rounded-lg border border-brand-ink/15 px-3 py-1.5 text-xs font-medium hover:bg-brand-surface disabled:opacity-50"
-                          >
-                            {u.role === "admin" ? "Снять админа" : "Сделать админом"}
-                          </button>
+                          {isSuper && (
+                            <button
+                              disabled={busy === u.id}
+                              onClick={() => setEditing(u)}
+                              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-brand-ink/15 px-3 py-1.5 text-xs font-medium hover:bg-brand-surface disabled:opacity-50"
+                            >
+                              <Icon name="ShieldCheck" size={14} /> Роль и права
+                            </button>
+                          )}
                           <button
                             disabled={busy === u.id}
                             onClick={() => setToDelete(u)}
@@ -150,6 +174,8 @@ function UsersAdmin() {
           />
         )}
       </WsCard>
+
+      <RoleDialog user={editing} busy={busy !== null} onClose={() => setEditing(null)} onSave={saveRole} />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent className="theme-light bg-white text-brand-ink">

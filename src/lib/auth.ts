@@ -1,10 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { Permission, Role } from "./permissions";
+
+export type { Permission, Role } from "./permissions";
 
 export type AuthUser = {
   id: number;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: Role;
+  permissions: Permission[];
   emailVerified: boolean;
   createdAt: string | null;
 };
@@ -124,7 +128,8 @@ export const adminUsersFn = createServerFn({ method: "GET" }).handler(async (): 
 export const adminSetRoleFn = createServerFn({ method: "POST" })
   .validator((input: unknown) => {
     const o = obj(input);
-    return { userId: Number(o.userId) || 0, role: o.role === "admin" ? "admin" : "user" };
+    const perms = Array.isArray(o.permissions) ? o.permissions.filter((x): x is string => typeof x === "string").slice(0, 20) : [];
+    return { userId: Number(o.userId) || 0, role: o.role === "admin" ? "admin" : "user", permissions: perms };
   })
   .handler(async ({ data }): Promise<ActionResult> => {
     const { callAuth } = await import("./auth.server");

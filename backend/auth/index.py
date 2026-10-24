@@ -27,6 +27,8 @@ SESSION_DAYS = 30
 CODE_MINUTES = 15
 MAX_CODE_ATTEMPTS = 5
 MAX_FAILED = 5
+SUPERADMIN_EMAIL = 'invvvestor@gmail.com'
+PERMISSIONS = ('users', 'strategies', 'courses', 'lessons', 'authors', 'purchases', 'access')
 LOCK_MINUTES = 15
 
 
@@ -85,12 +87,19 @@ def password_problem(password: str) -> str | None:
     return None
 
 
+def perms_of(u: dict) -> list:
+    if u['role'] != 'admin':
+        return []
+    return [p for p in (u.get('permissions') or '').split(',') if p in PERMISSIONS]
+
+
 def public_user(u: dict) -> dict:
     return {
         'id': u['id'],
         'email': u['email'],
         'name': u['name'],
         'role': u['role'],
+        'permissions': list(PERMISSIONS) if u['role'] == 'superadmin' else perms_of(u),
         'emailVerified': u['email_verified'],
         'createdAt': u['created_at'].isoformat() if u.get('created_at') else None,
     }
@@ -209,9 +218,15 @@ def session_user(cur, token: str | None):
     return cur.fetchone()
 
 
-def is_admin_email(email: str) -> bool:
-    admins = [e.strip().lower() for e in os.environ.get('ADMIN_EMAILS', '').split(',') if e.strip()]
-    return email in admins
+def is_superadmin_email(email: str) -> bool:
+    return email.strip().lower() == SUPERADMIN_EMAIL
+
+
+def ensure_superadmin(cur, user: dict) -> dict:
+    if is_superadmin_email(user['email']) and user['role'] != 'superadmin':
+        cur.execute(f"UPDATE {t('users')} SET role = 'superadmin', updated_at = NOW() WHERE id = %s", (user['id'],))
+        user['role'] = 'superadmin'
+    return user
 
 
 def handler(event: dict, context) -> dict:
@@ -262,7 +277,7 @@ def a_register(cur, body, _token):
             return resp(200, {'ok': True, 'emailSent': sent})
         return err(409, 'email_taken', 'Аккаунт с таким email уже существует. Войдите или восстановите пароль.')
 
-    role = 'admin' if is_admin_email(email) else 'user'
+    role = 'superadmin' if is_superadmin_email(email) else 'user'
     cur.execute(
         f"INSERT INTO {t('users')} (email, name, password_hash, role) VALUES (%s, %s, %s, %s) RETURNING *",
         (email, name, hash_password(password), role),
@@ -297,9 +312,7 @@ def a_verify(cur, body, _token):
         (user['id'],),
     )
     user = cur.fetchone()
-    if is_admin_email(email) and user['role'] != 'admin':
-        cur.execute(f"UPDATE {t('users')} SET role = 'admin' WHERE id = %s", (user['id'],))
-        user['role'] = 'admin'
+    user = ensure_superadmin(cur, user)
     raw = create_session(cur, user['id'], body)
     return resp(200, {'ok': True, 'token': raw, 'maxAge': SESSION_DAYS * 86400, 'user': public_user(user)})
 
@@ -338,9 +351,7 @@ def a_login(cur, body, _token):
     cur.execute(f"UPDATE {t('users')} SET failed_logins = 0, locked_until = NULL WHERE id = %s", (user['id'],))
     if not user['email_verified']:
         return err(403, 'email_not_verified', 'Подтвердите email — введите код из письма.')
-    if is_admin_email(email) and user['role'] != 'admin':
-        cur.execute(f"UPDATE {t('users')} SET role = 'admin' WHERE id = %s", (user['id'],))
-        user['role'] = 'admin'
+    user = ensure_superadmin(cur, user)
     raw = create_session(cur, user['id'], body)
     return resp(200, {'ok': True, 'token': raw, 'maxAge': SESSION_DAYS * 86400, 'user': public_user(user)})
 
@@ -423,17 +434,32 @@ def a_change_password(cur, body, token):
     return resp(200, {'ok': True})
 
 
-def require_admin(cur, token):
+def is_staff(user: dict) -> bool:
+    return user['role'] in ('admin', 'superadmin')
+
+
+def require_perm(cur, token, perm: str | None = None):
     user = session_user(cur, token)
     if not user:
         return None, err(401, 'unauthorized', 'Требуется вход')
-    if user['role'] != 'admin':
+    if user['role'] == 'superadmin':
+        return user, None
+    if user['role'] != 'admin' or (perm and perm not in perms_of(user)):
         return None, err(403, 'forbidden', 'Недостаточно прав')
     return user, None
 
 
+def require_superadmin(cur, token):
+    user = session_user(cur, token)
+    if not user:
+        return None, err(401, 'unauthorized', 'Требуется вход')
+    if user['role'] != 'superadmin':
+        return None, err(403, 'forbidden', 'Это действие доступно только супер администратору')
+    return user, None
+
+
 def a_admin_users(cur, _body, token):
-    _, denied = require_admin(cur, token)
+    _, denied = require_perm(cur, token, 'users')
     if denied:
         return denied
     cur.execute(f"SELECT * FROM {t('users')} ORDER BY created_at DESC LIMIT 500")
@@ -441,7 +467,8 @@ def a_admin_users(cur, _body, token):
 
 
 def a_admin_set_role(cur, body, token):
-    admin, denied = require_admin(cur, token)
+    """Только супер администратор: назначить роль и набор прав."""
+    _, denied = require_superadmin(cur, token)
     if denied:
         return denied
     role = body.get('role')
@@ -451,17 +478,25 @@ def a_admin_set_role(cur, body, token):
         return err(400, 'bad_user', 'Некорректный пользователь')
     if role not in ('user', 'admin'):
         return err(400, 'bad_role', 'Некорректная роль')
-    if uid == admin['id'] and role != 'admin':
-        return err(400, 'self_demote', 'Нельзя снять роль администратора с самого себя')
-    cur.execute(f"UPDATE {t('users')} SET role = %s, updated_at = NOW() WHERE id = %s RETURNING *", (role, uid))
-    row = cur.fetchone()
-    if not row:
+    raw = body.get('permissions') or []
+    if not isinstance(raw, list):
+        return err(400, 'bad_permissions', 'Некорректный список прав')
+    perms = [p for p in PERMISSIONS if p in raw] if role == 'admin' else []
+    cur.execute(f"SELECT * FROM {t('users')} WHERE id = %s", (uid,))
+    target = cur.fetchone()
+    if not target:
         return err(404, 'not_found', 'Пользователь не найден')
-    return resp(200, {'ok': True, 'user': public_user(row)})
+    if target['role'] == 'superadmin':
+        return err(400, 'protected', 'Роль супер администратора изменить нельзя')
+    cur.execute(
+        f"UPDATE {t('users')} SET role = %s, permissions = %s, updated_at = NOW() WHERE id = %s RETURNING *",
+        (role, ','.join(perms), uid),
+    )
+    return resp(200, {'ok': True, 'user': public_user(cur.fetchone())})
 
 
 def a_admin_delete_user(cur, body, token):
-    admin, denied = require_admin(cur, token)
+    admin, denied = require_perm(cur, token, 'users')
     if denied:
         return denied
     try:
@@ -470,9 +505,14 @@ def a_admin_delete_user(cur, body, token):
         return err(400, 'bad_user', 'Некорректный пользователь')
     if uid == admin['id']:
         return err(400, 'self_delete', 'Нельзя удалить собственный аккаунт')
-    cur.execute(f"SELECT id FROM {t('users')} WHERE id = %s", (uid,))
-    if not cur.fetchone():
+    cur.execute(f"SELECT id, role FROM {t('users')} WHERE id = %s", (uid,))
+    target = cur.fetchone()
+    if not target:
         return err(404, 'not_found', 'Пользователь не найден')
+    if target['role'] == 'superadmin':
+        return err(400, 'protected', 'Супер администратора удалить нельзя')
+    if target['role'] == 'admin' and admin['role'] != 'superadmin':
+        return err(403, 'forbidden', 'Удалять администраторов может только супер администратор')
     cur.execute(f"DELETE FROM {t('sessions')} WHERE user_id = %s", (uid,))
     cur.execute(f"DELETE FROM {t('email_tokens')} WHERE user_id = %s", (uid,))
     cur.execute(f"DELETE FROM {t('users')} WHERE id = %s", (uid,))

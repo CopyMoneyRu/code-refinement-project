@@ -1,4 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router";
+import { ADMIN_SECTIONS } from "@/lib/adminSections";
+import { can, ROLE_LABEL } from "@/lib/permissions";
 import Icon from "@/components/ui/icon";
 import { WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 
@@ -6,21 +8,21 @@ export const Route = createFileRoute("/admin/")({
   component: AdminHome,
 });
 
-const SECTIONS = [
-  { to: "/admin/users", label: "Пользователи", icon: "Users", text: "Аккаунты, роли и подтверждение email" },
-  { to: "/admin/courses", label: "Курсы", icon: "GraduationCap", text: "Категории, цены, бесплатные и платные курсы" },
-  { to: "/admin/lessons", label: "Уроки", icon: "PlayCircle", text: "Модули, видео и дополнительные файлы" },
-  { to: "/admin/teachers", label: "Преподаватели", icon: "UserRound", text: "Профили авторов курсов" },
-  { to: "/admin/purchases", label: "Покупки", icon: "Receipt", text: "Платежи и их статусы" },
-  { to: "/admin/access", label: "Доступы", icon: "KeyRound", text: "Выдача и отзыв доступа к курсам" },
-];
+const adminApi = getRouteApi("/admin");
 
 function AdminHome() {
+  const { user } = adminApi.useRouteContext();
+  const sections = ADMIN_SECTIONS.filter((s) => can(user, s.perm));
   return (
     <>
-      <WsTitle title="Административная панель" text="Управление пользователями, обучением и доступами платформы." />
+      <WsTitle title="Административная панель" text={`Ваша роль: ${ROLE_LABEL[user.role]}. Доступные разделы платформы.`} />
+      {!sections.length && (
+        <WsCard>
+          <p className="text-brand-muted">Вам пока не назначены права. Обратитесь к супер администратору.</p>
+        </WsCard>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {SECTIONS.map((s) => (
+        {sections.map((s) => (
           <Link key={s.to} to={s.to} className="group">
             <WsCard className="h-full transition-colors group-hover:border-brand-blue/40">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-surface text-brand-blue">

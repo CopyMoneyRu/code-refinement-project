@@ -1,23 +1,15 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import WorkspaceLayout, { type NavItem } from "@/components/workspace/WorkspaceLayout";
 import { getMe } from "@/lib/auth";
-
-const ADMIN_NAV: NavItem[] = [
-  { to: "/admin", label: "Обзор", icon: "LayoutDashboard", exact: true },
-  { to: "/admin/users", label: "Пользователи", icon: "Users" },
-  { to: "/admin/courses", label: "Курсы", icon: "GraduationCap" },
-  { to: "/admin/lessons", label: "Уроки", icon: "PlayCircle" },
-  { to: "/admin/teachers", label: "Преподаватели", icon: "UserRound" },
-  { to: "/admin/purchases", label: "Покупки", icon: "Receipt" },
-  { to: "/admin/access", label: "Доступы", icon: "KeyRound" },
-];
+import { ADMIN_SECTIONS } from "@/lib/adminSections";
+import { can, isStaff } from "@/lib/permissions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Администрирование — JETRA" }, { name: "robots", content: "noindex" }] }),
   beforeLoad: async () => {
     const user = await getMe();
     if (!user) throw redirect({ to: "/login" });
-    if (user.role !== "admin") throw redirect({ to: "/cabinet" });
+    if (!isStaff(user.role)) throw redirect({ to: "/cabinet" });
     return { user };
   },
   component: Layout,
@@ -25,8 +17,12 @@ export const Route = createFileRoute("/admin")({
 
 function Layout() {
   const { user } = Route.useRouteContext();
+  const items: NavItem[] = [
+    { to: "/admin", label: "Обзор", icon: "LayoutDashboard", exact: true },
+    ...ADMIN_SECTIONS.filter((s) => can(user, s.perm)),
+  ];
   return (
-    <WorkspaceLayout section="Администрирование" items={ADMIN_NAV} user={user}>
+    <WorkspaceLayout section="Администрирование" items={items} user={user}>
       <Outlet />
     </WorkspaceLayout>
   );

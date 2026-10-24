@@ -1,6 +1,7 @@
 import "@tanstack/react-start/server-only";
 import { deleteCookie, getCookie, getRequestHeader, getRequestIP, setCookie } from "@tanstack/react-start/server";
 import func2url from "../../backend/func2url.json";
+import type { Permission, Role } from "./permissions";
 
 export const SESSION_COOKIE = "__Host-jetra_session";
 
@@ -8,7 +9,8 @@ export type AuthUser = {
   id: number;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: Role;
+  permissions: Permission[];
   emailVerified: boolean;
   createdAt: string | null;
 };

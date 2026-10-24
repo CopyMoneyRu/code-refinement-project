@@ -21,6 +21,7 @@ import { Route as AdminAccessRouteImport } from './routes/admin.access'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
 import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
+import { Route as AdminStrategiesRouteImport } from './routes/admin.strategies'
 import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as CabinetIndexRouteImport } from './routes/cabinet.index'
@@ -92,6 +93,11 @@ const AdminPurchasesRoute = AdminPurchasesRouteImport.update({
   path: '/purchases',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStrategiesRoute = AdminStrategiesRouteImport.update({
+  id: '/strategies',
+  path: '/strategies',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminTeachersRoute = AdminTeachersRouteImport.update({
   id: '/teachers',
   path: '/teachers',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/strategies': typeof AdminStrategiesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/strategies': typeof AdminStrategiesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/strategies': typeof AdminStrategiesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/admin/courses'
     | '/admin/lessons'
     | '/admin/purchases'
+    | '/admin/strategies'
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/courses'
     | '/admin/lessons'
     | '/admin/purchases'
+    | '/admin/strategies'
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/admin/courses'
     | '/admin/lessons'
     | '/admin/purchases'
+    | '/admin/strategies'
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
@@ -385,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPurchasesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/strategies': {
+      id: '/admin/strategies'
+      path: '/strategies'
+      fullPath: '/admin/strategies'
+      preLoaderRoute: typeof AdminStrategiesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/teachers': {
       id: '/admin/teachers'
       path: '/teachers'
@@ -463,6 +482,7 @@ interface AdminRouteChildren {
   AdminCoursesRoute: typeof AdminCoursesRoute
   AdminLessonsRoute: typeof AdminLessonsRoute
   AdminPurchasesRoute: typeof AdminPurchasesRoute
+  AdminStrategiesRoute: typeof AdminStrategiesRoute
   AdminTeachersRoute: typeof AdminTeachersRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -473,6 +493,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCoursesRoute: AdminCoursesRoute,
   AdminLessonsRoute: AdminLessonsRoute,
   AdminPurchasesRoute: AdminPurchasesRoute,
+  AdminStrategiesRoute: AdminStrategiesRoute,
   AdminTeachersRoute: AdminTeachersRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,

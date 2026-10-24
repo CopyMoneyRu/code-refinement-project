@@ -8,7 +8,7 @@ export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Вход — JETRA" }, { name: "description", content: "Вход в личный кабинет JETRA." }] }),
   beforeLoad: async () => {
     const user = await getMe();
-    if (user) throw redirect({ to: user.role === "admin" ? "/admin" : "/cabinet" });
+    if (user) throw redirect({ to: user.role !== "user" ? "/admin" : "/cabinet" });
   },
   component: LoginPage,
 });
@@ -41,7 +41,7 @@ function LoginPage() {
       setFormError({ code: r.error, text: r.message });
       return;
     }
-    navigate({ to: r.role === "admin" ? "/admin" : "/cabinet" });
+    navigate({ to: r.role && r.role !== "user" ? "/admin" : "/cabinet" });
   };
 
   const resend = async () => {
