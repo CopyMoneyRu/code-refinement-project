@@ -81,7 +81,7 @@ function SettingsPage() {
               {user.hasPassword ? (
                 <Field label="Текущий пароль" type="password" autoComplete="current-password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
               ) : (
-                <p className="text-sm text-brand-muted">Вы вошли через Google или Яндекс. Задайте пароль, чтобы входить и по email.</p>
+                <p className="text-sm text-brand-muted">Вы вошли через Google. Задайте пароль, чтобы входить и по email.</p>
               )}
               <Field label="Новый пароль" type="password" autoComplete="new-password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
               <Field label="Повторите новый пароль" type="password" autoComplete="new-password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />

@@ -12,7 +12,7 @@ export const Route = createFileRoute("/oauth/$provider")({
     error: typeof s.error === "string" ? s.error : "",
   }),
   beforeLoad: ({ params }) => {
-    if (params.provider !== "google" && params.provider !== "yandex") throw notFound();
+    if (params.provider !== "google") throw notFound();
   },
   head: () => ({ meta: [{ title: "Вход — JETRA" }, { name: "robots", content: "noindex" }] }),
   component: OAuthCallback,
@@ -33,7 +33,7 @@ function OAuthCallback() {
       setMessage("Вход отменён. Попробуйте ещё раз или войдите по email.");
       return;
     }
-    oauthFinishFn({ data: { provider, code, state } }).then(async (r) => {
+    oauthFinishFn({ data: { provider: "google", code, state } }).then(async (r) => {
       if (!r.ok) return setMessage(r.message);
       await router.invalidate();
       navigate({ to: r.role === "user" ? "/cabinet" : "/admin", replace: true });

@@ -523,12 +523,12 @@ def a_admin_delete_user(cur, body, token):
 
 
 def a_oauth_login(cur, body, _token):
-    """Вызывается только сервером сайта после проверки ответа Google/Яндекса (общий секрет)."""
+    """Вызывается только сервером сайта после проверки ответа Google (общий секрет)."""
     secret = os.environ.get('OAUTH_BRIDGE_SECRET', '')
     if not secret or not hmac.compare_digest(str(body.get('bridgeSecret', '')), secret):
         return err(403, 'forbidden', 'Недостаточно прав')
     provider = str(body.get('provider', ''))
-    if provider not in ('google', 'yandex'):
+    if provider != 'google':
         return err(400, 'bad_provider', 'Неизвестный способ входа')
     puid = str(body.get('providerUserId', '')).strip()[:255]
     email = str(body.get('email', '')).strip().lower()[:255]

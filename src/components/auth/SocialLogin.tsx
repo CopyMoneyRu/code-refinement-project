@@ -5,7 +5,6 @@ import { oauthStartFn, type Provider } from "@/lib/oauth";
 
 const META: Record<Provider, { label: string; badge: string; badgeClass: string }> = {
   google: { label: "Google", badge: "G", badgeClass: "bg-white text-[#4285F4] border border-brand-ink/10" },
-  yandex: { label: "Яндекс", badge: "Я", badgeClass: "bg-[#FC3F1D] text-white" },
 };
 
 export default function SocialLogin({ providers }: { providers: Provider[] }) {
@@ -27,7 +26,7 @@ export default function SocialLogin({ providers }: { providers: Provider[] }) {
 
   return (
     <div className="mb-6 space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3">
         {providers.map((p) => (
           <button
             key={p}
@@ -41,7 +40,7 @@ export default function SocialLogin({ providers }: { providers: Provider[] }) {
             ) : (
               <span className={`flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold ${META[p].badgeClass}`}>{META[p].badge}</span>
             )}
-            {META[p].label}
+            Продолжить с {META[p].label}
           </button>
         ))}
       </div>

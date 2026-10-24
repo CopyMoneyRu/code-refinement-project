@@ -1,13 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { Role } from "./permissions";
 
-export type Provider = "google" | "yandex";
+export type Provider = "google";
 
-const asProvider = (v: unknown): Provider => (v === "yandex" ? "yandex" : "google");
+const asProvider = (_v: unknown): Provider => "google";
 
 export const oauthProvidersFn = createServerFn({ method: "GET" }).handler(async (): Promise<Provider[]> => {
   const { providerReady } = await import("./oauth.server");
-  return (["google", "yandex"] as const).filter((p) => providerReady(p));
+  return (["google"] as const).filter((p) => providerReady(p));
 });
 
 export const oauthStartFn = createServerFn({ method: "POST" })
