@@ -15,8 +15,8 @@ function SideNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => v
           to={it.to}
           onClick={onNavigate}
           activeOptions={{ exact: it.exact ?? false }}
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] text-brand-snow/60 transition-colors hover:bg-white/[0.04] hover:text-brand-snow"
-          activeProps={{ className: "!bg-white/[0.07] !text-brand-snow" }}
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] text-brand-muted transition-colors hover:bg-brand-surface hover:text-brand-ink"
+          activeProps={{ className: "!bg-brand-surface !text-brand-ink" }}
         >
           <Icon name={it.icon} size={18} />
           {it.label}
@@ -40,15 +40,15 @@ export default function WorkspaceLayout({
   const sidebar = (onNavigate?: () => void) => (
     <div className="flex h-full flex-col">
       <Logo />
-      <div className="mt-10 px-3 text-xs uppercase tracking-[0.16em] text-brand-snow/35">{section}</div>
+      <div className="mt-10 px-3 text-xs uppercase tracking-[0.16em] text-brand-ink/50">{section}</div>
       <div className="mt-3">
         <SideNav items={items} onNavigate={onNavigate} />
       </div>
-      <div className="mt-auto space-y-1 border-t border-white/[0.07] pt-5">
-        <Link to="/" onClick={onNavigate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-snow/50 hover:text-brand-snow">
+      <div className="mt-auto space-y-1 border-t border-brand-ink/10 pt-5">
+        <Link to="/" onClick={onNavigate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink">
           <Icon name="Globe" size={17} /> На сайт
         </Link>
-        <Link to="/login" onClick={onNavigate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-snow/50 hover:text-brand-snow">
+        <Link to="/login" onClick={onNavigate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink">
           <Icon name="LogOut" size={17} /> Выйти
         </Link>
       </div>
@@ -57,7 +57,7 @@ export default function WorkspaceLayout({
 
   return (
     <div className="theme-light min-h-screen bg-brand-light text-brand-ink">
-      <aside className="fixed inset-y-0 left-0 hidden w-[260px] bg-brand-navy p-6 lg:block">{sidebar()}</aside>
+      <aside className="fixed inset-y-0 left-0 hidden w-[260px] border-r border-brand-ink/10 bg-white p-6 lg:block">{sidebar()}</aside>
 
       <div className="lg:pl-[260px]">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-brand-ink/10 bg-brand-light/95 px-5 backdrop-blur sm:px-8">
@@ -68,7 +68,7 @@ export default function WorkspaceLayout({
                   <Icon name="Menu" size={20} />
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] border-0 bg-brand-navy p-6 text-brand-snow">
+              <SheetContent side="left" className="w-[280px] border-0 bg-brand-light p-6 text-brand-ink">
                 <SheetTitle className="sr-only">Навигация</SheetTitle>
                 {sidebar(() => setOpen(false))}
               </SheetContent>

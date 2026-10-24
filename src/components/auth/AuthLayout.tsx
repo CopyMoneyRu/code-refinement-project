@@ -31,15 +31,15 @@ export function StageNotice({ children }: { children: ReactNode }) {
 export default function AuthLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
-      <aside className="relative hidden flex-col justify-between bg-brand-navy p-12 text-brand-snow lg:flex">
+      <aside className="relative hidden flex-col justify-between bg-brand-surface p-12 text-brand-ink lg:flex">
         <Logo />
         <div>
           <h2 className="max-w-md font-display text-[44px] font-light leading-[1.1]">
             Капитал под <span className="font-bold">управлением</span> технологий
           </h2>
-          <p className="mt-5 max-w-sm text-brand-snow/55">Инвестиционные стратегии и обучение JETRA University на одной платформе.</p>
+          <p className="mt-5 max-w-sm text-brand-muted">Инвестиционные стратегии и обучение JETRA University на одной платформе.</p>
         </div>
-        <div className="text-xs text-brand-snow/35">© JETRA, 2026</div>
+        <div className="text-xs text-brand-ink/50">© JETRA, 2026</div>
       </aside>
       <main className="flex flex-col bg-brand-light px-5 py-8 sm:px-10">
         <div className="lg:hidden">

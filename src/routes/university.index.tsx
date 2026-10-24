@@ -45,7 +45,7 @@ function UniversityPage() {
       />
       <section className="pb-24">
         <div className="container-x">
-          <div className="flex flex-col gap-4 border-b border-white/[0.07] pb-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 border-b border-brand-ink/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
               {CATEGORIES.map((c) => (
                 <button
@@ -53,7 +53,7 @@ function UniversityPage() {
                   onClick={() => setCat(c)}
                   className={cn(
                     "whitespace-nowrap rounded-lg px-4 py-2 text-sm transition-colors",
-                    cat === c ? "bg-brand-blue text-white" : "bg-brand-card text-brand-snow/65 hover:text-brand-snow",
+                    cat === c ? "bg-brand-blue text-white" : "bg-white text-brand-muted hover:text-brand-ink",
                   )}
                 >
                   {c}
@@ -61,7 +61,7 @@ function UniversityPage() {
               ))}
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="flex rounded-lg bg-brand-card p-1 text-sm">
+              <div className="flex rounded-lg bg-white p-1 text-sm">
                 {([
                   ["all", "Все"],
                   ["free", "Бесплатные"],
@@ -72,7 +72,7 @@ function UniversityPage() {
                     onClick={() => setAccess(v)}
                     className={cn(
                       "flex-1 rounded-md px-3 py-1.5 transition-colors",
-                      access === v ? "bg-white/10 text-brand-snow" : "text-brand-snow/55 hover:text-brand-snow",
+                      access === v ? "bg-brand-surface text-brand-ink" : "text-brand-muted hover:text-brand-ink",
                     )}
                   >
                     {l}
@@ -80,12 +80,12 @@ function UniversityPage() {
                 ))}
               </div>
               <label className="relative">
-                <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-snow/40" />
+                <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-ink/50" />
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Поиск курса"
-                  className="h-10 w-full rounded-lg border border-white/10 bg-transparent pl-9 pr-3 text-sm text-brand-snow placeholder:text-brand-snow/35 focus:border-brand-blue focus:outline-none sm:w-56"
+                  className="h-10 w-full rounded-lg border border-brand-ink/10 bg-transparent pl-9 pr-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-blue focus:outline-none sm:w-56"
                 />
               </label>
             </div>
@@ -98,7 +98,7 @@ function UniversityPage() {
               ))}
             </div>
           ) : (
-            <div className="mt-16 text-center text-brand-snow/55">По выбранным условиям курсов не найдено.</div>
+            <div className="mt-16 text-center text-brand-muted">По выбранным условиям курсов не найдено.</div>
           )}
         </div>
       </section>

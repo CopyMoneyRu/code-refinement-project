@@ -34,53 +34,53 @@ function CoursePage() {
     <PublicLayout>
       <section className="pb-12 pt-10 md:pt-14">
         <div className="container-x">
-          <Link to="/university" className="inline-flex items-center gap-2 text-sm text-brand-snow/55 hover:text-brand-snow">
+          <Link to="/university" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-ink">
             <Icon name="ArrowLeft" size={16} /> Все курсы
           </Link>
           <div className="mt-8 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-xs uppercase tracking-[0.14em] text-brand-snow/45">{course.category}</span>
+                <span className="text-xs uppercase tracking-[0.14em] text-brand-muted">{course.category}</span>
                 <AccessBadge access={course.access} />
               </div>
-              <h1 className="mt-5 font-display text-4xl font-light leading-[1.1] text-brand-snow md:text-[52px]">
+              <h1 className="mt-5 font-display text-4xl font-light leading-[1.1] text-brand-ink md:text-[52px]">
                 {course.title}
               </h1>
-              <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-brand-snow/60">{course.short}</p>
+              <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-brand-muted">{course.short}</p>
 
-              <div className="mt-10 grid grid-cols-3 gap-4 border-y border-white/[0.07] py-6">
+              <div className="mt-10 grid grid-cols-3 gap-4 border-y border-brand-ink/10 py-6">
                 {[
                   ["Модулей", course.modules.length],
                   ["Уроков", total],
                   ["Уровень", course.level],
                 ].map(([k, v]) => (
                   <div key={k}>
-                    <div className="text-sm text-brand-snow/45">{k}</div>
-                    <div className="mt-1 font-display text-xl font-semibold text-brand-snow">{v}</div>
+                    <div className="text-sm text-brand-muted">{k}</div>
+                    <div className="mt-1 font-display text-xl font-semibold text-brand-ink">{v}</div>
                   </div>
                 ))}
               </div>
 
-              <h2 className="mt-12 font-display text-2xl font-semibold text-brand-snow">Программа курса</h2>
+              <h2 className="mt-12 font-display text-2xl font-semibold text-brand-ink">Программа курса</h2>
               <Accordion type="multiple" defaultValue={[course.modules[0].id]} className="mt-6 space-y-3">
                 {course.modules.map((mod, i) => (
-                  <AccordionItem key={mod.id} value={mod.id} className="rounded-xl border border-white/[0.06] bg-brand-card px-5">
+                  <AccordionItem key={mod.id} value={mod.id} className="rounded-xl border border-brand-ink/10 bg-white px-5">
                     <AccordionTrigger className="py-5 text-left hover:no-underline">
                       <span className="flex items-center gap-4">
                         <span className="font-display text-sm tabular-nums text-brand-blue">{String(i + 1).padStart(2, "0")}</span>
-                        <span className="font-medium text-brand-snow">{mod.title}</span>
-                        <span className="hidden text-sm text-brand-snow/40 sm:inline">{mod.lessons.length} ур.</span>
+                        <span className="font-medium text-brand-ink">{mod.title}</span>
+                        <span className="hidden text-sm text-brand-ink/50 sm:inline">{mod.lessons.length} ур.</span>
                       </span>
                     </AccordionTrigger>
                     <AccordionContent>
                       <ul className="space-y-1 pb-2">
                         {mod.lessons.map((l) => (
-                          <li key={l.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-[15px] text-brand-snow/75">
+                          <li key={l.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-[15px] text-brand-ink/85">
                             <span className="flex items-center gap-3">
-                              <Icon name={course.access === "free" ? "PlayCircle" : "Lock"} size={16} className="shrink-0 text-brand-snow/40" />
+                              <Icon name={course.access === "free" ? "PlayCircle" : "Lock"} size={16} className="shrink-0 text-brand-ink/50" />
                               {l.title}
                             </span>
-                            <span className="flex shrink-0 items-center gap-3 text-sm text-brand-snow/40">
+                            <span className="flex shrink-0 items-center gap-3 text-sm text-brand-ink/50">
                               {l.hasFiles && <Icon name="Paperclip" size={14} />}
                               {l.duration}
                             </span>
@@ -94,12 +94,12 @@ function CoursePage() {
             </div>
 
             <aside className="lg:sticky lg:top-8 lg:self-start">
-              <div className="rounded-2xl border border-white/[0.06] bg-brand-card p-7">
-                <div className="text-sm text-brand-snow/50">Доступ к курсу</div>
-                <div className="mt-2 font-display text-2xl font-semibold text-brand-snow">
+              <div className="rounded-2xl border border-brand-ink/10 bg-white p-7">
+                <div className="text-sm text-brand-muted">Доступ к курсу</div>
+                <div className="mt-2 font-display text-2xl font-semibold text-brand-ink">
                   {course.access === "free" ? "Бесплатно" : "Платный доступ"}
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-brand-snow/55">
+                <p className="mt-3 text-sm leading-relaxed text-brand-muted">
                   {course.access === "free"
                     ? "Зарегистрируйтесь, чтобы начать обучение и сохранять прогресс."
                     : "Оплата и автоматическое открытие доступа появятся на следующем этапе."}
@@ -110,19 +110,19 @@ function CoursePage() {
                 >
                   {course.access === "free" ? "Начать обучение" : "Записаться"}
                 </Link>
-                <ul className="mt-6 space-y-3 border-t border-white/[0.07] pt-6 text-sm text-brand-snow/65">
+                <ul className="mt-6 space-y-3 border-t border-brand-ink/10 pt-6 text-sm text-brand-muted">
                   <li className="flex items-center gap-3"><Icon name="Video" size={16} className="text-brand-blue" />Видеоуроки</li>
                   <li className="flex items-center gap-3"><Icon name="FileText" size={16} className="text-brand-blue" />Дополнительные материалы</li>
                   <li className="flex items-center gap-3"><Icon name="BarChart3" size={16} className="text-brand-blue" />Прогресс обучения</li>
                 </ul>
               </div>
-              <div className="mt-5 flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-brand-card p-6">
+              <div className="mt-5 flex items-center gap-4 rounded-2xl border border-brand-ink/10 bg-white p-6">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-blue/15 text-brand-blue">
                   <Icon name="UserRound" size={22} />
                 </div>
                 <div>
-                  <div className="font-medium text-brand-snow">{course.teacher.name}</div>
-                  <div className="text-sm text-brand-snow/50">{course.teacher.role}</div>
+                  <div className="font-medium text-brand-ink">{course.teacher.name}</div>
+                  <div className="text-sm text-brand-muted">{course.teacher.role}</div>
                 </div>
               </div>
             </aside>

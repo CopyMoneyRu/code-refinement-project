@@ -24,7 +24,7 @@ function StrategiesPage() {
         title={<>Инвестиционные <span className="font-bold">стратегии</span></>}
         text="Девять подходов к управлению капиталом. Подключение стратегий станет доступно на следующих этапах развития платформы."
       >
-        <div className="mt-8 inline-flex items-center gap-3 rounded-lg border border-white/10 px-4 py-3 text-sm text-brand-snow/70">
+        <div className="mt-8 inline-flex items-center gap-3 rounded-lg border border-brand-ink/10 px-4 py-3 text-sm text-brand-muted">
           <Icon name="Info" size={16} className="text-brand-blue" />
           Сейчас стратегии представлены в ознакомительном режиме
         </div>

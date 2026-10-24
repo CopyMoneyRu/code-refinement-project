@@ -3,12 +3,12 @@ import { STRATEGIES } from "@/data/catalog";
 
 export default function StrategiesPreview() {
   return (
-    <section className="border-t border-white/[0.06] bg-brand-navy py-20 md:py-28">
+    <section className="border-t border-brand-ink/10 bg-brand-surface/40 py-20 md:py-28">
       <div className="container-x">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <div className="eyebrow">Стратегии</div>
-            <h2 className="mt-4 font-display text-3xl font-light leading-tight text-brand-snow md:text-[44px]">
+            <h2 className="mt-4 font-display text-3xl font-light leading-tight text-brand-ink md:text-[44px]">
               Профессиональные подходы
             </h2>
           </div>

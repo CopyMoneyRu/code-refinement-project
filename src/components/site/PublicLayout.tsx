@@ -7,10 +7,10 @@ export function PageIntro({ eyebrow, title, text, children }: { eyebrow: string;
     <section className="pb-10 pt-14 md:pb-14 md:pt-20">
       <div className="container-x">
         <div className="eyebrow">{eyebrow}</div>
-        <h1 className="mt-4 max-w-3xl font-display text-4xl font-light leading-[1.1] tracking-[-0.01em] text-brand-snow md:text-[56px]">
+        <h1 className="mt-4 max-w-3xl font-display text-4xl font-light leading-[1.1] tracking-[-0.01em] text-brand-ink md:text-[56px]">
           {title}
         </h1>
-        {text && <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-brand-snow/60">{text}</p>}
+        {text && <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-brand-muted">{text}</p>}
         {children}
       </div>
     </section>
@@ -19,7 +19,7 @@ export function PageIntro({ eyebrow, title, text, children }: { eyebrow: string;
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-brand-navy text-brand-snow">
+    <div className="flex min-h-screen flex-col bg-brand-light text-brand-ink">
       <SiteHeader />
       <main className="flex-1">{children}</main>
       <SiteFooter />

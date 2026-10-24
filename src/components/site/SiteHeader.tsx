@@ -15,12 +15,12 @@ export default function SiteHeader({ tone = "dark" }: { tone?: "light" | "dark" 
   const light = tone === "light";
 
   return (
-    <header className={cn("relative z-30", light ? "bg-brand-light" : "bg-brand-navy")}>
+    <header className={cn("relative z-30", light ? "bg-brand-light" : "bg-brand-light")}>
       <div className="container-x">
         <div
           className={cn(
             "flex h-[88px] items-center justify-between border-b",
-            light ? "border-brand-ink/10" : "border-white/10",
+            light ? "border-brand-ink/10" : "border-brand-ink/10",
           )}
         >
           <div className="flex items-center gap-10 lg:gap-12">
@@ -32,9 +32,9 @@ export default function SiteHeader({ tone = "dark" }: { tone?: "light" | "dark" 
                   to={item.to}
                   className={cn(
                     "text-[15px] transition-colors",
-                    light ? "text-brand-muted hover:text-brand-ink" : "text-brand-snow/65 hover:text-brand-snow",
+                    light ? "text-brand-muted hover:text-brand-ink" : "text-brand-muted hover:text-brand-ink",
                   )}
-                  activeProps={{ className: light ? "!text-brand-ink" : "!text-brand-snow" }}
+                  activeProps={{ className: light ? "!text-brand-ink" : "!text-brand-ink" }}
                 >
                   {item.label}
                 </Link>
@@ -47,7 +47,7 @@ export default function SiteHeader({ tone = "dark" }: { tone?: "light" | "dark" 
               to="/login"
               className={cn(
                 "rounded-lg px-4 py-2.5 text-[15px] font-medium transition-colors",
-                light ? "text-brand-ink hover:bg-brand-surface" : "text-brand-snow hover:bg-white/5",
+                light ? "text-brand-ink hover:bg-brand-surface" : "text-brand-ink hover:bg-brand-surface",
               )}
             >
               Войти
@@ -66,13 +66,13 @@ export default function SiteHeader({ tone = "dark" }: { tone?: "light" | "dark" 
                 aria-label="Открыть меню"
                 className={cn(
                   "flex h-11 w-11 items-center justify-center rounded-lg md:hidden",
-                  light ? "text-brand-ink hover:bg-brand-surface" : "text-brand-snow hover:bg-white/5",
+                  light ? "text-brand-ink hover:bg-brand-surface" : "text-brand-ink hover:bg-brand-surface",
                 )}
               >
                 <Icon name="Menu" size={22} />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] border-white/10 bg-brand-navy text-brand-snow">
+            <SheetContent side="right" className="w-[300px] border-brand-ink/10 bg-brand-light text-brand-ink">
               <SheetTitle className="sr-only">Меню</SheetTitle>
               <div className="mt-2">
                 <Logo />
@@ -83,7 +83,7 @@ export default function SiteHeader({ tone = "dark" }: { tone?: "light" | "dark" 
                     key={item.to}
                     to={item.to}
                     onClick={() => setOpen(false)}
-                    className="border-b border-white/10 py-4 text-lg text-brand-snow/80 hover:text-brand-snow"
+                    className="border-b border-brand-ink/10 py-4 text-lg text-brand-ink/85 hover:text-brand-ink"
                   >
                     {item.label}
                   </Link>
@@ -93,7 +93,7 @@ export default function SiteHeader({ tone = "dark" }: { tone?: "light" | "dark" 
                 <Link
                   to="/login"
                   onClick={() => setOpen(false)}
-                  className="rounded-lg border border-white/15 py-3 text-center font-medium"
+                  className="rounded-lg border border-brand-ink/10 py-3 text-center font-medium"
                 >
                   Войти
                 </Link>

@@ -24,7 +24,7 @@ export default function Logo({ className, size = 36, withWordmark = true, tone =
         <span
           className={cn(
             "font-display text-[17px] font-bold tracking-[0.22em]",
-            tone === "light" ? "text-brand-ink" : "text-brand-snow",
+            tone === "light" ? "text-brand-ink" : "text-brand-ink",
           )}
         >
           JETRA

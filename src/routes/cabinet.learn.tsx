@@ -22,12 +22,12 @@ function LessonViewer() {
         <div className="text-sm text-brand-muted">{course.title} · {lesson.module}</div>
         <h1 className="mt-2 font-display text-2xl font-bold md:text-[30px]">{lesson.title}</h1>
 
-        <div className="mt-6 flex aspect-video items-center justify-center rounded-xl bg-brand-navy text-brand-snow">
+        <div className="mt-6 flex aspect-video items-center justify-center rounded-xl bg-brand-surface text-brand-ink">
           <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/20">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-brand-ink/20">
               <Icon name="Play" size={26} />
             </div>
-            <div className="mt-4 text-sm text-brand-snow/55">Здесь будет видеоурок · {lesson.duration}</div>
+            <div className="mt-4 text-sm text-brand-muted">Здесь будет видеоурок · {lesson.duration}</div>
           </div>
         </div>
 
