@@ -316,8 +316,8 @@ export default function CourseForm({
             <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-brand-ink/10 bg-white p-4">
               <input type="checkbox" checked={form.published} onChange={(e) => set("published", e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#397FC4]" />
               <span>
-                <span className="block text-sm font-medium">Показывать в каталоге</span>
-                <span className="block text-xs text-brand-muted">Снимите галочку, чтобы скрыть курс с сайта без удаления</span>
+                <span className="block text-sm font-medium">Показывать на сайте</span>
+                <span className="block text-xs text-brand-muted">Снимите галочку, чтобы скрыть курс. Он останется в админке</span>
               </span>
             </label>
           </div>

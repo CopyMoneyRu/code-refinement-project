@@ -5,7 +5,7 @@ import AuthorAvatar from "@/components/university/AuthorAvatar";
 import { saveAuthorFn, uploadAuthorPhotoFn, type AdminAuthor, type AuthorInput } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 
-const EMPTY: AuthorInput = { name: "", role: "", bio: "", about: "", photoUrl: "", links: [], facts: [] };
+const EMPTY: AuthorInput = { name: "", role: "", bio: "", about: "", photoUrl: "", links: [], facts: [], published: true };
 
 const inputCls =
   "h-11 w-full rounded-lg border border-brand-ink/15 bg-white px-3.5 text-[15px] text-brand-ink focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/15";
@@ -48,6 +48,7 @@ export default function AuthorForm({
             photoUrl: author.photoUrl,
             links: author.links,
             facts: author.facts,
+            published: author.published,
           }
         : EMPTY,
     );
@@ -256,6 +257,16 @@ export default function AuthorForm({
                 )}
               </div>
             </div>
+          </div>
+
+          <div className="px-6 pb-6">
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-brand-ink/10 bg-white p-4">
+              <input type="checkbox" checked={form.published} onChange={(e) => set("published", e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#397FC4]" />
+              <span>
+                <span className="block text-sm font-medium">Показывать на сайте</span>
+                <span className="block text-xs text-brand-muted">Снимите галочку, чтобы скрыть автора и его страницу. Профиль останется в админке</span>
+              </span>
+            </label>
           </div>
 
           <div className="sticky bottom-0 border-t border-brand-ink/10 bg-white px-6 py-4">

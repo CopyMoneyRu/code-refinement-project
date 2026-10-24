@@ -128,6 +128,48 @@
         "ok": false
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "delete_course without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "delete_course",
+        "id": 1
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "delete_author without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "delete_author",
+        "id": 1
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "set_author_published without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "set_author_published",
+        "id": 1
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

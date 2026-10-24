@@ -18,6 +18,7 @@ export type DbAuthor = {
   about: string;
   links: AuthorLink[];
   facts: AuthorFact[];
+  published: boolean;
 };
 export type AdminAuthor = DbAuthor & { coursesTotal: number; coursesPublished: number };
 export type AuthorInput = {
@@ -29,6 +30,7 @@ export type AuthorInput = {
   photoUrl: string;
   links: AuthorLink[];
   facts: AuthorFact[];
+  published: boolean;
 };
 
 export type DbCourse = {
@@ -156,6 +158,7 @@ export const saveAuthorFn = createServerFn({ method: "POST" })
       name: str(o.name, 120),
       role: str(o.role, 160),
       bio: str(o.bio, 500),
+      published: o.published !== false,
       about: str(o.about, 30000),
       photoUrl: str(o.photoUrl, 500),
       links: (Array.isArray(o.links) ? o.links : []).slice(0, 20).map((l) => {
@@ -193,3 +196,30 @@ export const authorBySlugFn = createServerFn({ method: "GET" })
     if (!r.ok) throw notFound();
     return { author: r.author, courses: r.courses };
   });
+
+const idPayload = (input: unknown) => {
+  const o = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  return { id: Math.max(0, Math.round(Number(o.id) || 0)), published: o.published === true };
+};
+
+async function adminCall<T>(action: string, data: Record<string, unknown>): Promise<({ ok: true } & T) | Fail> {
+  const { callCourses } = await import("./courses.server");
+  const r = await callCourses<T>(action, data, true);
+  return r.ok ? r : { ok: false, error: r.error, message: r.message };
+}
+
+export const setCoursePublishedFn = createServerFn({ method: "POST" })
+  .validator(idPayload)
+  .handler(({ data }) => adminCall<{ course: DbCourse }>("set_course_published", data));
+
+export const deleteCourseFn = createServerFn({ method: "POST" })
+  .validator(idPayload)
+  .handler(({ data }) => adminCall<{ title: string }>("delete_course", { id: data.id }));
+
+export const setAuthorPublishedFn = createServerFn({ method: "POST" })
+  .validator(idPayload)
+  .handler(({ data }) => adminCall<{ author: AdminAuthor }>("set_author_published", data));
+
+export const deleteAuthorFn = createServerFn({ method: "POST" })
+  .validator(idPayload)
+  .handler(({ data }) => adminCall<{ name: string; coursesDetached: number }>("delete_author", { id: data.id }));

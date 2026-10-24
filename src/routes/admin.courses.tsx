@@ -2,9 +2,11 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import CourseForm from "@/components/workspace/CourseForm";
+import ConfirmDelete from "@/components/workspace/ConfirmDelete";
+import PublishToggle from "@/components/workspace/PublishToggle";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { requirePermission } from "@/lib/adminGuard";
-import { adminCoursesFn, formatPrice, lessonsTotal, type DbCourse } from "@/lib/courses";
+import { adminCoursesFn, deleteCourseFn, formatPrice, lessonsTotal, setCoursePublishedFn, type DbCourse } from "@/lib/courses";
 
 export const Route = createFileRoute("/admin/courses")({
   beforeLoad: ({ context }) => requirePermission(context, "courses"),
@@ -19,6 +21,34 @@ function CoursesAdmin() {
   const [editing, setEditing] = useState<DbCourse | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState<number | null>(null);
+  const [toDelete, setToDelete] = useState<DbCourse | null>(null);
+
+  const togglePublished = async (c: DbCourse, published: boolean) => {
+    setBusy(c.id);
+    setError("");
+    setNotice("");
+    const r = await setCoursePublishedFn({ data: { id: c.id, published } });
+    setBusy(null);
+    if (!r.ok) return setError(r.message);
+    setNotice(published ? `Курс «${c.title}» показан на сайте` : `Курс «${c.title}» скрыт с сайта и хранится в админке`);
+    router.invalidate();
+  };
+
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    const c = toDelete;
+    setBusy(c.id);
+    setError("");
+    setNotice("");
+    const r = await deleteCourseFn({ data: { id: c.id } });
+    setBusy(null);
+    setToDelete(null);
+    if (!r.ok) return setError(r.message);
+    setNotice(`Курс «${c.title}» удалён`);
+    router.invalidate();
+  };
 
   const categories = useMemo(() => [...new Set(courses.map((c) => c.category))].sort(), [courses]);
   const list = useMemo(() => {
@@ -44,6 +74,7 @@ function CoursesAdmin() {
         }
       />
       {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
+      {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
       <WsCard className="p-0">
         <div className="flex flex-col gap-3 border-b border-brand-ink/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between">
           <label className="relative flex-1">
@@ -59,10 +90,10 @@ function CoursesAdmin() {
         </div>
         {list.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-left text-sm">
+            <table className="w-full min-w-[940px] text-left text-sm">
               <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
                 <tr>
-                  {["Курс", "Категория", "Автор", "Цена", "Программа", "Статус", ""].map((c) => (
+                  {["Курс", "Категория", "Автор", "Цена", "Программа", "На сайте", ""].map((c) => (
                     <th key={c} className="px-5 py-3.5 font-medium">{c}</th>
                   ))}
                 </tr>
@@ -86,12 +117,13 @@ function CoursesAdmin() {
                     <td className="whitespace-nowrap px-5 py-3.5 text-brand-muted">
                       {c.modules.length} мод. · {lessonsTotal(c)} ур.
                     </td>
-                    <td className="px-5 py-3.5">
-                      {c.published ? (
-                        <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">В каталоге</span>
-                      ) : (
-                        <span className="rounded-md bg-brand-surface px-2.5 py-1 text-xs font-medium text-brand-muted">Скрыт</span>
-                      )}
+                    <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
+                      <PublishToggle
+                        checked={c.published}
+                        disabled={busy === c.id}
+                        onChange={(v) => togglePublished(c, v)}
+                        label={`Показывать курс «${c.title}» на сайте`}
+                      />
                     </td>
                     <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-2">
@@ -112,6 +144,15 @@ function CoursesAdmin() {
                         >
                           <Icon name="Pencil" size={14} /> Изменить
                         </button>
+                        <button
+                          disabled={busy === c.id}
+                          onClick={() => setToDelete(c)}
+                          aria-label={`Удалить курс «${c.title}»`}
+                          title="Удалить курс"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          <Icon name="Trash2" size={15} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -127,6 +168,19 @@ function CoursesAdmin() {
           />
         )}
       </WsCard>
+
+      <ConfirmDelete
+        open={!!toDelete}
+        title="Удалить курс?"
+        busy={busy !== null}
+        onCancel={() => setToDelete(null)}
+        onConfirm={confirmDelete}
+      >
+        <p>
+          Курс <span className="font-medium text-brand-ink">«{toDelete?.title}»</span> будет удалён безвозвратно вместе с программой.
+        </p>
+        <p>Если нужно просто убрать курс с сайта — отмените и выключите переключатель «На сайте».</p>
+      </ConfirmDelete>
 
       <CourseForm
         open={formOpen}

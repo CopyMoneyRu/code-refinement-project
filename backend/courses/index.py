@@ -92,7 +92,7 @@ def unique_slug(cur, base: str, exclude_id=None) -> str:
         n += 1
 
 
-def course_out(r: dict) -> dict:
+def course_out(r: dict, public: bool = False) -> dict:
     return {
         'id': r['id'],
         'slug': r['slug'],
@@ -109,35 +109,37 @@ def course_out(r: dict) -> dict:
         'author': {
             'id': r['author_id'], 'slug': r.get('author_slug') or '', 'name': r.get('author_name') or '',
             'role': r.get('author_role') or '', 'photoUrl': r.get('author_photo') or '', 'bio': r.get('author_bio') or '',
-        } if r['author_id'] else None,
+        } if r['author_id'] and (not public or r.get('author_published')) else None,
         'updatedAt': r['updated_at'],
     }
 
 
 COURSE_SELECT = """SELECT c.*, a.slug AS author_slug, a.name AS author_name, a.role AS author_role,
-    a.photo_url AS author_photo, a.bio AS author_bio
+    a.photo_url AS author_photo, a.bio AS author_bio, a.published AS author_published
     FROM {courses} c LEFT JOIN {authors} a ON a.id = c.author_id"""
 
 
-def select_courses(cur, where: str = '', params: tuple = ()):
+def select_courses(cur, where: str = '', params: tuple = (), public: bool = False):
     sql = COURSE_SELECT.format(courses=t('courses'), authors=t('authors'))
     cur.execute(f'{sql} {where} ORDER BY c.id', params)
-    return [course_out(r) for r in cur.fetchall()]
+    return [course_out(r, public) for r in cur.fetchall()]
 
 
 def author_profile(r: dict) -> dict:
     return {
         'id': r['id'], 'slug': r['slug'], 'name': r['name'], 'role': r['role'], 'photoUrl': r['photo_url'],
         'bio': r['bio'], 'about': r.get('about') or '', 'links': r.get('links') or [], 'facts': r.get('facts') or [],
+        'published': bool(r.get('published', True)),
     }
 
 
-def authors_out(cur, with_counts: bool = False):
+def authors_out(cur, with_counts: bool = False, public: bool = False):
+    where = 'WHERE a.published' if public else ''
     cur.execute(
-        f"""SELECT a.id, a.slug, a.name, a.role, a.photo_url, a.bio, a.about, a.links, a.facts,
+        f"""SELECT a.id, a.slug, a.name, a.role, a.photo_url, a.bio, a.about, a.links, a.facts, a.published,
                    (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id) AS courses_total,
                    (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id AND c.published) AS courses_published
-            FROM {t('authors')} a ORDER BY a.id"""
+            FROM {t('authors')} a {where} ORDER BY a.id"""
     )
     out = []
     for r in cur.fetchall():
@@ -220,12 +222,16 @@ def validate(cur, body):
 
 
 def a_list(cur, _body, _user):
-    return resp(200, {'ok': True, 'courses': select_courses(cur, 'WHERE c.published'), 'authors': authors_out(cur)})
+    return resp(200, {
+        'ok': True,
+        'courses': select_courses(cur, 'WHERE c.published', public=True),
+        'authors': authors_out(cur, public=True),
+    })
 
 
 def a_get(cur, body, _user):
     slug = str(body.get('slug', ''))[:120]
-    rows = select_courses(cur, 'WHERE c.published AND c.slug = %s', (slug,))
+    rows = select_courses(cur, 'WHERE c.published AND c.slug = %s', (slug,), public=True)
     if not rows:
         return err(404, 'not_found', 'Курс не найден')
     return resp(200, {'ok': True, 'course': rows[0]})
@@ -233,11 +239,11 @@ def a_get(cur, body, _user):
 
 def a_author(cur, body, _user):
     slug = str(body.get('slug', ''))[:60]
-    cur.execute(f"SELECT * FROM {t('authors')} WHERE slug = %s", (slug,))
+    cur.execute(f"SELECT * FROM {t('authors')} WHERE slug = %s AND published", (slug,))
     row = cur.fetchone()
     if not row:
         return err(404, 'not_found', 'Автор не найден')
-    courses = select_courses(cur, 'WHERE c.published AND c.author_id = %s', (row['id'],))
+    courses = select_courses(cur, 'WHERE c.published AND c.author_id = %s', (row['id'],), public=True)
     if not courses:
         return err(404, 'not_found', 'Автор не найден')
     return resp(200, {'ok': True, 'author': author_profile(row), 'courses': courses})
@@ -372,6 +378,7 @@ def a_save_author(cur, body, user):
     if photo and not photo.startswith('https://'):
         return err(400, 'invalid_photo', 'Некорректная ссылка на фото')
     about = str(body.get('about', '')).strip()[:30000]
+    published = bool(body.get('published', True))
     links, problem = clean_links(body.get('links', []))
     if problem:
         return err(400, 'invalid_links', problem)
@@ -389,15 +396,15 @@ def a_save_author(cur, body, user):
             return err(404, 'not_found', 'Автор не найден')
         cur.execute(
             f"""UPDATE {t('authors')} SET name = %s, role = %s, bio = %s, photo_url = %s, about = %s,
-                links = %s::jsonb, facts = %s::jsonb, updated_at = NOW() WHERE id = %s""",
-            (name, role, bio, photo, about, json.dumps(links, ensure_ascii=False), json.dumps(facts, ensure_ascii=False), aid),
+                links = %s::jsonb, facts = %s::jsonb, published = %s, updated_at = NOW() WHERE id = %s""",
+            (name, role, bio, photo, about, json.dumps(links, ensure_ascii=False), json.dumps(facts, ensure_ascii=False), published, aid),
         )
     else:
         slug = unique_author_slug(cur, slugify(name)[:50] or 'avtor')
         cur.execute(
-            f"""INSERT INTO {t('authors')} (slug, name, role, bio, photo_url, about, links, facts)
-                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb) RETURNING id""",
-            (slug, name, role, bio, photo, about, json.dumps(links, ensure_ascii=False), json.dumps(facts, ensure_ascii=False)),
+            f"""INSERT INTO {t('authors')} (slug, name, role, bio, photo_url, about, links, facts, published)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s) RETURNING id""",
+            (slug, name, role, bio, photo, about, json.dumps(links, ensure_ascii=False), json.dumps(facts, ensure_ascii=False), published),
         )
         aid = cur.fetchone()['id']
     author = next(a for a in authors_out(cur, with_counts=True) if a['id'] == aid)
@@ -405,7 +412,71 @@ def a_save_author(cur, body, user):
 
 
 PUBLIC = {'list': a_list, 'get': a_get, 'author': a_author}
+def parse_id(body):
+    try:
+        v = int(body.get('id'))
+        return v if v > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def a_set_course_published(cur, body, user):
+    cid = parse_id(body)
+    if not cid:
+        return err(400, 'bad_course', 'Некорректный курс')
+    cur.execute(
+        f"UPDATE {t('courses')} SET published = %s, updated_at = NOW() WHERE id = %s RETURNING id",
+        (bool(body.get('published')), cid),
+    )
+    if not cur.fetchone():
+        return err(404, 'not_found', 'Курс не найден')
+    return resp(200, {'ok': True, 'course': select_courses(cur, 'WHERE c.id = %s', (cid,))[0]})
+
+
+def a_delete_course(cur, body, user):
+    cid = parse_id(body)
+    if not cid:
+        return err(400, 'bad_course', 'Некорректный курс')
+    cur.execute(f"DELETE FROM {t('courses')} WHERE id = %s RETURNING title", (cid,))
+    row = cur.fetchone()
+    if not row:
+        return err(404, 'not_found', 'Курс не найден')
+    return resp(200, {'ok': True, 'title': row['title']})
+
+
+def a_set_author_published(cur, body, user):
+    aid = parse_id(body)
+    if not aid:
+        return err(400, 'bad_author', 'Некорректный автор')
+    cur.execute(
+        f"UPDATE {t('authors')} SET published = %s, updated_at = NOW() WHERE id = %s RETURNING id",
+        (bool(body.get('published')), aid),
+    )
+    if not cur.fetchone():
+        return err(404, 'not_found', 'Автор не найден')
+    author = next(a for a in authors_out(cur, with_counts=True) if a['id'] == aid)
+    return resp(200, {'ok': True, 'author': author})
+
+
+def a_delete_author(cur, body, user):
+    aid = parse_id(body)
+    if not aid:
+        return err(400, 'bad_author', 'Некорректный автор')
+    cur.execute(f"SELECT name FROM {t('authors')} WHERE id = %s", (aid,))
+    row = cur.fetchone()
+    if not row:
+        return err(404, 'not_found', 'Автор не найден')
+    cur.execute(f"UPDATE {t('courses')} SET author_id = NULL, updated_at = NOW() WHERE author_id = %s", (aid,))
+    detached = cur.rowcount
+    cur.execute(f"DELETE FROM {t('authors')} WHERE id = %s", (aid,))
+    return resp(200, {'ok': True, 'name': row['name'], 'coursesDetached': detached})
+
+
 ADMIN = {
+    'set_course_published': ('courses', a_set_course_published),
+    'delete_course': ('courses', a_delete_course),
+    'set_author_published': ('authors', a_set_author_published),
+    'delete_author': ('authors', a_delete_author),
     'admin_list': ('courses', a_admin_list),
     'save': ('courses', a_save),
     'upload_cover': ('courses', a_upload_cover),

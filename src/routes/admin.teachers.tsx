@@ -3,9 +3,11 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import AuthorForm from "@/components/workspace/AuthorForm";
+import ConfirmDelete from "@/components/workspace/ConfirmDelete";
+import PublishToggle from "@/components/workspace/PublishToggle";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { requirePermission } from "@/lib/adminGuard";
-import { adminAuthorsFn, type AdminAuthor } from "@/lib/courses";
+import { adminAuthorsFn, deleteAuthorFn, setAuthorPublishedFn, type AdminAuthor } from "@/lib/courses";
 
 export const Route = createFileRoute("/admin/teachers")({
   beforeLoad: ({ context }) => requirePermission(context, "authors"),
@@ -20,6 +22,44 @@ function AuthorsAdmin() {
   const [editing, setEditing] = useState<AdminAuthor | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState<number | null>(null);
+  const [toDelete, setToDelete] = useState<AdminAuthor | null>(null);
+
+  const togglePublished = async (a: AdminAuthor, published: boolean) => {
+    setBusy(a.id);
+    setError("");
+    setNotice("");
+    const r = await setAuthorPublishedFn({ data: { id: a.id, published } });
+    setBusy(null);
+    if (!r.ok) return setError(r.message);
+    setNotice(
+      published
+        ? a.coursesPublished > 0
+          ? `Автор «${a.name}» показан на сайте`
+          : `Автор «${a.name}» включён. На сайте он появится, когда у него будет опубликованный курс`
+        : `Автор «${a.name}» скрыт с сайта. Его курсы остаются в каталоге, но без указания автора`,
+    );
+    router.invalidate();
+  };
+
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    const a = toDelete;
+    setBusy(a.id);
+    setError("");
+    setNotice("");
+    const r = await deleteAuthorFn({ data: { id: a.id } });
+    setBusy(null);
+    setToDelete(null);
+    if (!r.ok) return setError(r.message);
+    setNotice(
+      r.coursesDetached > 0
+        ? `Автор «${a.name}» удалён. Курсов без автора: ${r.coursesDetached} — выберите им нового автора в разделе «Курсы»`
+        : `Автор «${a.name}» удалён`,
+    );
+    router.invalidate();
+  };
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -44,6 +84,7 @@ function AuthorsAdmin() {
         }
       />
       {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
+      {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
       <WsCard className="p-0">
         <div className="flex flex-col gap-3 border-b border-brand-ink/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between">
           <label className="relative flex-1">
@@ -62,7 +103,7 @@ function AuthorsAdmin() {
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
                 <tr>
-                  {["Автор", "Кратко", "Курсов", "В университете", ""].map((c) => (
+                  {["Автор", "Кратко", "Курсов", "На сайте", ""].map((c) => (
                     <th key={c} className="px-5 py-3.5 font-medium">{c}</th>
                   ))}
                 </tr>
@@ -83,16 +124,20 @@ function AuthorsAdmin() {
                       {a.bio ? <span className="line-clamp-2">{a.bio}</span> : <span className="text-brand-ink/40">Не заполнено</span>}
                     </td>
                     <td className="px-5 py-3.5 text-brand-muted">{a.coursesTotal}</td>
-                    <td className="px-5 py-3.5">
-                      {a.coursesPublished > 0 ? (
-                        <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">Показывается</span>
-                      ) : (
-                        <span className="whitespace-nowrap rounded-md bg-brand-surface px-2.5 py-1 text-xs font-medium text-brand-muted">Нет опубликованных курсов</span>
+                    <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
+                      <PublishToggle
+                        checked={a.published}
+                        disabled={busy === a.id}
+                        onChange={(v) => togglePublished(a, v)}
+                        label={`Показывать автора «${a.name}» на сайте`}
+                      />
+                      {a.published && a.coursesPublished === 0 && (
+                        <div className="mt-1.5 text-xs text-amber-700">Появится после публикации его курса</div>
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-2">
-                      {a.coursesPublished > 0 && (
+                      {a.published && a.coursesPublished > 0 && (
                         <Link
                           to="/university/authors/$slug"
                           params={{ slug: a.slug }}
@@ -108,6 +153,15 @@ function AuthorsAdmin() {
                         className="inline-flex items-center gap-1.5 rounded-lg border border-brand-ink/15 px-3 py-1.5 text-xs font-medium hover:bg-brand-surface"
                       >
                         <Icon name="Pencil" size={14} /> Изменить
+                      </button>
+                      <button
+                        disabled={busy === a.id}
+                        onClick={() => setToDelete(a)}
+                        aria-label={`Удалить автора «${a.name}»`}
+                        title="Удалить автора"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        <Icon name="Trash2" size={15} />
                       </button>
                       </div>
                     </td>
@@ -125,12 +179,31 @@ function AuthorsAdmin() {
         )}
       </WsCard>
 
+      <ConfirmDelete
+        open={!!toDelete}
+        title="Удалить автора?"
+        busy={busy !== null}
+        onCancel={() => setToDelete(null)}
+        onConfirm={confirmDelete}
+      >
+        <p>
+          Профиль <span className="font-medium text-brand-ink">«{toDelete?.name}»</span> будет удалён безвозвратно вместе с фото, описанием и ссылками.
+        </p>
+        {toDelete && toDelete.coursesTotal > 0 && (
+          <p>
+            Курсы этого автора ({toDelete.coursesTotal}) не удалятся, но останутся без автора.
+          </p>
+        )}
+        <p>Если нужно просто убрать автора с сайта — отмените и выключите переключатель «На сайте».</p>
+      </ConfirmDelete>
+
       <AuthorForm
         open={formOpen}
         author={editing}
         onClose={() => setFormOpen(false)}
         onSaved={(a, created) => {
           setFormOpen(false);
+          setError("");
           setNotice(created ? `Автор «${a.name}» добавлен. Теперь его можно выбрать в карточке курса.` : `Профиль «${a.name}» сохранён`);
           router.invalidate();
         }}
