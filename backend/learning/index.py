@@ -114,15 +114,16 @@ def is_https(url: str) -> bool:
 
 # ---------- чтение программы ----------
 
-def load_program(cur, course_id: int, with_content: bool):
+def load_program(cur, course_id: int, with_content: bool, public: bool = False):
+    only = ' AND published' if public else ''
     cur.execute(
-        f"SELECT * FROM {t('course_modules')} WHERE course_id = %s ORDER BY position, id", (course_id,)
+        f"SELECT * FROM {t('course_modules')} WHERE course_id = %s{only} ORDER BY position, id", (course_id,)
     )
     modules = [dict(m) for m in cur.fetchall()]
     if not modules:
         return []
     ids = tuple(m['id'] for m in modules)
-    cur.execute(f"SELECT * FROM {t('lessons')} WHERE module_id IN %s ORDER BY position, id", (ids,))
+    cur.execute(f"SELECT * FROM {t('lessons')} WHERE module_id IN %s{only} ORDER BY position, id", (ids,))
     lessons = [dict(l) for l in cur.fetchall()]
     materials = {}
     if lessons:
@@ -140,6 +141,7 @@ def load_program(cur, course_id: int, with_content: bool):
             'hasVideo': l['video_type'] != 'none' and bool(l['video_url']),
             'materialsCount': len(mats),
             'isFree': bool(l['is_free']),
+            'published': bool(l['published']),
         }
         if with_content:
             item.update({
@@ -153,7 +155,7 @@ def load_program(cur, course_id: int, with_content: bool):
     return [
         {
             'id': m['id'], 'title': m['title'], 'description': m['description'],
-            'unlockMode': m['unlock_mode'], 'lessons': by_module.get(m['id'], []),
+            'unlockMode': m['unlock_mode'], 'published': bool(m['published']), 'lessons': by_module.get(m['id'], []),
         }
         for m in modules
     ]
@@ -205,7 +207,7 @@ def done_set(cur, user_id: int, course_id: int) -> set:
         f"""SELECT p.lesson_id FROM {t('lesson_progress')} p
             JOIN {t('lessons')} l ON l.id = p.lesson_id
             JOIN {t('course_modules')} m ON m.id = l.module_id
-            WHERE p.user_id = %s AND m.course_id = %s""",
+            WHERE p.user_id = %s AND m.course_id = %s AND l.published AND m.published""",
         (user_id, course_id),
     )
     return {r['lesson_id'] for r in cur.fetchall()}
@@ -243,7 +245,7 @@ def a_course_learn(cur, body, user):
     state = access_state(cur, user, course)
     if state == 'hidden':
         return err(404, 'not_found', 'Курс не найден')
-    modules = load_program(cur, course['id'], with_content=False)
+    modules = load_program(cur, course['id'], with_content=False, public=True)
     done = done_set(cur, user['id'], course['id']) if user else set()
     apply_locks(modules, done, can_preview(user), state == 'open')
     return resp(200, {
@@ -271,10 +273,12 @@ def a_lesson_get(cur, body, user):
     if state not in ('open', 'paid'):
         return err(403, state, 'Нет доступа к этому курсу')
     modules = apply_locks(
-        load_program(cur, course['id'], with_content=True), done_set(cur, user['id'], course['id']), can_preview(user), state == 'open'
+        load_program(cur, course['id'], with_content=True, public=True), done_set(cur, user['id'], course['id']), can_preview(user), state == 'open'
     )
     flat = [(m, l) for m in modules for l in m['lessons']]
-    idx = next(i for i, (_, l) in enumerate(flat) if l['id'] == lid)
+    idx = next((i for i, (_, l) in enumerate(flat) if l['id'] == lid), None)
+    if idx is None:
+        return err(404, 'not_found', 'Урок не найден или скрыт')
     module, lesson = flat[idx]
     if lesson['paidLocked']:
         return err(403, 'paid', 'Этот урок доступен после оплаты курса')
@@ -303,8 +307,10 @@ def a_lesson_complete(cur, body, user):
     if state not in ('open', 'paid'):
         return err(403, 'forbidden', 'Нет доступа к этому курсу')
     full = state == 'open'
-    modules = apply_locks(load_program(cur, course['id'], with_content=False), done_set(cur, user['id'], course['id']), can_preview(user), full)
-    lesson = next(l for m in modules for l in m['lessons'] if l['id'] == lid)
+    modules = apply_locks(load_program(cur, course['id'], with_content=False, public=True), done_set(cur, user['id'], course['id']), can_preview(user), full)
+    lesson = next((l for m in modules for l in m['lessons'] if l['id'] == lid), None)
+    if lesson is None:
+        return err(404, 'not_found', 'Урок не найден или скрыт')
     if lesson['paidLocked']:
         return err(403, 'paid', 'Этот урок доступен после оплаты курса')
     if lesson['locked']:
@@ -316,7 +322,7 @@ def a_lesson_complete(cur, body, user):
         )
     else:
         cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE user_id = %s AND lesson_id = %s", (user['id'], lid))
-    modules = apply_locks(load_program(cur, course['id'], with_content=False), done_set(cur, user['id'], course['id']), can_preview(user), full)
+    modules = apply_locks(load_program(cur, course['id'], with_content=False, public=True), done_set(cur, user['id'], course['id']), can_preview(user), full)
     return resp(200, {'ok': True, 'modules': modules, 'progress': progress_of(modules)})
 
 
@@ -335,7 +341,7 @@ def a_my_courses(cur, _body, user):
     for cid in ids:
         course = course_by(cur, 'c.id = %s', (cid,))
         state = access_state(cur, user, course)
-        modules = apply_locks(load_program(cur, cid, with_content=False), done_set(cur, user['id'], cid), False, state == 'open')
+        modules = apply_locks(load_program(cur, cid, with_content=False, public=True), done_set(cur, user['id'], cid), False, state == 'open')
         cur.execute(
             f"""SELECT MAX(p.completed_at) AS last FROM {t('lesson_progress')} p JOIN {t('lessons')} l ON l.id = p.lesson_id
                 JOIN {t('course_modules')} m ON m.id = l.module_id WHERE m.course_id = %s AND p.user_id = %s""",
@@ -353,6 +359,9 @@ def a_program_courses(cur, _body, user):
     cur.execute(
         f"""SELECT c.id, c.slug, c.title, c.published, c.access,
                    (SELECT COUNT(*) FROM {t('course_modules')} m WHERE m.course_id = c.id) AS modules,
+                   (SELECT COUNT(*) FROM {t('course_modules')} m WHERE m.course_id = c.id AND NOT m.published) AS hidden_modules,
+                   (SELECT COUNT(*) FROM {t('lessons')} l JOIN {t('course_modules')} m ON m.id = l.module_id
+                     WHERE m.course_id = c.id AND NOT l.published) AS hidden_lessons,
                    (SELECT COUNT(*) FROM {t('lessons')} l JOIN {t('course_modules')} m ON m.id = l.module_id
                      WHERE m.course_id = c.id) AS lessons
             FROM {t('courses')} c ORDER BY c.id"""
@@ -567,6 +576,30 @@ def a_lesson_set_free(cur, body, user):
     if not row:
         return err(404, 'not_found', 'Урок не найден')
     return resp(200, {'ok': True, 'modules': load_program(cur, course_of_module(cur, row['module_id']), with_content=True)})
+
+
+def a_lesson_set_published(cur, body, user):
+    lid = to_int(body.get('id'))
+    cur.execute(
+        f"UPDATE {t('lessons')} SET published = %s, updated_at = NOW() WHERE id = %s RETURNING module_id",
+        (bool(body.get('published')), lid),
+    )
+    row = cur.fetchone()
+    if not row:
+        return err(404, 'not_found', 'Урок не найден')
+    return resp(200, {'ok': True, 'modules': load_program(cur, course_of_module(cur, row['module_id']), with_content=True)})
+
+
+def a_module_set_published(cur, body, user):
+    mid = to_int(body.get('id'))
+    cur.execute(
+        f"UPDATE {t('course_modules')} SET published = %s, updated_at = NOW() WHERE id = %s RETURNING course_id",
+        (bool(body.get('published')), mid),
+    )
+    row = cur.fetchone()
+    if not row:
+        return err(404, 'not_found', 'Модуль не найден')
+    return resp(200, {'ok': True, 'modules': load_program(cur, row['course_id'], with_content=True)})
 
 
 def a_module_set_free(cur, body, user):
@@ -793,6 +826,8 @@ ADMIN = {
     'lesson_move': ('lessons', a_lesson_move),
     'lesson_set_free': ('lessons', a_lesson_set_free),
     'module_set_free': ('lessons', a_module_set_free),
+    'lesson_set_published': ('lessons', a_lesson_set_published),
+    'module_set_published': ('lessons', a_module_set_published),
     'upload_start': ('lessons', a_upload_start),
     'access_list': ('access', a_access_list),
     'access_grant': ('access', a_access_grant),

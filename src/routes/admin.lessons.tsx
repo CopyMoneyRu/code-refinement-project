@@ -49,6 +49,11 @@ function LessonsAdmin() {
                     </div>
                     <div className="mt-0.5 text-sm text-brand-muted">
                       {c.modules} мод. · {c.lessons} ур.
+                      {(c.hidden_modules > 0 || c.hidden_lessons > 0) && (
+                        <span className="ml-2 inline-flex items-center gap-1 text-xs">
+                          <Icon name="EyeOff" size={12} /> скрыто: {[c.hidden_modules ? `${c.hidden_modules} мод.` : "", c.hidden_lessons ? `${c.hidden_lessons} ур.` : ""].filter(Boolean).join(", ")}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-brand-blue">

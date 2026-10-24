@@ -11,6 +11,7 @@ export type LessonBrief = {
   hasVideo: boolean;
   materialsCount: number;
   isFree: boolean;
+  published?: boolean;
   completed?: boolean;
   locked?: boolean;
   paidLocked?: boolean;
@@ -21,7 +22,14 @@ export type LessonFull = LessonBrief & {
   videoUrl: string;
   materials: Material[];
 };
-export type ModuleBrief = { id: number; title: string; description: string; unlockMode: UnlockMode; lessons: LessonBrief[] };
+export type ModuleBrief = {
+  id: number;
+  title: string;
+  description: string;
+  unlockMode: UnlockMode;
+  published?: boolean;
+  lessons: LessonBrief[];
+};
 export type ModuleFull = Omit<ModuleBrief, "lessons"> & { lessons: LessonFull[] };
 
 export type CourseHead = {
@@ -85,7 +93,17 @@ export const myCoursesFn = createServerFn({ method: "GET" }).handler(async () =>
   return r.ok ? r.courses : ([] as MyCourse[]);
 });
 
-export type ProgramCourse = { id: number; slug: string; title: string; published: boolean; access: "free" | "paid"; modules: number; lessons: number };
+export type ProgramCourse = {
+  id: number;
+  slug: string;
+  title: string;
+  published: boolean;
+  access: "free" | "paid";
+  modules: number;
+  lessons: number;
+  hidden_modules: number;
+  hidden_lessons: number;
+};
 export const programCoursesFn = createServerFn({ method: "GET" }).handler(async () => {
   const r = await call<{ courses: ProgramCourse[] }>("program_courses");
   return r.ok ? r.courses : ([] as ProgramCourse[]);
@@ -195,3 +213,13 @@ export const lessonSetFreeFn = createServerFn({ method: "POST" })
 export const moduleSetFreeFn = createServerFn({ method: "POST" })
   .validator(freeToggle)
   .handler(({ data }) => call<{ modules: ModuleFull[] }>("module_set_free", data));
+
+const pubToggle = (i: unknown) => ({ id: num(obj(i).id), published: obj(i).published === true });
+
+export const lessonSetPublishedFn = createServerFn({ method: "POST" })
+  .validator(pubToggle)
+  .handler(({ data }) => call<{ modules: ModuleFull[] }>("lesson_set_published", data));
+
+export const moduleSetPublishedFn = createServerFn({ method: "POST" })
+  .validator(pubToggle)
+  .handler(({ data }) => call<{ modules: ModuleFull[] }>("module_set_published", data));

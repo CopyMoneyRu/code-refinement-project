@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import ConfirmDelete from "@/components/workspace/ConfirmDelete";
+import PublishToggle from "@/components/workspace/PublishToggle";
 import LessonForm from "@/components/workspace/LessonForm";
 import ModuleForm, { UNLOCK_OPTIONS } from "@/components/workspace/ModuleForm";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
@@ -10,8 +11,10 @@ import {
   lessonDeleteFn,
   lessonMoveFn,
   lessonSetFreeFn,
+  lessonSetPublishedFn,
   moduleDeleteFn,
   moduleSetFreeFn,
+  moduleSetPublishedFn,
   moduleMoveFn,
   programGetFn,
   type LessonFull,
@@ -64,6 +67,8 @@ function ProgramEditor() {
   };
 
   const totalLessons = modules.reduce((n, m) => n + m.lessons.length, 0);
+  const hiddenModules = modules.filter((m) => m.published === false).length;
+  const hiddenLessons = modules.reduce((n, m) => n + m.lessons.filter((l) => l.published === false).length, 0);
   const paid = course.access === "paid";
   const freeTotal = modules.reduce((n, m) => n + m.lessons.filter((l) => l.isFree).length, 0);
 
@@ -74,7 +79,9 @@ function ProgramEditor() {
       </Link>
       <WsTitle
         title={course.title}
-        text={`Программа курса: ${modules.length} мод. · ${totalLessons} ур. Изменения сразу видны ученикам.`}
+        text={`Программа курса: ${modules.length} мод. · ${totalLessons} ур.${
+          hiddenModules || hiddenLessons ? ` Скрыто: ${hiddenModules ? `${hiddenModules} мод.` : ""}${hiddenModules && hiddenLessons ? ", " : ""}${hiddenLessons ? `${hiddenLessons} ур.` : ""}` : ""
+        } Изменения сразу видны ученикам.`}
         action={
           <div className="flex flex-wrap gap-2">
             {course.published && (
@@ -120,7 +127,7 @@ function ProgramEditor() {
             const mode = UNLOCK_OPTIONS.find((o) => o.value === m.unlockMode)!;
             const isCollapsed = collapsed[m.id];
             return (
-              <WsCard key={m.id} className="p-0">
+              <WsCard key={m.id} className={"p-0 " + (m.published === false ? "border-dashed bg-brand-light/60" : "")}>
                 <div className="flex flex-col gap-3 border-b border-brand-ink/[0.08] px-5 py-4 sm:flex-row sm:items-center">
                   <button
                     onClick={() => setCollapsed((c) => ({ ...c, [m.id]: !c[m.id] }))}
@@ -129,13 +136,26 @@ function ProgramEditor() {
                     <Icon name={isCollapsed ? "ChevronRight" : "ChevronDown"} size={18} className="shrink-0 text-brand-muted" />
                     <span className="font-display text-sm tabular-nums text-brand-blue">{String(mi + 1).padStart(2, "0")}</span>
                     <span className="min-w-0">
-                      <span className="block truncate font-semibold">{m.title}</span>
+                      <span className={"block truncate font-semibold " + (m.published === false ? "text-brand-muted" : "")}>{m.title}</span>
                       <span className="mt-0.5 flex items-center gap-1.5 text-xs text-brand-muted">
                         <Icon name={mode.icon} size={13} /> {mode.title} · {m.lessons.length} ур.
                       </span>
                     </span>
                   </button>
-                  <div className="flex shrink-0 items-center gap-1">
+                  <div className="flex shrink-0 flex-wrap items-center gap-1">
+                    <span className="mr-2">
+                      <PublishToggle
+                        checked={m.published !== false}
+                        disabled={busy}
+                        label={`Показывать модуль «${m.title}» ученикам`}
+                        onChange={(v) =>
+                          run(
+                            () => moduleSetPublishedFn({ data: { id: m.id, published: v } }),
+                            v ? `Модуль «${m.title}» снова виден ученикам` : `Модуль «${m.title}» скрыт. Он и его уроки остаются в админке`,
+                          )
+                        }
+                      />
+                    </span>
                     {paid && m.lessons.length > 0 && (() => {
                       const allFree = m.lessons.every((l) => l.isFree);
                       return (
@@ -169,7 +189,7 @@ function ProgramEditor() {
                     {m.lessons.length > 0 && (
                       <ul className="space-y-1">
                         {m.lessons.map((l, li) => (
-                          <li key={l.id} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-brand-light">
+                          <li key={l.id} className={"group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-brand-light " + (l.published === false ? "opacity-60" : "")}>
                             <span className="w-6 shrink-0 text-center text-sm tabular-nums text-brand-muted">{li + 1}</span>
                             {paid && (
                               <label
@@ -190,7 +210,12 @@ function ProgramEditor() {
                               </label>
                             )}
                             <button onClick={() => setLessonForm({ open: true, moduleId: m.id, lesson: l })} className="min-w-0 flex-1 text-left">
-                              <span className="block truncate text-[15px] font-medium hover:text-brand-blue">{l.title}</span>
+                              <span className="flex items-center gap-2">
+                                <span className="truncate text-[15px] font-medium hover:text-brand-blue">{l.title}</span>
+                                {l.published === false && (
+                                  <span className="shrink-0 rounded-md bg-brand-surface px-2 py-0.5 text-xs font-medium text-brand-muted">Скрыт</span>
+                                )}
+                              </span>
                               <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-brand-muted">
                                 {l.hasVideo ? (
                                   <span className="inline-flex items-center gap-1 text-emerald-700"><Icon name="PlayCircle" size={13} /> Видео</span>
@@ -201,6 +226,24 @@ function ProgramEditor() {
                                 {l.description && <span className="inline-flex items-center gap-1"><Icon name="AlignLeft" size={13} /> Описание</span>}
                                 {l.duration && <span>{l.duration}</span>}
                               </span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() =>
+                                run(
+                                  () => lessonSetPublishedFn({ data: { id: l.id, published: l.published === false } }),
+                                  l.published === false ? `Урок «${l.title}» снова виден ученикам` : `Урок «${l.title}» скрыт`,
+                                )
+                              }
+                              title={l.published === false ? "Урок скрыт. Нажмите, чтобы показать ученикам" : "Урок виден ученикам. Нажмите, чтобы скрыть"}
+                              aria-label={l.published === false ? "Показать урок" : "Скрыть урок"}
+                              className={
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors disabled:opacity-40 " +
+                                (l.published === false ? "bg-brand-surface text-brand-muted hover:text-brand-ink" : "text-emerald-600 hover:bg-emerald-50")
+                              }
+                            >
+                              <Icon name={l.published === false ? "EyeOff" : "Eye"} size={16} />
                             </button>
                             <div className="flex shrink-0 items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                               <IconBtn icon="ChevronUp" label="Урок выше" disabled={busy || li === 0} onClick={() => run(() => lessonMoveFn({ data: { id: l.id, direction: -1 } }))} />

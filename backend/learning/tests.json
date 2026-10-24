@@ -124,6 +124,21 @@
         "state": "login"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Hide module without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "module_set_published",
+        "id": 1,
+        "published": false
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

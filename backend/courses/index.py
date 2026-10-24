@@ -125,7 +125,7 @@ def attach_programs(cur, rows):
     ids = tuple(r['id'] for r in rows)
     cur.execute(
         f"""SELECT m.id, m.course_id, m.title FROM {t('course_modules')} m
-            WHERE m.course_id IN %s ORDER BY m.course_id, m.position, m.id""",
+            WHERE m.course_id IN %s AND m.published ORDER BY m.course_id, m.position, m.id""",
         (ids,),
     )
     modules = cur.fetchall()
@@ -135,7 +135,7 @@ def attach_programs(cur, rows):
             f"""SELECT l.module_id, l.title, l.duration, l.is_free,
                        (l.video_type <> 'none' AND l.video_url <> '') AS has_video,
                        EXISTS (SELECT 1 FROM {t('lesson_materials')} lm WHERE lm.lesson_id = l.id) AS has_files
-                FROM {t('lessons')} l WHERE l.module_id IN %s ORDER BY l.position, l.id""",
+                FROM {t('lessons')} l WHERE l.module_id IN %s AND l.published ORDER BY l.position, l.id""",
             (tuple(m['id'] for m in modules),),
         )
         for l in cur.fetchall():
