@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import AuthLayout, { FormAlert, SubmitButton } from "@/components/auth/AuthLayout";
 import CodeInput from "@/components/auth/CodeInput";
 import { resendFn, verifyEmailFn } from "@/lib/auth";
@@ -8,6 +8,7 @@ const RESEND_SECONDS = 60;
 
 export default function VerifyCodeStep({ email, sent = true, onBack }: { email: string; sent?: boolean; onBack: () => void }) {
   const navigate = useNavigate();
+  const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -36,6 +37,7 @@ export default function VerifyCodeStep({ email, sent = true, onBack }: { email: 
       if (r.error === "too_many_attempts" || r.error === "code_expired") setCode("");
       return;
     }
+    await router.invalidate();
     navigate({ to: r.role && r.role !== "user" ? "/admin" : "/cabinet" });
   };
 

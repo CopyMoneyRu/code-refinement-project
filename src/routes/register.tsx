@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import AuthLayout, { AuthField, FormAlert, SubmitButton } from "@/components/auth/AuthLayout";
+import SocialLogin from "@/components/auth/SocialLogin";
+import { oauthProvidersFn } from "@/lib/oauth";
 import VerifyCodeStep from "@/components/auth/VerifyCodeStep";
 import { getMe, registerFn } from "@/lib/auth";
 
@@ -10,12 +12,14 @@ export const Route = createFileRoute("/register")({
     const user = await getMe();
     if (user) throw redirect({ to: user.role !== "user" ? "/admin" : "/cabinet" });
   },
+  loader: () => oauthProvidersFn(),
   component: RegisterPage,
 });
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function RegisterPage() {
+  const providers = Route.useLoaderData();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [agree, setAgree] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -50,6 +54,7 @@ function RegisterPage() {
 
   return (
     <AuthLayout title="Регистрация" subtitle="Создайте аккаунт по email и паролю">
+      <SocialLogin providers={providers} />
       <form onSubmit={submit} className="space-y-5" noValidate>
         <AuthField label="Имя" autoComplete="name" value={form.name} onChange={set("name")} error={errors.name} />
         <AuthField label="Email" type="email" autoComplete="email" placeholder="name@example.com" value={form.email} onChange={set("email")} error={errors.email} />

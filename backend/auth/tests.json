@@ -126,6 +126,22 @@
         "ok": false
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "OAuth without bridge secret",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "oauth_login",
+        "provider": "google",
+        "providerUserId": "1",
+        "email": "a@b.cd"
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

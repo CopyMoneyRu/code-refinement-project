@@ -10,6 +10,7 @@ export type AuthUser = {
   role: Role;
   permissions: Permission[];
   emailVerified: boolean;
+  hasPassword: boolean;
   createdAt: string | null;
 };
 

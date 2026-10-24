@@ -6,6 +6,7 @@ import {TooltipProvider} from "@/components/ui/tooltip";
 import {PLATFORM_META, PLATFORM_SCRIPTS} from "@/platform/scripts.gen";
 import {HMR_CLIENT} from "@/platform/dev-hmr";
 import appCss from "@/index.css?url";
+import {getMe} from "@/lib/auth";
 
 const TITLE = "JETRA — платформа для инвестиций и управления капиталом";
 const DESCRIPTION =
@@ -43,6 +44,8 @@ export const Route = createRootRoute({
             ...PLATFORM_SCRIPTS,
         ],
     }),
+    loader: () => getMe(),
+    staleTime: Infinity,
     component: RootComponent,
 });
 

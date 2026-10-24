@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import AuthLayout, { AuthField, FormAlert, SubmitButton } from "@/components/auth/AuthLayout";
+import SocialLogin from "@/components/auth/SocialLogin";
+import { oauthProvidersFn } from "@/lib/oauth";
 import VerifyCodeStep from "@/components/auth/VerifyCodeStep";
 import { getMe, loginFn, resendFn } from "@/lib/auth";
 
@@ -10,13 +12,16 @@ export const Route = createFileRoute("/login")({
     const user = await getMe();
     if (user) throw redirect({ to: user.role !== "user" ? "/admin" : "/cabinet" });
   },
+  loader: () => oauthProvidersFn(),
   component: LoginPage,
 });
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function LoginPage() {
+  const providers = Route.useLoaderData();
   const navigate = useNavigate();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
@@ -41,6 +46,7 @@ function LoginPage() {
       setFormError({ code: r.error, text: r.message });
       return;
     }
+    await router.invalidate();
     navigate({ to: r.role && r.role !== "user" ? "/admin" : "/cabinet" });
   };
 
@@ -56,6 +62,7 @@ function LoginPage() {
 
   return (
     <AuthLayout title="Вход" subtitle="Войдите в личный кабинет JETRA">
+      <SocialLogin providers={providers} />
       <form onSubmit={submit} className="space-y-5" noValidate>
         <AuthField label="Email" type="email" autoComplete="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
         <AuthField label="Пароль" type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} />

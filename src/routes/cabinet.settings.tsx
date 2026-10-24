@@ -76,9 +76,13 @@ function SettingsPage() {
         </WsCard>
         <WsCard>
           <form onSubmit={savePassword} noValidate>
-            <div className="font-semibold">Смена пароля</div>
+            <div className="font-semibold">{user.hasPassword ? "Смена пароля" : "Пароль для входа по email"}</div>
             <div className="mt-5 space-y-4">
-              <Field label="Текущий пароль" type="password" autoComplete="current-password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
+              {user.hasPassword ? (
+                <Field label="Текущий пароль" type="password" autoComplete="current-password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
+              ) : (
+                <p className="text-sm text-brand-muted">Вы вошли через Google или Яндекс. Задайте пароль, чтобы входить и по email.</p>
+              )}
               <Field label="Новый пароль" type="password" autoComplete="new-password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
               <Field label="Повторите новый пароль" type="password" autoComplete="new-password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
             </div>

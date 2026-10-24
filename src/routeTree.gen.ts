@@ -30,6 +30,7 @@ import { Route as CabinetLearnRouteImport } from './routes/cabinet.learn'
 import { Route as CabinetProgressRouteImport } from './routes/cabinet.progress'
 import { Route as CabinetPurchasesRouteImport } from './routes/cabinet.purchases'
 import { Route as CabinetSettingsRouteImport } from './routes/cabinet.settings'
+import { Route as OauthProviderRouteImport } from './routes/oauth.$provider'
 import { Route as UniversityIndexRouteImport } from './routes/university.index'
 import { Route as UniversitySlugRouteImport } from './routes/university.$slug'
 
@@ -138,6 +139,11 @@ const CabinetSettingsRoute = CabinetSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => CabinetRoute,
 } as any)
+const OauthProviderRoute = OauthProviderRouteImport.update({
+  id: '/oauth/$provider',
+  path: '/oauth/$provider',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UniversityIndexRoute = UniversityIndexRouteImport.update({
   id: '/university/',
   path: '/university/',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
+  '/oauth/$provider': typeof OauthProviderRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
+  '/oauth/$provider': typeof OauthProviderRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin': typeof AdminIndexRoute
   '/cabinet': typeof CabinetIndexRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
+  '/oauth/$provider': typeof OauthProviderRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
+    | '/oauth/$provider'
     | '/university/$slug'
     | '/admin/'
     | '/cabinet/'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
+    | '/oauth/$provider'
     | '/university/$slug'
     | '/admin'
     | '/cabinet'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
+    | '/oauth/$provider'
     | '/university/$slug'
     | '/admin/'
     | '/cabinet/'
@@ -307,6 +319,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   StrategiesRoute: typeof StrategiesRoute
+  OauthProviderRoute: typeof OauthProviderRoute
   UniversitySlugRoute: typeof UniversitySlugRoute
   UniversityIndexRoute: typeof UniversityIndexRoute
 }
@@ -460,6 +473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CabinetSettingsRouteImport
       parentRoute: typeof CabinetRoute
     }
+    '/oauth/$provider': {
+      id: '/oauth/$provider'
+      path: '/oauth/$provider'
+      fullPath: '/oauth/$provider'
+      preLoaderRoute: typeof OauthProviderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/university/': {
       id: '/university/'
       path: '/university'
@@ -530,6 +550,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   StrategiesRoute: StrategiesRoute,
+  OauthProviderRoute: OauthProviderRoute,
   UniversitySlugRoute: UniversitySlugRoute,
   UniversityIndexRoute: UniversityIndexRoute,
 }

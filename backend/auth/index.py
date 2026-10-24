@@ -70,6 +70,8 @@ def hash_password(password: str) -> str:
 
 
 def check_password(password: str, stored: str) -> bool:
+    if not stored or stored.count('$') != 3:
+        return False
     algo, iters, salt, digest = stored.split('$')
     if algo != 'pbkdf2_sha256':
         return False
@@ -101,6 +103,7 @@ def public_user(u: dict) -> dict:
         'role': u['role'],
         'permissions': list(PERMISSIONS) if u['role'] == 'superadmin' else perms_of(u),
         'emailVerified': u['email_verified'],
+        'hasPassword': bool(u.get('password_hash')),
         'createdAt': u['created_at'].isoformat() if u.get('created_at') else None,
     }
 
@@ -420,7 +423,7 @@ def a_change_password(cur, body, token):
     user = session_user(cur, token)
     if not user:
         return err(401, 'unauthorized', 'Требуется вход')
-    if not check_password(str(body.get('current', '')), user['password_hash']):
+    if user['password_hash'] and not check_password(str(body.get('current', '')), user['password_hash']):
         return err(400, 'wrong_password', 'Текущий пароль указан неверно')
     new = str(body.get('password', ''))
     problem = password_problem(new)
@@ -519,7 +522,54 @@ def a_admin_delete_user(cur, body, token):
     return resp(200, {'ok': True})
 
 
+def a_oauth_login(cur, body, _token):
+    """Вызывается только сервером сайта после проверки ответа Google/Яндекса (общий секрет)."""
+    secret = os.environ.get('OAUTH_BRIDGE_SECRET', '')
+    if not secret or not hmac.compare_digest(str(body.get('bridgeSecret', '')), secret):
+        return err(403, 'forbidden', 'Недостаточно прав')
+    provider = str(body.get('provider', ''))
+    if provider not in ('google', 'yandex'):
+        return err(400, 'bad_provider', 'Неизвестный способ входа')
+    puid = str(body.get('providerUserId', '')).strip()[:255]
+    email = str(body.get('email', '')).strip().lower()[:255]
+    name = (str(body.get('name', '')).strip() or email.split('@')[0])[:120]
+    if not puid or not EMAIL_RE.match(email):
+        return err(400, 'no_email', 'Сервис входа не передал email. Разрешите доступ к почте и попробуйте снова.')
+
+    cur.execute(
+        f"""SELECT u.* FROM {t('oauth_accounts')} o JOIN {t('users')} u ON u.id = o.user_id
+            WHERE o.provider = %s AND o.provider_user_id = %s""",
+        (provider, puid),
+    )
+    user = cur.fetchone()
+    if not user:
+        user = find_user(cur, email)
+        if user:
+            cur.execute(
+                f"UPDATE {t('users')} SET email_verified = TRUE, failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = %s RETURNING *",
+                (user['id'],),
+            )
+            user = cur.fetchone()
+        else:
+            role = 'superadmin' if is_superadmin_email(email) else 'user'
+            cur.execute(
+                f"""INSERT INTO {t('users')} (email, name, password_hash, role, email_verified)
+                    VALUES (%s, %s, '', %s, TRUE) RETURNING *""",
+                (email, name, role),
+            )
+            user = cur.fetchone()
+        cur.execute(
+            f"""INSERT INTO {t('oauth_accounts')} (user_id, provider, provider_user_id, email)
+                VALUES (%s, %s, %s, %s) ON CONFLICT (provider, provider_user_id) DO NOTHING""",
+            (user['id'], provider, puid, email),
+        )
+    user = ensure_superadmin(cur, user)
+    raw = create_session(cur, user['id'], body)
+    return resp(200, {'ok': True, 'token': raw, 'maxAge': SESSION_DAYS * 86400, 'user': public_user(user)})
+
+
 ACTIONS = {
+    'oauth_login': a_oauth_login,
     'admin_delete_user': a_admin_delete_user,
     'register': a_register,
     'resend': a_resend,
