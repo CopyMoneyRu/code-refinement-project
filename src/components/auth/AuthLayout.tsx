@@ -28,6 +28,36 @@ export function StageNotice({ children }: { children: ReactNode }) {
   );
 }
 
+export function FormAlert({ tone, children }: { tone: "error" | "success"; children: ReactNode }) {
+  const error = tone === "error";
+  return (
+    <div
+      role={error ? "alert" : "status"}
+      className={
+        error
+          ? "flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm leading-relaxed text-red-700"
+          : "flex gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-800"
+      }
+    >
+      <Icon name={error ? "CircleAlert" : "CircleCheck"} size={18} className="mt-0.5 shrink-0" />
+      <span>{children}</span>
+    </div>
+  );
+}
+
+export function SubmitButton({ loading, children }: { loading: boolean; children: ReactNode }) {
+  return (
+    <button
+      type="submit"
+      disabled={loading}
+      className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-blue font-medium text-white transition-colors hover:bg-[#3271B0] disabled:opacity-60"
+    >
+      {loading && <Icon name="Loader2" size={18} className="animate-spin" />}
+      {children}
+    </button>
+  );
+}
+
 export default function AuthLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">

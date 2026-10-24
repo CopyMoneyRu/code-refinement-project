@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import Logo from "@/components/brand/Logo";
 import Icon from "@/components/ui/icon";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { logoutFn, type AuthUser } from "@/lib/auth";
 
 export type NavItem = { to: string; label: string; icon: string; exact?: boolean };
 
@@ -29,13 +30,21 @@ function SideNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => v
 export default function WorkspaceLayout({
   section,
   items,
+  user,
   children,
 }: {
   section: string;
   items: NavItem[];
+  user: AuthUser;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const logout = async () => {
+    await logoutFn();
+    await router.invalidate();
+    router.navigate({ to: "/login" });
+  };
 
   const sidebar = (onNavigate?: () => void) => (
     <div className="flex h-full flex-col">
@@ -48,9 +57,19 @@ export default function WorkspaceLayout({
         <Link to="/" onClick={onNavigate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink">
           <Icon name="Globe" size={17} /> На сайт
         </Link>
-        <Link to="/login" onClick={onNavigate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink">
+        {user.role === "admin" && (
+          <Link
+            to={section === "Администрирование" ? "/cabinet" : "/admin"}
+            onClick={onNavigate}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink"
+          >
+            <Icon name={section === "Администрирование" ? "UserRound" : "ShieldCheck"} size={17} />
+            {section === "Администрирование" ? "Личный кабинет" : "Администрирование"}
+          </Link>
+        )}
+        <button onClick={logout} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink">
           <Icon name="LogOut" size={17} /> Выйти
-        </Link>
+        </button>
       </div>
     </div>
   );
@@ -76,9 +95,12 @@ export default function WorkspaceLayout({
             <span className="text-sm text-brand-muted">{section}</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden rounded-md bg-brand-surface px-2.5 py-1 text-xs text-brand-muted sm:inline">Макет · этап 1</span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-surface text-brand-muted">
-              <Icon name="UserRound" size={18} />
+            <div className="hidden text-right sm:block">
+              <div className="text-sm font-medium leading-tight">{user.name}</div>
+              <div className="text-xs text-brand-muted">{user.role === "admin" ? "Администратор" : user.email}</div>
+            </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-blue text-sm font-semibold text-white">
+              {user.name.trim().charAt(0).toUpperCase() || "?"}
             </div>
           </div>
         </header>

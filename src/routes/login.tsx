@@ -1,27 +1,53 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import AuthLayout, { AuthField, StageNotice } from "@/components/auth/AuthLayout";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import AuthLayout, { AuthField, FormAlert, SubmitButton } from "@/components/auth/AuthLayout";
+import { getMe, loginFn, resendFn } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Вход — JETRA" }, { name: "description", content: "Вход в личный кабинет JETRA." }] }),
+  beforeLoad: async () => {
+    const user = await getMe();
+    if (user) throw redirect({ to: user.role === "admin" ? "/admin" : "/cabinet" });
+  },
   component: LoginPage,
 });
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState<{ code: string; text: string } | null>(null);
+  const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: typeof errors = {};
-    if (!EMAIL_RE.test(email)) next.email = "Введите корректный email";
-    if (password.length < 8) next.password = "Минимум 8 символов";
+    if (!EMAIL_RE.test(email.trim())) next.email = "Введите корректный email";
+    if (!password) next.password = "Введите пароль";
     setErrors(next);
-    setSent(Object.keys(next).length === 0);
+    setFormError(null);
+    setNotice("");
+    if (Object.keys(next).length) return;
+    setLoading(true);
+    const r = await loginFn({ data: { email: email.trim(), password } });
+    setLoading(false);
+    if (!r.ok) {
+      setFormError({ code: r.error, text: r.message });
+      return;
+    }
+    navigate({ to: r.role === "admin" ? "/admin" : "/cabinet" });
+  };
+
+  const resend = async () => {
+    setLoading(true);
+    await resendFn({ data: { email: email.trim() } });
+    setLoading(false);
+    setFormError(null);
+    setNotice("Мы отправили новое письмо со ссылкой для подтверждения. Проверьте почту, включая папку «Спам».");
   };
 
   return (
@@ -32,10 +58,21 @@ function LoginPage() {
         <div className="flex justify-end">
           <Link to="/forgot-password" className="text-sm text-brand-blue hover:underline">Забыли пароль?</Link>
         </div>
-        <button type="submit" className="h-12 w-full rounded-lg bg-brand-blue font-medium text-white transition-colors hover:bg-[#3271B0]">
-          Войти
-        </button>
-        {sent && <StageNotice>Серверная авторизация подключается на следующем этапе. Данные не отправлены и нигде не сохранены.</StageNotice>}
+        {formError && (
+          <FormAlert tone="error">
+            {formError.text}
+            {formError.code === "email_not_verified" && (
+              <>
+                {" "}
+                <button type="button" onClick={resend} className="font-medium underline">
+                  Отправить письмо ещё раз
+                </button>
+              </>
+            )}
+          </FormAlert>
+        )}
+        {notice && <FormAlert tone="success">{notice}</FormAlert>}
+        <SubmitButton loading={loading}>Войти</SubmitButton>
       </form>
       <p className="mt-8 text-center text-sm text-brand-muted">
         Нет аккаунта? <Link to="/register" className="font-medium text-brand-blue hover:underline">Зарегистрироваться</Link>

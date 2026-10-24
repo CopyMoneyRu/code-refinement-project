@@ -1,0 +1,63 @@
+import "@tanstack/react-start/server-only";
+import { deleteCookie, getCookie, getRequestHeader, getRequestIP, setCookie } from "@tanstack/react-start/server";
+import func2url from "../../backend/func2url.json";
+
+export const SESSION_COOKIE = "__Host-jetra_session";
+
+export type AuthUser = {
+  id: number;
+  email: string;
+  name: string;
+  role: "user" | "admin";
+  emailVerified: boolean;
+  createdAt: string | null;
+};
+
+export type AuthResult<T = Record<string, unknown>> =
+  | ({ ok: true } & T)
+  | { ok: false; error: string; message: string };
+
+export async function callAuth<T = Record<string, unknown>>(
+  action: string,
+  payload: Record<string, unknown> = {},
+  withSession = false,
+): Promise<AuthResult<T>> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (withSession) {
+    const token = getCookie(SESSION_COOKIE);
+    if (token) headers["X-Session-Token"] = token;
+  }
+  try {
+    const res = await fetch((func2url as Record<string, string>).auth, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ action, ...payload }),
+    });
+    return (await res.json()) as AuthResult<T>;
+  } catch {
+    return { ok: false, error: "network", message: "Сервис временно недоступен. Попробуйте позже." };
+  }
+}
+
+export function clientMeta() {
+  return {
+    ip: getRequestIP({ xForwardedFor: true }) ?? "",
+    userAgent: getRequestHeader("user-agent") ?? "",
+  };
+}
+
+export function saveSession(token: string, maxAge: number) {
+  setCookie(SESSION_COOKIE, token, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge });
+}
+
+export function clearSession() {
+  deleteCookie(SESSION_COOKIE, { httpOnly: true, secure: true, sameSite: "lax", path: "/" });
+}
+
+export async function currentUser(): Promise<AuthUser | null> {
+  if (!getCookie(SESSION_COOKIE)) return null;
+  const r = await callAuth<{ user: AuthUser | null }>("me", {}, true);
+  if (!r.ok) return null;
+  if (!r.user) clearSession();
+  return r.user;
+}

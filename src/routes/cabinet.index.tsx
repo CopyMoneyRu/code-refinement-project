@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { COURSES } from "@/data/catalog";
@@ -7,7 +7,10 @@ export const Route = createFileRoute("/cabinet/")({
   component: CabinetHome,
 });
 
+const cabinetApi = getRouteApi("/cabinet");
+
 function CabinetHome() {
+  const { user } = cabinetApi.useRouteContext();
   const tiles = [
     { label: "Курсов в обучении", icon: "GraduationCap" },
     { label: "Пройдено уроков", icon: "CheckCircle2" },
@@ -15,7 +18,7 @@ function CabinetHome() {
   ];
   return (
     <>
-      <WsTitle title="Добро пожаловать" text="Здесь будут ваши курсы, прогресс обучения и покупки." />
+      <WsTitle title={`Добро пожаловать, ${user.name}`} text="Здесь будут ваши курсы, прогресс обучения и покупки." />
       <div className="grid gap-4 sm:grid-cols-3">
         {tiles.map((t) => (
           <WsCard key={t.label}>

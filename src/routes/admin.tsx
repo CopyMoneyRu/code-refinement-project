@@ -1,5 +1,6 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import WorkspaceLayout, { type NavItem } from "@/components/workspace/WorkspaceLayout";
+import { getMe } from "@/lib/auth";
 
 const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Обзор", icon: "LayoutDashboard", exact: true },
@@ -13,9 +14,20 @@ const ADMIN_NAV: NavItem[] = [
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Администрирование — JETRA" }, { name: "robots", content: "noindex" }] }),
-  component: () => (
-    <WorkspaceLayout section="Администрирование" items={ADMIN_NAV}>
+  beforeLoad: async () => {
+    const user = await getMe();
+    if (!user) throw redirect({ to: "/login" });
+    if (user.role !== "admin") throw redirect({ to: "/cabinet" });
+    return { user };
+  },
+  component: Layout,
+});
+
+function Layout() {
+  const { user } = Route.useRouteContext();
+  return (
+    <WorkspaceLayout section="Администрирование" items={ADMIN_NAV} user={user}>
       <Outlet />
     </WorkspaceLayout>
-  ),
-});
+  );
+}
