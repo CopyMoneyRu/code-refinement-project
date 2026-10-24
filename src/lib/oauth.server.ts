@@ -27,8 +27,28 @@ export function isProvider(v: string): v is Provider {
   return v === "google" || v === "yandex";
 }
 
+export const CALLBACK_PATH = (p: Provider) => `/oauth/${p}`;
+
+function googleRedirectUri(): string | null {
+  const raw = (process.env.GOOGLE_REDIRECT_URI ?? "").trim();
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    const okProto = u.protocol === "https:" || u.hostname === "localhost";
+    if (!okProto || u.pathname !== CALLBACK_PATH("google") || u.search || u.hash) {
+      console.error(`[oauth] GOOGLE_REDIRECT_URI должен иметь вид https://домен${CALLBACK_PATH("google")}`);
+      return null;
+    }
+    return `${u.origin}${u.pathname}`;
+  } catch {
+    console.error("[oauth] GOOGLE_REDIRECT_URI не является корректным адресом");
+    return null;
+  }
+}
+
 export function providerReady(p: Provider) {
-  return Boolean(CONFIG[p].id() && CONFIG[p].secret() && process.env.OAUTH_BRIDGE_SECRET);
+  const base = Boolean(CONFIG[p].id() && CONFIG[p].secret() && process.env.OAUTH_BRIDGE_SECRET);
+  return p === "google" ? base && googleRedirectUri() !== null : base;
 }
 
 function origin() {
@@ -38,7 +58,8 @@ function origin() {
 }
 
 export function callbackUrl(p: Provider) {
-  return `${origin()}/oauth/${p}`;
+  if (p === "google") return googleRedirectUri() ?? "";
+  return `${origin()}${CALLBACK_PATH(p)}`;
 }
 
 function randomState() {
