@@ -460,7 +460,27 @@ def a_admin_set_role(cur, body, token):
     return resp(200, {'ok': True, 'user': public_user(row)})
 
 
+def a_admin_delete_user(cur, body, token):
+    admin, denied = require_admin(cur, token)
+    if denied:
+        return denied
+    try:
+        uid = int(body.get('userId'))
+    except (TypeError, ValueError):
+        return err(400, 'bad_user', 'Некорректный пользователь')
+    if uid == admin['id']:
+        return err(400, 'self_delete', 'Нельзя удалить собственный аккаунт')
+    cur.execute(f"SELECT id FROM {t('users')} WHERE id = %s", (uid,))
+    if not cur.fetchone():
+        return err(404, 'not_found', 'Пользователь не найден')
+    cur.execute(f"DELETE FROM {t('sessions')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('email_tokens')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('users')} WHERE id = %s", (uid,))
+    return resp(200, {'ok': True})
+
+
 ACTIONS = {
+    'admin_delete_user': a_admin_delete_user,
     'register': a_register,
     'resend': a_resend,
     'verify': a_verify,

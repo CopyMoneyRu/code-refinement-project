@@ -94,6 +94,20 @@
         "ok": false
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Delete user without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "admin_delete_user",
+        "userId": 1
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

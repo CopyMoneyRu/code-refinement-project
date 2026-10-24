@@ -2,7 +2,17 @@ import { useMemo, useState } from "react";
 import { createFileRoute, getRouteApi, useRouter } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
-import { adminSetRoleFn, adminUsersFn } from "@/lib/auth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { adminDeleteUserFn, adminSetRoleFn, adminUsersFn, type AuthUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/users")({
@@ -19,6 +29,8 @@ function UsersAdmin() {
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [toDelete, setToDelete] = useState<AuthUser | null>(null);
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -34,10 +46,27 @@ function UsersAdmin() {
     else router.invalidate();
   };
 
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    const target = toDelete;
+    setBusy(target.id);
+    setError("");
+    setNotice("");
+    const r = await adminDeleteUserFn({ data: { userId: target.id } });
+    setBusy(null);
+    setToDelete(null);
+    if (!r.ok) setError(r.message);
+    else {
+      setNotice(`Пользователь ${target.email} удалён`);
+      router.invalidate();
+    }
+  };
+
   return (
     <>
       <WsTitle title="Пользователи" text="Зарегистрированные пользователи, роли и подтверждение email." />
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
       <WsCard className="p-0">
         <div className="flex flex-col gap-3 border-b border-brand-ink/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between">
           <label className="relative flex-1">
@@ -53,7 +82,7 @@ function UsersAdmin() {
         </div>
         {list.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
                 <tr>
                   {["Пользователь", "Email", "Роль", "Email подтверждён", "Регистрация", ""].map((c) => (
@@ -88,13 +117,24 @@ function UsersAdmin() {
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       {u.id !== me.id && (
-                        <button
-                          disabled={busy === u.id}
-                          onClick={() => toggleRole(u.id, u.role === "admin" ? "user" : "admin")}
-                          className="rounded-lg border border-brand-ink/15 px-3 py-1.5 text-xs font-medium hover:bg-brand-surface disabled:opacity-50"
-                        >
-                          {u.role === "admin" ? "Снять админа" : "Сделать админом"}
-                        </button>
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            disabled={busy === u.id}
+                            onClick={() => toggleRole(u.id, u.role === "admin" ? "user" : "admin")}
+                            className="whitespace-nowrap rounded-lg border border-brand-ink/15 px-3 py-1.5 text-xs font-medium hover:bg-brand-surface disabled:opacity-50"
+                          >
+                            {u.role === "admin" ? "Снять админа" : "Сделать админом"}
+                          </button>
+                          <button
+                            disabled={busy === u.id}
+                            onClick={() => setToDelete(u)}
+                            aria-label={`Удалить ${u.email}`}
+                            title="Удалить пользователя"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            <Icon name="Trash2" size={15} />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -110,6 +150,31 @@ function UsersAdmin() {
           />
         )}
       </WsCard>
+
+      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+        <AlertDialogContent className="theme-light bg-white text-brand-ink">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить пользователя?</AlertDialogTitle>
+            <AlertDialogDescription className="text-brand-muted">
+              Аккаунт <span className="font-medium text-brand-ink">{toDelete?.name}</span> ({toDelete?.email}) будет удалён безвозвратно.
+              Пользователь будет сразу разлогинен на всех устройствах.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={busy !== null}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -131,3 +131,11 @@ export const adminSetRoleFn = createServerFn({ method: "POST" })
     const r = await callAuth("admin_set_role", data, true);
     return r.ok ? { ok: true } : fail(r);
   });
+
+export const adminDeleteUserFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) => ({ userId: Number(obj(input).userId) || 0 }))
+  .handler(async ({ data }): Promise<ActionResult> => {
+    const { callAuth } = await import("./auth.server");
+    const r = await callAuth("admin_delete_user", data, true);
+    return r.ok ? { ok: true } : fail(r);
+  });
