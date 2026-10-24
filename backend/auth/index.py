@@ -27,7 +27,7 @@ SESSION_DAYS = 30
 CODE_MINUTES = 15
 MAX_CODE_ATTEMPTS = 5
 MAX_FAILED = 5
-SUPERADMIN_EMAIL = 'invvvestor@gmail.com'
+SUPERADMIN_EMAIL = 'invvvvestor@gmail.com'
 PERMISSIONS = ('users', 'strategies', 'courses', 'lessons', 'authors', 'purchases', 'access')
 LOCK_MINUTES = 15
 
@@ -363,6 +363,7 @@ def a_me(cur, _body, token):
     user = session_user(cur, token)
     if not user:
         return resp(200, {'ok': True, 'user': None})
+    user = ensure_superadmin(cur, user)
     return resp(200, {'ok': True, 'user': public_user(user)})
 
 
