@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import AuthLayout, { AuthField, FormAlert, SubmitButton } from "@/components/auth/AuthLayout";
-import Icon from "@/components/ui/icon";
-import { getMe, registerFn, resendFn } from "@/lib/auth";
+import VerifyCodeStep from "@/components/auth/VerifyCodeStep";
+import { getMe, registerFn } from "@/lib/auth";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Регистрация — JETRA" }, { name: "description", content: "Создайте аккаунт на платформе JETRA." }] }),
@@ -22,7 +22,6 @@ function RegisterPage() {
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<{ email: string; sent: boolean } | null>(null);
-  const [resent, setResent] = useState(false);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
 
   const submit = async (e: React.FormEvent) => {
@@ -47,44 +46,7 @@ function RegisterPage() {
     setDone({ email: form.email.trim(), sent: r.emailSent !== false });
   };
 
-  if (done) {
-    return (
-      <AuthLayout title="Подтвердите email" subtitle="Остался один шаг до входа в кабинет">
-        <div className="space-y-5">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-surface text-brand-blue">
-            <Icon name="MailCheck" size={28} />
-          </div>
-          {done.sent ? (
-            <p className="leading-relaxed text-brand-muted">
-              Мы отправили письмо на <span className="font-medium text-brand-ink">{done.email}</span>. Перейдите по ссылке в письме,
-              чтобы подтвердить адрес и войти. Если письма нет — проверьте папку «Спам».
-            </p>
-          ) : (
-            <FormAlert tone="error">
-              Аккаунт создан, но письмо пока не удалось отправить: почтовый сервис ещё не настроен. Попробуйте отправить письмо позже.
-            </FormAlert>
-          )}
-          {resent && <FormAlert tone="success">Письмо отправлено повторно.</FormAlert>}
-          <button
-            type="button"
-            disabled={loading}
-            onClick={async () => {
-              setLoading(true);
-              const r = await resendFn({ data: { email: done.email } });
-              setLoading(false);
-              setResent(r.ok);
-            }}
-            className="text-sm font-medium text-brand-blue hover:underline disabled:opacity-60"
-          >
-            Отправить письмо ещё раз
-          </button>
-          <Link to="/login" className="flex h-12 w-full items-center justify-center rounded-lg border border-brand-ink/15 bg-white font-medium text-brand-ink hover:bg-brand-surface">
-            Перейти ко входу
-          </Link>
-        </div>
-      </AuthLayout>
-    );
-  }
+  if (done) return <VerifyCodeStep email={done.email} sent={done.sent} onBack={() => setDone(null)} />;
 
   return (
     <AuthLayout title="Регистрация" subtitle="Создайте аккаунт по email и паролю">

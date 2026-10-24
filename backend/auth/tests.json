@@ -1,11 +1,99 @@
 {
   "tests": [
-    {"name": "CORS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
-    {"name": "Me without session", "method": "POST", "path": "/", "body": {"action": "me"}, "expectedStatus": 200, "expectedBody": {"ok": true, "user": null}, "bodyMatcher": "partial"},
-    {"name": "Unknown action", "method": "POST", "path": "/", "body": {"action": "nope"}, "expectedStatus": 400, "expectedBody": {"ok": false, "error": "unknown_action"}, "bodyMatcher": "partial"},
-    {"name": "Register validation", "method": "POST", "path": "/", "body": {"action": "register", "name": "A", "email": "bad", "password": "1"}, "expectedStatus": 400, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
-    {"name": "Login unknown user", "method": "POST", "path": "/", "body": {"action": "login", "email": "nobody@example.com", "password": "wrongpass1"}, "expectedStatus": 401, "expectedBody": {"ok": false, "error": "invalid_credentials"}, "bodyMatcher": "partial"},
-    {"name": "Verify bad token", "method": "POST", "path": "/", "body": {"action": "verify", "token": "invalid"}, "expectedStatus": 400, "expectedBody": {"ok": false, "error": "invalid_token"}, "bodyMatcher": "partial"},
-    {"name": "Admin without session", "method": "POST", "path": "/", "body": {"action": "admin_users"}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"}
+    {
+      "name": "CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Me without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "me"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "ok": true,
+        "user": null
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Unknown action",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "nope"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "ok": false,
+        "error": "unknown_action"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Register validation",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "register",
+        "name": "A",
+        "email": "bad",
+        "password": "1"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Login unknown user",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "login",
+        "email": "nobody@example.com",
+        "password": "wrongpass1"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false,
+        "error": "invalid_credentials"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Verify bad code",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "verify",
+        "email": "nobody@example.com",
+        "code": "000000"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "ok": false,
+        "error": "invalid_code"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Admin without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "admin_users"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
+    }
   ]
 }

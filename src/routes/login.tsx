@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import AuthLayout, { AuthField, FormAlert, SubmitButton } from "@/components/auth/AuthLayout";
+import VerifyCodeStep from "@/components/auth/VerifyCodeStep";
 import { getMe, loginFn, resendFn } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
@@ -21,6 +22,7 @@ function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [formError, setFormError] = useState<{ code: string; text: string } | null>(null);
   const [notice, setNotice] = useState("");
+  const [verifyFor, setVerifyFor] = useState("");
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -47,8 +49,10 @@ function LoginPage() {
     await resendFn({ data: { email: email.trim() } });
     setLoading(false);
     setFormError(null);
-    setNotice("Мы отправили новое письмо со ссылкой для подтверждения. Проверьте почту, включая папку «Спам».");
+    setVerifyFor(email.trim());
   };
+
+  if (verifyFor) return <VerifyCodeStep email={verifyFor} onBack={() => setVerifyFor("")} />;
 
   return (
     <AuthLayout title="Вход" subtitle="Войдите в личный кабинет JETRA">
@@ -65,7 +69,7 @@ function LoginPage() {
               <>
                 {" "}
                 <button type="button" onClick={resend} className="font-medium underline">
-                  Отправить письмо ещё раз
+                  Получить код подтверждения
                 </button>
               </>
             )}

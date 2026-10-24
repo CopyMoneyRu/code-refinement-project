@@ -15,9 +15,7 @@ import { Route as CabinetRouteImport } from './routes/cabinet'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StrategiesRouteImport } from './routes/strategies'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
@@ -64,19 +62,9 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const StrategiesRoute = StrategiesRouteImport.update({
   id: '/strategies',
   path: '/strategies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -162,9 +150,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/strategies': typeof StrategiesRoute
-  '/verify-email': typeof VerifyEmailRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -186,9 +172,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/strategies': typeof StrategiesRoute
-  '/verify-email': typeof VerifyEmailRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -213,9 +197,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/strategies': typeof StrategiesRoute
-  '/verify-email': typeof VerifyEmailRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -241,9 +223,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/reset-password'
     | '/strategies'
-    | '/verify-email'
     | '/admin/access'
     | '/admin/courses'
     | '/admin/lessons'
@@ -265,9 +245,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/reset-password'
     | '/strategies'
-    | '/verify-email'
     | '/admin/access'
     | '/admin/courses'
     | '/admin/lessons'
@@ -291,9 +269,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/reset-password'
     | '/strategies'
-    | '/verify-email'
     | '/admin/access'
     | '/admin/courses'
     | '/admin/lessons'
@@ -318,9 +294,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   StrategiesRoute: typeof StrategiesRoute
-  VerifyEmailRoute: typeof VerifyEmailRoute
   UniversitySlugRoute: typeof UniversitySlugRoute
   UniversityIndexRoute: typeof UniversityIndexRoute
 }
@@ -369,25 +343,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/strategies': {
       id: '/strategies'
       path: '/strategies'
       fullPath: '/strategies'
       preLoaderRoute: typeof StrategiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -548,9 +508,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   StrategiesRoute: StrategiesRoute,
-  VerifyEmailRoute: VerifyEmailRoute,
   UniversitySlugRoute: UniversitySlugRoute,
   UniversityIndexRoute: UniversityIndexRoute,
 }

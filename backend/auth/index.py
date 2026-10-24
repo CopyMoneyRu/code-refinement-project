@@ -24,8 +24,8 @@ CORS = {
 EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 PBKDF2_ITER = 210_000
 SESSION_DAYS = 30
-VERIFY_HOURS = 48
-RESET_HOURS = 1
+CODE_MINUTES = 15
+MAX_CODE_ATTEMPTS = 5
 MAX_FAILED = 5
 LOCK_MINUTES = 15
 
@@ -96,33 +96,11 @@ def public_user(u: dict) -> dict:
     }
 
 
-def site_url() -> str:
-    return os.environ.get('SITE_URL', '').rstrip('/')
-
-
 def smtp_ready() -> bool:
-    return all(os.environ.get(k) for k in ('SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD', 'SITE_URL'))
+    return all(os.environ.get(k) for k in ('SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD'))
 
 
-def send_mail(to: str, subject: str, title: str, text: str, button: str, link: str) -> bool:
-    if not smtp_ready():
-        print(f'[auth] SMTP не настроен, письмо «{subject}» не отправлено')
-        return False
-    html = f"""<!doctype html><html><body style="margin:0;background:#F5F7FA;font-family:Arial,sans-serif;color:#17263C">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px">
-<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-radius:12px;padding:40px">
-<tr><td style="font-size:22px;font-weight:800;letter-spacing:4px">JETRA</td></tr>
-<tr><td style="padding-top:28px;font-size:22px;font-weight:700">{title}</td></tr>
-<tr><td style="padding-top:12px;font-size:15px;line-height:1.6;color:#5A6B82">{text}</td></tr>
-<tr><td style="padding-top:28px"><a href="{link}" style="display:inline-block;background:#397FC4;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600">{button}</a></td></tr>
-<tr><td style="padding-top:28px;font-size:12px;color:#8A97A8;line-height:1.5">Если кнопка не работает, скопируйте ссылку в браузер:<br>{link}<br><br>Если вы не запрашивали это письмо, просто проигнорируйте его.</td></tr>
-</table></td></tr></table></body></html>"""
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = f'JETRA <{os.environ["SMTP_USER"]}>'
-    msg['To'] = to
-    msg.attach(MIMEText(f'{title}\n\n{text}\n\n{link}', 'plain', 'utf-8'))
-    msg.attach(MIMEText(html, 'html', 'utf-8'))
+def deliver(to: str, msg) -> bool:
     host, port = os.environ['SMTP_HOST'], int(os.environ['SMTP_PORT'])
     ctx = ssl.create_default_context()
     try:
@@ -141,29 +119,78 @@ def send_mail(to: str, subject: str, title: str, text: str, button: str, link: s
         return False
 
 
-def issue_email_token(cur, user_id: int, purpose: str, hours: int) -> str:
+def code_hash(user_id: int, purpose: str, code: str) -> str:
+    return sha(f'{user_id}:{purpose}:{code}')
+
+
+def issue_code(cur, user_id: int, purpose: str) -> str:
     cur.execute(
         f"UPDATE {t('email_tokens')} SET used_at = NOW() WHERE user_id = %s AND purpose = %s AND used_at IS NULL",
         (user_id, purpose),
     )
-    raw = secrets.token_urlsafe(32)
+    code = f'{secrets.randbelow(1_000_000):06d}'
     cur.execute(
         f"INSERT INTO {t('email_tokens')} (user_id, purpose, token_hash, expires_at) VALUES (%s, %s, %s, %s)",
-        (user_id, purpose, sha(raw), now() + timedelta(hours=hours)),
+        (user_id, purpose, code_hash(user_id, purpose, code), now() + timedelta(minutes=CODE_MINUTES)),
     )
-    return raw
+    return code
+
+
+def send_code_mail(to: str, subject: str, title: str, text: str, code: str) -> bool:
+    if not smtp_ready():
+        print(f'[auth] SMTP не настроен, письмо «{subject}» не отправлено')
+        return False
+    html = f"""<!doctype html><html><body style="margin:0;background:#F5F7FA;font-family:Arial,sans-serif;color:#17263C">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px">
+<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-radius:12px;padding:40px">
+<tr><td style="font-size:22px;font-weight:800;letter-spacing:4px">JETRA</td></tr>
+<tr><td style="padding-top:28px;font-size:22px;font-weight:700">{title}</td></tr>
+<tr><td style="padding-top:12px;font-size:15px;line-height:1.6;color:#5A6B82">{text}</td></tr>
+<tr><td style="padding-top:24px"><div style="display:inline-block;background:#E6ECF3;border-radius:10px;padding:16px 28px;font-size:34px;font-weight:700;letter-spacing:10px;color:#17263C;font-family:'Courier New',monospace">{code}</div></td></tr>
+<tr><td style="padding-top:24px;font-size:12px;color:#8A97A8;line-height:1.5">Код действует {CODE_MINUTES} минут. Никому не сообщайте его.<br>Если вы не запрашивали это письмо, просто проигнорируйте его.</td></tr>
+</table></td></tr></table></body></html>"""
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = f'JETRA <{os.environ["SMTP_USER"]}>'
+    msg['To'] = to
+    msg.attach(MIMEText(f'{title}\n\n{text}\n\nКод: {code}\n\nКод действует {CODE_MINUTES} минут.', 'plain', 'utf-8'))
+    msg.attach(MIMEText(html, 'html', 'utf-8'))
+    return deliver(to, msg)
 
 
 def send_verify(cur, user: dict) -> bool:
-    raw = issue_email_token(cur, user['id'], 'verify', VERIFY_HOURS)
-    return send_mail(
+    code = issue_code(cur, user['id'], 'verify')
+    return send_code_mail(
         user['email'],
-        'Подтвердите email — JETRA',
+        f'{code} — код подтверждения JETRA',
         'Подтвердите ваш email',
-        f'Здравствуйте, {user["name"]}! Чтобы завершить регистрацию на платформе JETRA, подтвердите адрес электронной почты. Ссылка действует 48 часов.',
-        'Подтвердить email',
-        f'{site_url()}/verify-email?token={raw}',
+        f'Здравствуйте, {user["name"]}! Введите этот код на сайте JETRA, чтобы завершить регистрацию.',
+        code,
     )
+
+
+def check_code(cur, user: dict, purpose: str, code: str):
+    """Возвращает (row, None) при успехе или (None, ответ-ошибку)."""
+    bad = err(400, 'invalid_code', 'Неверный код. Проверьте письмо и попробуйте ещё раз.')
+    cur.execute(
+        f"""SELECT * FROM {t('email_tokens')} WHERE user_id = %s AND purpose = %s AND used_at IS NULL
+            ORDER BY id DESC LIMIT 1""",
+        (user['id'], purpose),
+    )
+    row = cur.fetchone()
+    if not row or row['expires_at'] <= now():
+        return None, err(400, 'code_expired', 'Срок действия кода истёк. Запросите новый код.')
+    if row['attempts'] >= MAX_CODE_ATTEMPTS:
+        return None, err(429, 'too_many_attempts', 'Слишком много неверных попыток. Запросите новый код.')
+    if not re.fullmatch(r'\d{6}', code) or not hmac.compare_digest(row['token_hash'], code_hash(user['id'], purpose, code)):
+        cur.execute(f"UPDATE {t('email_tokens')} SET attempts = attempts + 1 WHERE id = %s", (row['id'],))
+        left = MAX_CODE_ATTEMPTS - row['attempts'] - 1
+        if left <= 0:
+            cur.execute(f"UPDATE {t('email_tokens')} SET used_at = NOW() WHERE id = %s", (row['id'],))
+            return None, err(429, 'too_many_attempts', 'Слишком много неверных попыток. Запросите новый код.')
+        return None, bad
+    cur.execute(f"UPDATE {t('email_tokens')} SET used_at = NOW() WHERE id = %s", (row['id'],))
+    return row, None
 
 
 def find_user(cur, email: str):
@@ -254,27 +281,27 @@ def a_resend(cur, body, _token):
     return resp(200, {'ok': True, 'emailSent': sent if user else True})
 
 
-def consume_token(cur, raw: str, purpose: str):
-    if not raw or len(raw) > 200:
-        return None
-    cur.execute(
-        f"""SELECT * FROM {t('email_tokens')} WHERE token_hash = %s AND purpose = %s
-            AND used_at IS NULL AND expires_at > NOW()""",
-        (sha(raw), purpose),
-    )
-    return cur.fetchone()
-
-
 def a_verify(cur, body, _token):
-    row = consume_token(cur, str(body.get('token', '')), 'verify')
-    if not row:
-        return err(400, 'invalid_token', 'Ссылка недействительна или устарела. Запросите новое письмо.')
-    cur.execute(f"UPDATE {t('email_tokens')} SET used_at = NOW() WHERE id = %s", (row['id'],))
+    email = str(body.get('email', '')).strip().lower()
+    code = str(body.get('code', '')).strip()
+    user = find_user(cur, email) if EMAIL_RE.match(email) else None
+    if not user:
+        return err(400, 'invalid_code', 'Неверный код. Проверьте письмо и попробуйте ещё раз.')
+    if user['email_verified']:
+        return err(400, 'already_verified', 'Email уже подтверждён. Войдите с паролем.')
+    _, denied = check_code(cur, user, 'verify', code)
+    if denied:
+        return denied
     cur.execute(
         f"UPDATE {t('users')} SET email_verified = TRUE, updated_at = NOW() WHERE id = %s RETURNING *",
-        (row['user_id'],),
+        (user['id'],),
     )
-    return resp(200, {'ok': True, 'user': public_user(cur.fetchone())})
+    user = cur.fetchone()
+    if is_admin_email(email) and user['role'] != 'admin':
+        cur.execute(f"UPDATE {t('users')} SET role = 'admin' WHERE id = %s", (user['id'],))
+        user['role'] = 'admin'
+    raw = create_session(cur, user['id'], body)
+    return resp(200, {'ok': True, 'token': raw, 'maxAge': SESSION_DAYS * 86400, 'user': public_user(user)})
 
 
 def create_session(cur, user_id: int, body: dict) -> str:
@@ -310,7 +337,7 @@ def a_login(cur, body, _token):
         return generic
     cur.execute(f"UPDATE {t('users')} SET failed_logins = 0, locked_until = NULL WHERE id = %s", (user['id'],))
     if not user['email_verified']:
-        return err(403, 'email_not_verified', 'Подтвердите email — мы отправили письмо со ссылкой при регистрации.')
+        return err(403, 'email_not_verified', 'Подтвердите email — введите код из письма.')
     if is_admin_email(email) and user['role'] != 'admin':
         cur.execute(f"UPDATE {t('users')} SET role = 'admin' WHERE id = %s", (user['id'],))
         user['role'] = 'admin'
@@ -335,33 +362,35 @@ def a_forgot(cur, body, _token):
     email = str(body.get('email', '')).strip().lower()
     user = find_user(cur, email) if EMAIL_RE.match(email) else None
     if user:
-        raw = issue_email_token(cur, user['id'], 'reset', RESET_HOURS)
-        send_mail(
+        code = issue_code(cur, user['id'], 'reset')
+        send_code_mail(
             user['email'],
-            'Восстановление пароля — JETRA',
+            f'{code} — код для смены пароля JETRA',
             'Смена пароля',
-            'Мы получили запрос на смену пароля для вашего аккаунта JETRA. Ссылка действует 1 час.',
-            'Задать новый пароль',
-            f'{site_url()}/reset-password?token={raw}',
+            'Мы получили запрос на смену пароля для вашего аккаунта JETRA. Введите этот код на сайте.',
+            code,
         )
     return resp(200, {'ok': True})
 
 
 def a_reset(cur, body, _token):
+    email = str(body.get('email', '')).strip().lower()
     password = str(body.get('password', ''))
     problem = password_problem(password)
     if problem:
         return err(400, 'weak_password', problem)
-    row = consume_token(cur, str(body.get('token', '')), 'reset')
-    if not row:
-        return err(400, 'invalid_token', 'Ссылка недействительна или устарела. Запросите восстановление ещё раз.')
-    cur.execute(f"UPDATE {t('email_tokens')} SET used_at = NOW() WHERE id = %s", (row['id'],))
+    user = find_user(cur, email) if EMAIL_RE.match(email) else None
+    if not user:
+        return err(400, 'invalid_code', 'Неверный код. Проверьте письмо и попробуйте ещё раз.')
+    _, denied = check_code(cur, user, 'reset', str(body.get('code', '')).strip())
+    if denied:
+        return denied
     cur.execute(
         f"""UPDATE {t('users')} SET password_hash = %s, email_verified = TRUE, failed_logins = 0,
             locked_until = NULL, updated_at = NOW() WHERE id = %s""",
-        (hash_password(password), row['user_id']),
+        (hash_password(password), user['id']),
     )
-    cur.execute(f"UPDATE {t('sessions')} SET revoked_at = NOW() WHERE user_id = %s AND revoked_at IS NULL", (row['user_id'],))
+    cur.execute(f"UPDATE {t('sessions')} SET revoked_at = NOW() WHERE user_id = %s AND revoked_at IS NULL", (user['id'],))
     return resp(200, {'ok': True})
 
 

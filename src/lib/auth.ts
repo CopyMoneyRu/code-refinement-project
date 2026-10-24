@@ -65,11 +65,16 @@ export const resendFn = createServerFn({ method: "POST" })
   });
 
 export const verifyEmailFn = createServerFn({ method: "POST" })
-  .validator((input: unknown) => ({ token: str(obj(input).token, 200) }))
-  .handler(async ({ data }): Promise<ActionResult> => {
-    const { callAuth } = await import("./auth.server");
-    const r = await callAuth("verify", data);
-    return r.ok ? { ok: true } : fail(r);
+  .validator((input: unknown) => {
+    const o = obj(input);
+    return { email: str(o.email, 255), code: str(o.code, 12) };
+  })
+  .handler(async ({ data }): Promise<ActionResult & { role?: AuthUser["role"] }> => {
+    const { callAuth, clientMeta, saveSession } = await import("./auth.server");
+    const r = await callAuth<{ token: string; maxAge: number; user: AuthUser }>("verify", { ...data, ...clientMeta() });
+    if (!r.ok) return fail(r);
+    saveSession(r.token, r.maxAge);
+    return { ok: true, role: r.user.role };
   });
 
 export const forgotFn = createServerFn({ method: "POST" })
@@ -83,7 +88,7 @@ export const forgotFn = createServerFn({ method: "POST" })
 export const resetPasswordFn = createServerFn({ method: "POST" })
   .validator((input: unknown) => {
     const o = obj(input);
-    return { token: str(o.token, 200), password: str(o.password, 200) };
+    return { email: str(o.email, 255), code: str(o.code, 12), password: str(o.password, 200) };
   })
   .handler(async ({ data }): Promise<ActionResult> => {
     const { callAuth } = await import("./auth.server");
