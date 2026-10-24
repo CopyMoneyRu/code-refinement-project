@@ -24,6 +24,7 @@ function RegisterPage() {
   const [agree, setAgree] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
+  const [taken, setTaken] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<{ email: string; sent: boolean } | null>(null);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
@@ -39,12 +40,14 @@ function RegisterPage() {
     if (!agree) next.agree = "Необходимо согласие";
     setErrors(next);
     setFormError("");
+    setTaken(false);
     if (Object.keys(next).length) return;
     setLoading(true);
     const r = await registerFn({ data: { name: form.name.trim(), email: form.email.trim(), password: form.password } });
     setLoading(false);
     if (!r.ok) {
-      setFormError(r.message);
+      if (r.error === "email_taken") setTaken(true);
+      else setFormError(r.message);
       return;
     }
     setDone({ email: form.email.trim(), sent: r.emailSent !== false });
@@ -66,6 +69,14 @@ function RegisterPage() {
         </label>
         {errors.agree && <span className="block text-sm text-red-600">{errors.agree}</span>}
         {formError && <FormAlert tone="error">{formError}</FormAlert>}
+        {taken && (
+          <FormAlert tone="error">
+            Этот email уже зарегистрирован — код подтверждения больше не нужен.{" "}
+            <Link to="/login" className="font-medium underline">Войдите с паролем</Link>
+            {" или "}
+            <Link to="/forgot-password" className="font-medium underline">восстановите пароль</Link>.
+          </FormAlert>
+        )}
         <SubmitButton loading={loading}>Создать аккаунт</SubmitButton>
       </form>
       <p className="mt-8 text-center text-sm text-brand-muted">

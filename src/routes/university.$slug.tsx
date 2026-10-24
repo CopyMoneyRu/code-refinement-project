@@ -3,11 +3,11 @@ import PublicLayout from "@/components/site/PublicLayout";
 import { AccessBadge } from "@/components/university/CourseCard";
 import Icon from "@/components/ui/icon";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { COURSES, lessonsCount } from "@/data/catalog";
+import { courseBySlugFn, formatPrice, lessonsTotal } from "@/lib/courses";
 
 export const Route = createFileRoute("/university/$slug")({
-  loader: ({ params }) => {
-    const course = COURSES.find((c) => c.slug === params.slug);
+  loader: async ({ params }) => {
+    const course = await courseBySlugFn({ data: { slug: params.slug } });
     if (!course) throw notFound();
     return { course };
   },
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/university/$slug")({
         { name: "description", content: desc },
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
+        ...(loaderData?.course.coverUrl ? [{ property: "og:image", content: loaderData.course.coverUrl }] : []),
       ],
     };
   },
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/university/$slug")({
 
 function CoursePage() {
   const { course } = Route.useLoaderData();
-  const total = lessonsCount(course);
+  const total = lessonsTotal(course);
 
   return (
     <PublicLayout>
@@ -41,12 +42,18 @@ function CoursePage() {
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-xs uppercase tracking-[0.14em] text-brand-muted">{course.category}</span>
-                <AccessBadge access={course.access} />
+                <AccessBadge access={course.access} price={course.price} />
               </div>
               <h1 className="mt-5 font-display text-4xl font-light leading-[1.1] text-brand-ink md:text-[52px]">
                 {course.title}
               </h1>
               <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-brand-muted">{course.short}</p>
+
+              {course.coverUrl && (
+                <div className="mt-8 aspect-[16/9] overflow-hidden rounded-2xl bg-brand-surface">
+                  <img src={course.coverUrl} alt={course.title} className="h-full w-full object-cover" />
+                </div>
+              )}
 
               <div className="mt-10 grid grid-cols-3 gap-4 border-y border-brand-ink/10 py-6">
                 {[
@@ -61,10 +68,19 @@ function CoursePage() {
                 ))}
               </div>
 
+              {course.description && (
+                <>
+                  <h2 className="mt-12 font-display text-2xl font-semibold text-brand-ink">О курсе</h2>
+                  <div className="mt-5 whitespace-pre-line text-[16px] leading-relaxed text-brand-ink/80">{course.description}</div>
+                </>
+              )}
+
+              {course.modules.length > 0 && (
+              <>
               <h2 className="mt-12 font-display text-2xl font-semibold text-brand-ink">Программа курса</h2>
-              <Accordion type="multiple" defaultValue={[course.modules[0].id]} className="mt-6 space-y-3">
+              <Accordion type="multiple" defaultValue={["m0"]} className="mt-6 space-y-3">
                 {course.modules.map((mod, i) => (
-                  <AccordionItem key={mod.id} value={mod.id} className="rounded-xl border border-brand-ink/10 bg-white px-5">
+                  <AccordionItem key={i} value={`m${i}`} className="rounded-xl border border-brand-ink/10 bg-white px-5">
                     <AccordionTrigger className="py-5 text-left hover:no-underline">
                       <span className="flex items-center gap-4">
                         <span className="font-display text-sm tabular-nums text-brand-blue">{String(i + 1).padStart(2, "0")}</span>
@@ -74,8 +90,8 @@ function CoursePage() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <ul className="space-y-1 pb-2">
-                        {mod.lessons.map((l) => (
-                          <li key={l.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-[15px] text-brand-ink/85">
+                        {mod.lessons.map((l, li) => (
+                          <li key={li} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-[15px] text-brand-ink/85">
                             <span className="flex items-center gap-3">
                               <Icon name={course.access === "free" ? "PlayCircle" : "Lock"} size={16} className="shrink-0 text-brand-ink/50" />
                               {l.title}
@@ -91,13 +107,15 @@ function CoursePage() {
                   </AccordionItem>
                 ))}
               </Accordion>
+              </>
+              )}
             </div>
 
             <aside className="lg:sticky lg:top-8 lg:self-start">
               <div className="rounded-2xl border border-brand-ink/10 bg-white p-7">
                 <div className="text-sm text-brand-muted">Доступ к курсу</div>
                 <div className="mt-2 font-display text-2xl font-semibold text-brand-ink">
-                  {course.access === "free" ? "Бесплатно" : "Платный доступ"}
+                  {course.access === "free" ? "Бесплатно" : course.price ? formatPrice(course.price) : "Платный доступ"}
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-brand-muted">
                   {course.access === "free"
@@ -116,15 +134,18 @@ function CoursePage() {
                   <li className="flex items-center gap-3"><Icon name="BarChart3" size={16} className="text-brand-blue" />Прогресс обучения</li>
                 </ul>
               </div>
-              <div className="mt-5 flex items-center gap-4 rounded-2xl border border-brand-ink/10 bg-white p-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-blue/15 text-brand-blue">
-                  <Icon name="UserRound" size={22} />
+              {course.author && (
+                <div className="mt-5 flex items-center gap-4 rounded-2xl border border-brand-ink/10 bg-white p-6">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-blue/15 text-brand-blue">
+                    <Icon name="UserRound" size={22} />
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.14em] text-brand-muted">Автор курса</div>
+                    <div className="mt-0.5 font-medium text-brand-ink">{course.author.name}</div>
+                    {course.author.role && <div className="text-sm text-brand-muted">{course.author.role}</div>}
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-brand-ink">{course.teacher.name}</div>
-                  <div className="text-sm text-brand-muted">{course.teacher.role}</div>
-                </div>
-              </div>
+              )}
             </aside>
           </div>
         </div>

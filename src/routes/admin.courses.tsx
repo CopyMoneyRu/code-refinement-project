@@ -1,22 +1,151 @@
+import { useMemo, useState } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import Icon from "@/components/ui/icon";
+import CourseForm from "@/components/workspace/CourseForm";
+import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { requirePermission } from "@/lib/adminGuard";
-import { createFileRoute } from "@tanstack/react-router";
-import AdminTable from "@/components/workspace/AdminTable";
+import { adminCoursesFn, formatPrice, lessonsTotal, type DbCourse } from "@/lib/courses";
 
 export const Route = createFileRoute("/admin/courses")({
   beforeLoad: ({ context }) => requirePermission(context, "courses"),
+  loader: () => adminCoursesFn(),
   component: CoursesAdmin,
 });
 
 function CoursesAdmin() {
+  const { courses, authors } = Route.useLoaderData();
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<DbCourse | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  const categories = useMemo(() => [...new Set(courses.map((c) => c.category))].sort(), [courses]);
+  const list = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return s ? courses.filter((c) => c.title.toLowerCase().includes(s) || c.category.toLowerCase().includes(s)) : courses;
+  }, [courses, q]);
+
+  const openForm = (c: DbCourse | null) => {
+    setEditing(c);
+    setFormOpen(true);
+    setNotice("");
+  };
+
   return (
-    <AdminTable
-      title="Курсы"
-      text="Создание и редактирование курсов JETRA University."
-      columns={['Название', 'Категория', 'Тип', 'Цена', 'Модулей', 'Статус']}
-      addLabel="Новый курс"
-      emptyIcon="GraduationCap"
-      emptyTitle="Курсы будут храниться в базе данных"
-      emptyText="Сейчас каталог показан в ознакомительном режиме. Управление курсами откроется после подключения сервера."
-    />
+    <>
+      <WsTitle
+        title="Курсы"
+        text="Добавление и редактирование курсов JETRA University. Изменения сразу появляются в каталоге."
+        action={
+          <button onClick={() => openForm(null)} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white hover:bg-[#3271B0]">
+            <Icon name="Plus" size={16} /> Добавить курс
+          </button>
+        }
+      />
+      {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
+      <WsCard className="p-0">
+        <div className="flex flex-col gap-3 border-b border-brand-ink/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <label className="relative flex-1">
+            <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Поиск по названию или категории"
+              className="h-10 w-full rounded-lg border border-brand-ink/15 pl-9 pr-3 text-sm focus:border-brand-blue focus:outline-none sm:max-w-xs"
+            />
+          </label>
+          <span className="text-sm text-brand-muted">Всего: {courses.length}</span>
+        </div>
+        {list.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px] text-left text-sm">
+              <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
+                <tr>
+                  {["Курс", "Категория", "Автор", "Цена", "Программа", "Статус", ""].map((c) => (
+                    <th key={c} className="px-5 py-3.5 font-medium">{c}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-ink/[0.06]">
+                {list.map((c) => (
+                  <tr key={c.id} className="cursor-pointer hover:bg-brand-light/50" onClick={() => openForm(c)}>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-brand-surface">
+                          {c.coverUrl ? <img src={c.coverUrl} alt="" className="h-full w-full object-cover" /> : <Icon name="Image" size={16} className="text-brand-muted" />}
+                        </div>
+                        <span className="font-medium">{c.title}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-brand-muted">{c.category}</td>
+                    <td className="px-5 py-3.5 text-brand-muted">{c.author?.name ?? "—"}</td>
+                    <td className="whitespace-nowrap px-5 py-3.5">
+                      {c.access === "free" ? <span className="text-emerald-700">Бесплатно</span> : formatPrice(c.price)}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-brand-muted">
+                      {c.modules.length} мод. · {lessonsTotal(c)} ур.
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {c.published ? (
+                        <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">В каталоге</span>
+                      ) : (
+                        <span className="rounded-md bg-brand-surface px-2.5 py-1 text-xs font-medium text-brand-muted">Скрыт</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="inline-flex items-center gap-2">
+                        {c.published && (
+                          <Link
+                            to="/university/$slug"
+                            params={{ slug: c.slug }}
+                            target="_blank"
+                            title="Открыть на сайте"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-ink/15 text-brand-muted hover:bg-brand-surface hover:text-brand-ink"
+                          >
+                            <Icon name="ExternalLink" size={15} />
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => openForm(c)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-ink/15 px-3 py-1.5 text-xs font-medium hover:bg-brand-surface"
+                        >
+                          <Icon name="Pencil" size={14} /> Изменить
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            icon="GraduationCap"
+            title={courses.length ? "Ничего не найдено" : "Курсов пока нет"}
+            text={courses.length ? "Измените условия поиска." : "Нажмите «Добавить курс», чтобы создать первый курс."}
+          />
+        )}
+      </WsCard>
+
+      <CourseForm
+        open={formOpen}
+        course={editing}
+        authors={authors}
+        categories={categories}
+        onClose={() => setFormOpen(false)}
+        onSaved={(c, created) => {
+          setFormOpen(false);
+          setNotice(
+            created
+              ? c.published
+                ? `Курс «${c.title}» создан и опубликован в каталоге`
+                : `Курс «${c.title}» создан (скрыт из каталога)`
+              : `Курс «${c.title}» сохранён`,
+          );
+          router.invalidate();
+        }}
+      />
+    </>
   );
 }

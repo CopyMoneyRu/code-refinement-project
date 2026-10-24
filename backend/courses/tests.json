@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {"name": "CORS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "Public course list", "method": "POST", "path": "/", "body": {"action": "list"}, "expectedStatus": 200, "expectedBody": {"ok": true}, "bodyMatcher": "partial"},
+    {"name": "Course by slug", "method": "POST", "path": "/", "body": {"action": "get", "slug": "osnovy-investiciy"}, "expectedStatus": 200, "expectedBody": {"ok": true}, "bodyMatcher": "partial"},
+    {"name": "Unknown course", "method": "POST", "path": "/", "body": {"action": "get", "slug": "no-such-course"}, "expectedStatus": 404, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
+    {"name": "Save without session", "method": "POST", "path": "/", "body": {"action": "save", "title": "Test"}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
+    {"name": "Upload without session", "method": "POST", "path": "/", "body": {"action": "upload_cover"}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"}
+  ]
+}

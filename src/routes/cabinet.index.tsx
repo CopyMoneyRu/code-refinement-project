@@ -1,11 +1,12 @@
 import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
-import { COURSES } from "@/data/catalog";
+import { catalogFn } from "@/lib/courses";
 import { ADMIN_SECTIONS } from "@/lib/adminSections";
 import { can, ROLE_LABEL } from "@/lib/permissions";
 
 export const Route = createFileRoute("/cabinet/")({
+  loader: () => catalogFn(),
   component: CabinetHome,
 });
 
@@ -13,6 +14,7 @@ const cabinetApi = getRouteApi("/cabinet");
 
 function CabinetHome() {
   const { user } = cabinetApi.useRouteContext();
+  const { courses } = Route.useLoaderData();
   const tiles = [
     { label: "Курсов в обучении", icon: "GraduationCap" },
     { label: "Пройдено уроков", icon: "CheckCircle2" },
@@ -77,8 +79,8 @@ function CabinetHome() {
         <WsCard>
           <div className="font-semibold">Рекомендуем начать</div>
           <ul className="mt-4 divide-y divide-brand-ink/[0.07]">
-            {COURSES.filter((c) => c.access === "free").map((c) => (
-              <li key={c.slug}>
+            {courses.filter((c) => c.access === "free").slice(0, 6).map((c) => (
+              <li key={c.id}>
                 <Link to="/university/$slug" params={{ slug: c.slug }} className="flex items-center justify-between gap-3 py-3.5 text-[15px] hover:text-brand-blue">
                   {c.title}
                   <Icon name="ChevronRight" size={16} className="text-brand-muted" />

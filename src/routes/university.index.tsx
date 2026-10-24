@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import CourseCard from "@/components/university/CourseCard";
 import Icon from "@/components/ui/icon";
-import { AUTHORS, CATEGORIES, COURSES } from "@/data/catalog";
+import { catalogFn } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/university/")({
@@ -15,28 +15,43 @@ export const Route = createFileRoute("/university/")({
       { property: "og:description", content: "Курсы по инвестициям и управлению капиталом." },
     ],
   }),
+  loader: () => catalogFn(),
   component: UniversityPage,
 });
+
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("") || "?";
 
 type AccessFilter = "all" | "free" | "paid";
 
 function UniversityPage() {
+  const { courses: COURSES, authors } = Route.useLoaderData();
+  const AUTHORS = useMemo(
+    () => authors.filter((a) => COURSES.some((c) => c.author?.id === a.id)).map((a) => ({ ...a, initials: initialsOf(a.name) })),
+    [authors, COURSES],
+  );
+  const CATEGORIES = useMemo(() => ["Все", ...[...new Set(COURSES.map((c) => c.category))].sort()], [COURSES]);
   const [cat, setCat] = useState<string>("Все");
   const [access, setAccess] = useState<AccessFilter>("all");
   const [q, setQ] = useState("");
-  const [author, setAuthor] = useState<string | null>(null);
+  const [author, setAuthor] = useState<number | null>(null);
   const [authorView, setAuthorView] = useState<"cards" | "list">("cards");
 
   const list = useMemo(
     () =>
       COURSES.filter(
         (c) =>
-          (!author || c.authorId === author) &&
+          (!author || c.author?.id === author) &&
           (cat === "Все" || c.category === cat) &&
           (access === "all" || c.access === access) &&
           c.title.toLowerCase().includes(q.trim().toLowerCase()),
       ),
-    [cat, access, q, author],
+    [COURSES, cat, access, q, author],
   );
 
   return (
@@ -83,8 +98,8 @@ function UniversityPage() {
               </div>
             ) : (
               <ul className="mt-5 divide-y divide-brand-ink/10 overflow-hidden rounded-xl border border-brand-ink/10 bg-white">
-                {[{ id: null as string | null, name: "Все авторы", role: "" }, ...AUTHORS].map((a) => {
-                  const count = a.id ? COURSES.filter((c) => c.authorId === a.id).length : COURSES.length;
+                {[{ id: null as number | null, name: "Все авторы", role: "" }, ...AUTHORS].map((a) => {
+                  const count = a.id ? COURSES.filter((c) => c.author?.id === a.id).length : COURSES.length;
                   return (
                     <li key={a.id ?? "all"}>
                       <button
@@ -156,7 +171,7 @@ function UniversityPage() {
           {list.length ? (
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((c) => (
-                <CourseCard key={c.slug} c={c} />
+                <CourseCard key={c.id} c={c} />
               ))}
             </div>
           ) : (
