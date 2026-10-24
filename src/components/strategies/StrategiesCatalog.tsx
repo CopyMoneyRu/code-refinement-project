@@ -10,7 +10,7 @@ export default function StrategiesCatalog() {
 
   return (
     <div>
-      <div className="-mx-1 flex gap-2 overflow-x-auto border-b border-brand-ink/10 px-1 pb-6">
+      <div className="-mx-1 flex gap-2 overflow-x-auto border-b border-brand-ink/10 px-1 pb-6 md:flex-wrap md:justify-center md:overflow-visible">
         {MARKETS.map((m) => {
           const count = m.id === "all" ? STRATEGIES.length : STRATEGIES.filter((s) => s.market === m.id).length;
           const active = market === m.id;

@@ -11,13 +11,14 @@ export type Strategy = {
   market: Market;
 };
 
-export type Market = "crypto" | "stocks" | "realty" | "other";
+export type Market = "crypto" | "stocks" | "realty" | "business" | "other";
 
 export const MARKETS: { id: Market | "all"; label: string; icon: string }[] = [
   { id: "all", label: "Все", icon: "LayoutGrid" },
   { id: "crypto", label: "Крипторынок", icon: "Bitcoin" },
   { id: "stocks", label: "Фондовый рынок", icon: "CandlestickChart" },
   { id: "realty", label: "Недвижимость", icon: "Building2" },
+  { id: "business", label: "Бизнес", icon: "Briefcase" },
   { id: "other", label: "Прочее", icon: "Shapes" },
 ];
 
@@ -29,7 +30,7 @@ export const STRATEGIES: Strategy[] = [
   { id: "s5", market: "crypto", name: "Квантовая аналитика", focus: "Модели данных", horizon: "Среднесрочно", icon: "BrainCircuit", description: "Количественные модели и анализ рыночных данных." },
   { id: "s6", market: "stocks", name: "Дивидендная", focus: "Денежный поток", horizon: "Долгосрочно", icon: "Landmark", description: "Компании с устойчивой дивидендной политикой." },
   { id: "s7", market: "stocks", name: "Глобальная", focus: "Мировые рынки", horizon: "Долгосрочно", icon: "Globe", description: "Географическая диверсификация портфеля." },
-  { id: "s8", market: "realty", name: "Технологическая", focus: "Сектор технологий", horizon: "Долгосрочно", icon: "CircuitBoard", description: "Компании, формирующие технологическую повестку." },
+  { id: "s8", market: "business", name: "Технологическая", focus: "Сектор технологий", horizon: "Долгосрочно", icon: "CircuitBoard", description: "Компании, формирующие технологическую повестку." },
   { id: "s9", market: "other", name: "Защитная", focus: "Управление рисками", horizon: "Гибко", icon: "LockKeyhole", description: "Инструменты хеджирования и защиты капитала." },
 ];
 
