@@ -13,7 +13,7 @@ export default function Logo({ className, size = 36, withWordmark = true, tone =
   return (
     <Link to="/" className={cn("inline-flex items-center gap-3", className)} aria-label="JETRA — на главную">
       <img
-        src="/brand/jetra-logo.png"
+        src="/brand/jetra-mark.png"
         alt="JETRA"
         width={size}
         height={size}
