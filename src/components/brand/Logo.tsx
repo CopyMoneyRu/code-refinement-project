@@ -23,7 +23,7 @@ export default function Logo({ className, size = 36, withWordmark = true, tone =
       {withWordmark && (
         <span
           className={cn(
-            "font-display text-[17px] font-bold tracking-[0.22em]",
+            "font-display text-[22px] font-extrabold tracking-[0.18em] sm:text-[24px]",
             tone === "light" ? "text-brand-ink" : "text-brand-ink",
           )}
         >
