@@ -261,6 +261,22 @@ def handler(event: dict, context) -> dict:
         conn.close()
 
 
+DOC_VERSION = '2026-10-25'
+
+
+def record_consents(cur, user_id: int, email: str, body: dict) -> None:
+    ip = str(body.get('ip', ''))[:64] or None
+    ua = str(body.get('userAgent', ''))[:300] or None
+    docs = [('personal_data', True), ('terms', True), ('privacy', True), ('marketing', bool(body.get('marketing')))]
+    for doc, accepted in docs:
+        cur.execute(
+            f"""INSERT INTO {t('user_consents')} (user_id, email, document, version, accepted, ip, user_agent)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            (user_id, email, doc, DOC_VERSION, accepted, ip, ua),
+        )
+    cur.execute(f"UPDATE {t('users')} SET marketing_consent = %s WHERE id = %s", (bool(body.get('marketing')), user_id))
+
+
 def a_register(cur, body, _token):
     name = str(body.get('name', '')).strip()[:120]
     email = str(body.get('email', '')).strip().lower()[:255]
@@ -272,12 +288,15 @@ def a_register(cur, body, _token):
     problem = password_problem(password)
     if problem:
         return err(400, 'weak_password', problem)
+    if not body.get('personalData') or not body.get('terms'):
+        return err(400, 'consent_required', 'Подтвердите согласие на обработку персональных данных и примите пользовательское соглашение')
 
     existing = find_user(cur, email)
     if existing and existing.get('archived_at'):
         return err(403, 'archived', 'Этот аккаунт заблокирован. Обратитесь к администратору.')
     if existing:
         if not existing['email_verified']:
+            record_consents(cur, existing['id'], email, body)
             sent = send_verify(cur, existing)
             return resp(200, {'ok': True, 'emailSent': sent})
         return err(409, 'email_taken', 'Аккаунт с таким email уже существует. Войдите или восстановите пароль.')
@@ -288,6 +307,7 @@ def a_register(cur, body, _token):
         (email, name, hash_password(password), role),
     )
     user = cur.fetchone()
+    record_consents(cur, user['id'], email, body)
     sent = send_verify(cur, user)
     return resp(200, {'ok': True, 'emailSent': sent})
 

@@ -3,6 +3,7 @@ import type { SectionPerm } from "./permissions";
 export type AdminSection = { to: string; label: string; icon: string; perm: SectionPerm; text: string };
 
 export const ADMIN_SECTIONS: AdminSection[] = [
+  { to: "/admin/analytics", label: "Аналитика", icon: "BarChart3", perm: "any", text: "Пользователи, обучения, оплаты и выручка за любой период" },
   { to: "/admin/users", label: "Пользователи", icon: "Users", perm: "users", text: "Аккаунты, роли и права администраторов" },
   { to: "/admin/strategies", label: "Стратегии", icon: "LineChart", perm: "strategies", text: "Каталог стратегий и разделы" },
   { to: "/admin/courses", label: "Обучения", icon: "GraduationCap", perm: "courses", text: "Категории, цены, бесплатные и платные обучения" },

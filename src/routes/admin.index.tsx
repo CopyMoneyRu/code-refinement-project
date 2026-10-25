@@ -3,8 +3,11 @@ import { ADMIN_SECTIONS } from "@/lib/adminSections";
 import { can, ROLE_LABEL } from "@/lib/permissions";
 import Icon from "@/components/ui/icon";
 import { WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
+import OverviewBlock from "@/components/analytics/OverviewBlock";
+import { overviewFn } from "@/lib/analytics";
 
 export const Route = createFileRoute("/admin/")({
+  loader: () => overviewFn(),
   component: AdminHome,
 });
 
@@ -13,9 +16,11 @@ const adminApi = getRouteApi("/admin");
 function AdminHome() {
   const { user } = adminApi.useRouteContext();
   const sections = ADMIN_SECTIONS.filter((s) => can(user, s.perm));
+  const overview = Route.useLoaderData();
   return (
     <>
       <WsTitle title="Административная панель" text={`Ваша роль: ${ROLE_LABEL[user.role]}. Доступные разделы платформы.`} />
+      {overview && <OverviewBlock data={overview} />}
       {!sections.length && (
         <WsCard>
           <p className="text-brand-muted">Вам пока не назначены права. Обратитесь к супер администратору.</p>

@@ -12,12 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CabinetRouteImport } from './routes/cabinet'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PersonalDataConsentRouteImport } from './routes/personal-data-consent'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as StrategiesRouteImport } from './routes/strategies'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminArchiveRouteImport } from './routes/admin.archive'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
@@ -54,6 +59,11 @@ const CabinetRoute = CabinetRouteImport.update({
   path: '/cabinet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -62,6 +72,16 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PersonalDataConsentRoute = PersonalDataConsentRouteImport.update({
+  id: '/personal-data-consent',
+  path: '/personal-data-consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -74,6 +94,11 @@ const StrategiesRoute = StrategiesRouteImport.update({
   path: '/strategies',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -82,6 +107,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminAccessRoute = AdminAccessRouteImport.update({
   id: '/access',
   path: '/access',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminArchiveRoute = AdminArchiveRouteImport.update({
@@ -190,11 +220,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/cabinet': typeof CabinetRouteWithChildren
+  '/disclaimer': typeof DisclaimerRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/personal-data-consent': typeof PersonalDataConsentRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/strategies': typeof StrategiesRoute
+  '/terms': typeof TermsRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
@@ -219,11 +254,16 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/personal-data-consent': typeof PersonalDataConsentRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/strategies': typeof StrategiesRoute
+  '/terms': typeof TermsRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
@@ -251,11 +291,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/cabinet': typeof CabinetRouteWithChildren
+  '/disclaimer': typeof DisclaimerRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/personal-data-consent': typeof PersonalDataConsentRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/strategies': typeof StrategiesRoute
+  '/terms': typeof TermsRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
@@ -284,11 +329,16 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/cabinet'
+    | '/disclaimer'
     | '/forgot-password'
     | '/login'
+    | '/personal-data-consent'
+    | '/privacy'
     | '/register'
     | '/strategies'
+    | '/terms'
     | '/admin/access'
+    | '/admin/analytics'
     | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
@@ -313,11 +363,16 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/disclaimer'
     | '/forgot-password'
     | '/login'
+    | '/personal-data-consent'
+    | '/privacy'
     | '/register'
     | '/strategies'
+    | '/terms'
     | '/admin/access'
+    | '/admin/analytics'
     | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
@@ -344,11 +399,16 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/cabinet'
+    | '/disclaimer'
     | '/forgot-password'
     | '/login'
+    | '/personal-data-consent'
+    | '/privacy'
     | '/register'
     | '/strategies'
+    | '/terms'
     | '/admin/access'
+    | '/admin/analytics'
     | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
@@ -376,10 +436,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   CabinetRoute: typeof CabinetRouteWithChildren
+  DisclaimerRoute: typeof DisclaimerRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  PersonalDataConsentRoute: typeof PersonalDataConsentRoute
+  PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   StrategiesRoute: typeof StrategiesRoute
+  TermsRoute: typeof TermsRoute
   OauthProviderRoute: typeof OauthProviderRoute
   UniversitySlugRoute: typeof UniversitySlugRoute
   UniversityIndexRoute: typeof UniversityIndexRoute
@@ -409,6 +473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CabinetRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -421,6 +492,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/personal-data-consent': {
+      id: '/personal-data-consent'
+      path: '/personal-data-consent'
+      fullPath: '/personal-data-consent'
+      preLoaderRoute: typeof PersonalDataConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -437,6 +522,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StrategiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -449,6 +541,13 @@ declare module '@tanstack/react-router' {
       path: '/access'
       fullPath: '/admin/access'
       preLoaderRoute: typeof AdminAccessRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/archive': {
@@ -596,6 +695,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAccessRoute: typeof AdminAccessRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminArchiveRoute: typeof AdminArchiveRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCoursesRoute: typeof AdminCoursesRoute
@@ -610,6 +710,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAccessRoute: AdminAccessRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminArchiveRoute: AdminArchiveRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCoursesRoute: AdminCoursesRoute,
@@ -651,10 +752,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   CabinetRoute: CabinetRouteWithChildren,
+  DisclaimerRoute: DisclaimerRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  PersonalDataConsentRoute: PersonalDataConsentRoute,
+  PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   StrategiesRoute: StrategiesRoute,
+  TermsRoute: TermsRoute,
   OauthProviderRoute: OauthProviderRoute,
   UniversitySlugRoute: UniversitySlugRoute,
   UniversityIndexRoute: UniversityIndexRoute,

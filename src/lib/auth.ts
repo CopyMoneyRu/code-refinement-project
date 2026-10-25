@@ -34,11 +34,18 @@ export const getMe = createServerFn({ method: "GET" }).handler(async (): Promise
 export const registerFn = createServerFn({ method: "POST" })
   .validator((input: unknown) => {
     const o = obj(input);
-    return { name: str(o.name, 120), email: str(o.email, 255), password: str(o.password, 200) };
+    return {
+      name: str(o.name, 120),
+      email: str(o.email, 255),
+      password: str(o.password, 200),
+      personalData: o.personalData === true,
+      terms: o.terms === true,
+      marketing: o.marketing === true,
+    };
   })
   .handler(async ({ data }): Promise<ActionResult> => {
-    const { callAuth } = await import("./auth.server");
-    const r = await callAuth<{ emailSent: boolean }>("register", data);
+    const { callAuth, clientMeta } = await import("./auth.server");
+    const r = await callAuth<{ emailSent: boolean }>("register", { ...data, ...clientMeta() });
     return r.ok ? { ok: true, emailSent: r.emailSent } : fail(r);
   });
 

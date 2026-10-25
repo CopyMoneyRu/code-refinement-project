@@ -1,0 +1,6 @@
+{"tests": [
+  {"name": "CORS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+  {"name": "Overview without session", "method": "POST", "path": "/", "body": {"action": "overview"}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
+  {"name": "Report without session", "method": "POST", "path": "/", "body": {"action": "report", "from": "2026-10-01", "to": "2026-10-25"}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"},
+  {"name": "Unknown action", "method": "POST", "path": "/", "body": {"action": "nope"}, "expectedStatus": 400, "expectedBody": {"ok": false}, "bodyMatcher": "partial"}
+]}

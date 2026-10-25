@@ -21,7 +21,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function RegisterPage() {
   const providers = Route.useLoaderData();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
-  const [agree, setAgree] = useState(false);
+  const [consent, setConsent] = useState({ personalData: false, terms: false, marketing: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
   const [taken, setTaken] = useState(false);
@@ -37,13 +37,14 @@ function RegisterPage() {
     if (form.password.length < 8) next.password = "Минимум 8 символов";
     else if (!/[A-Za-zА-Яа-я]/.test(form.password) || !/\d/.test(form.password)) next.password = "Пароль должен содержать буквы и цифры";
     if (form.confirm !== form.password) next.confirm = "Пароли не совпадают";
-    if (!agree) next.agree = "Необходимо согласие";
+    if (!consent.personalData) next.personalData = "Необходимо согласие на обработку персональных данных";
+    if (!consent.terms) next.terms = "Необходимо принять пользовательское соглашение";
     setErrors(next);
     setFormError("");
     setTaken(false);
     if (Object.keys(next).length) return;
     setLoading(true);
-    const r = await registerFn({ data: { name: form.name.trim(), email: form.email.trim(), password: form.password } });
+    const r = await registerFn({ data: { name: form.name.trim(), email: form.email.trim(), password: form.password, ...consent } });
     setLoading(false);
     if (!r.ok) {
       if (r.error === "email_taken") setTaken(true);
@@ -63,11 +64,27 @@ function RegisterPage() {
         <AuthField label="Email" type="email" autoComplete="email" placeholder="name@example.com" value={form.email} onChange={set("email")} error={errors.email} />
         <AuthField label="Пароль" type="password" autoComplete="new-password" placeholder="Не менее 8 символов, буквы и цифры" value={form.password} onChange={set("password")} error={errors.password} />
         <AuthField label="Повторите пароль" type="password" autoComplete="new-password" value={form.confirm} onChange={set("confirm")} error={errors.confirm} />
-        <label className="flex items-start gap-3 text-sm text-brand-muted">
-          <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#397FC4]" />
-          <span>Я принимаю условия использования и политику обработки персональных данных</span>
-        </label>
-        {errors.agree && <span className="block text-sm text-red-600">{errors.agree}</span>}
+<div className="space-y-3">
+          <ConsentBox checked={consent.personalData} onChange={(v) => setConsent({ ...consent, personalData: v })} error={errors.personalData}>
+            Даю{" "}
+            <Link to="/personal-data-consent" target="_blank" className="text-brand-blue hover:underline">
+              согласие на обработку персональных данных
+            </Link>{" "}
+            и ознакомлен(а) с{" "}
+            <Link to="/privacy" target="_blank" className="text-brand-blue hover:underline">
+              Политикой конфиденциальности
+            </Link>
+          </ConsentBox>
+          <ConsentBox checked={consent.terms} onChange={(v) => setConsent({ ...consent, terms: v })} error={errors.terms}>
+            Принимаю{" "}
+            <Link to="/terms" target="_blank" className="text-brand-blue hover:underline">
+              Пользовательское соглашение
+            </Link>
+          </ConsentBox>
+          <ConsentBox checked={consent.marketing} onChange={(v) => setConsent({ ...consent, marketing: v })}>
+            Хочу получать новости и полезные материалы JETRA (необязательно)
+          </ConsentBox>
+        </div>
         {formError && <FormAlert tone="error">{formError}</FormAlert>}
         {taken && (
           <FormAlert tone="error">
@@ -83,5 +100,17 @@ function RegisterPage() {
         Уже есть аккаунт? <Link to="/login" className="font-medium text-brand-blue hover:underline">Войти</Link>
       </p>
     </AuthLayout>
+  );
+}
+
+function ConsentBox({ checked, onChange, error, children }: { checked: boolean; onChange: (v: boolean) => void; error?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="flex items-start gap-3 text-sm leading-snug text-brand-muted">
+        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#397FC4]" />
+        <span>{children}</span>
+      </label>
+      {error && <span className="mt-1 block pl-7 text-sm text-red-600">{error}</span>}
+    </div>
   );
 }

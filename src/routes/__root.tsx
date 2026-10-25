@@ -7,6 +7,7 @@ import {PLATFORM_META, PLATFORM_SCRIPTS} from "@/platform/scripts.gen";
 import {HMR_CLIENT} from "@/platform/dev-hmr";
 import appCss from "@/index.css?url";
 import {getMe} from "@/lib/auth";
+import SiteWidgets from "@/components/site/SiteWidgets";
 
 const TITLE = "JETRA — платформа для инвестиций и управления капиталом";
 const DESCRIPTION =
@@ -56,6 +57,7 @@ function RootComponent() {
                 <Toaster/>
                 <Sonner/>
                 <Outlet/>
+                <SiteWidgets/>
             </TooltipProvider>
         </RootDocument>
     );
