@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import PublicLayout from "@/components/site/PublicLayout";
-import StrategiesCatalog from "@/components/strategies/StrategiesCatalog";
+import StrategiesPage from "@/components/strategies/StrategiesPage";
 
 export const Route = createFileRoute("/strategies")({
   head: () => ({
@@ -13,15 +12,3 @@ export const Route = createFileRoute("/strategies")({
   }),
   component: StrategiesPage,
 });
-
-function StrategiesPage() {
-  return (
-    <PublicLayout>
-      <section className="pb-24 pt-10 md:pt-14">
-        <div className="container-x">
-          <StrategiesCatalog />
-        </div>
-      </section>
-    </PublicLayout>
-  );
-}
