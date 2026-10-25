@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import Logo from "@/components/brand/Logo";
+import ClubLink from "@/components/site/ClubLink";
 import Icon from "@/components/ui/icon";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -13,8 +14,6 @@ const rootApi = getRouteApi("__root__");
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
-
-const CLUB_URL = "https://club-capitalist.ru/";
 
 const navLink = "text-[17px] font-medium text-brand-muted transition-colors hover:text-brand-ink";
 
@@ -34,9 +33,7 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
                 {item.label}
               </Link>
             ))}
-            <a href={CLUB_URL} target="_blank" rel="noopener noreferrer" className={navLink}>
-              Клуб
-            </a>
+            <ClubLink className={navLink}>Клуб</ClubLink>
           </nav>
 
           {user ? (
@@ -87,15 +84,12 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
                     {item.label}
                   </Link>
                 ))}
-                <a
-                  href={CLUB_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setOpen(false)}
+                <ClubLink
+                  onClose={() => setOpen(false)}
                   className="flex items-center justify-between border-b border-brand-ink/10 py-4 text-lg text-brand-ink/85 hover:text-brand-ink"
                 >
                   Клуб <Icon name="ArrowUpRight" size={18} className="text-brand-muted" />
-                </a>
+                </ClubLink>
               </nav>
               {user ? (
                 <Link
