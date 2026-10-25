@@ -216,7 +216,7 @@ def done_set(cur, user_id: int, course_id: int) -> set:
 def course_head(c) -> dict:
     return {
         'id': c['id'], 'slug': c['slug'], 'title': c['title'], 'short': c['short'], 'coverUrl': c['cover_url'],
-        'access': c['access'], 'price': c['price'], 'level': c['level'], 'category': c['category'],
+        'access': c['access'], 'price': c['price'], 'category': c['category'],
         'published': c['published'],
         'author': {'name': c['author_name'], 'slug': c['author_slug']} if c.get('author_name') and c.get('author_published') else None,
     }

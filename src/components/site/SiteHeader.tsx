@@ -6,8 +6,8 @@ import Icon from "@/components/ui/icon";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const NAV = [
-  { to: "/strategies", label: "Стратегии" },
-  { to: "/university", label: "Университет" },
+  { to: "/strategies", label: "Стратегии", icon: "LineChart" },
+  { to: "/university", label: "Университет", icon: "GraduationCap" },
 ] as const;
 
 const rootApi = getRouteApi("__root__");
@@ -29,8 +29,18 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
 
           <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-10 md:flex lg:gap-12">
             {NAV.map((item) => (
-              <Link key={item.to} to={item.to} className={navLink} activeProps={{ className: "!text-brand-ink" }}>
-                {item.label}
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`${navLink} relative inline-flex items-center gap-2 py-2 after:absolute after:inset-x-0 after:-bottom-[22px] after:h-[3px] after:rounded-full after:bg-transparent after:transition-colors md:after:-bottom-[26px]`}
+                activeProps={{ className: "!text-brand-blue after:!bg-brand-blue" }}
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && <Icon name={item.icon} size={18} />}
+                    {item.label}
+                  </>
+                )}
               </Link>
             ))}
             <ClubLink className={navLink}>Клуб</ClubLink>
@@ -74,13 +84,16 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
                 <Logo size={32} />
               </div>
               <nav className="mt-10 flex flex-col">
-                {[{ to: "/", label: "Главная" }, ...NAV].map((item) => (
+                {[{ to: "/", label: "Главная", icon: "Home" }, ...NAV].map((item) => (
                   <Link
                     key={item.to}
                     to={item.to}
                     onClick={() => setOpen(false)}
-                    className="border-b border-brand-ink/10 py-4 text-lg text-brand-ink/85 hover:text-brand-ink"
+                    activeOptions={{ exact: item.to === "/" }}
+                    className="flex items-center gap-3 border-b border-brand-ink/10 py-4 text-lg text-brand-ink/85 hover:text-brand-ink"
+                    activeProps={{ className: "!text-brand-blue font-medium" }}
                   >
+                    <Icon name={item.icon} size={19} />
                     {item.label}
                   </Link>
                 ))}

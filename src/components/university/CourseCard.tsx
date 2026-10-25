@@ -26,7 +26,7 @@ export default function CourseCard({ c }: { c: DbCourse }) {
       )}
       <div className="flex flex-1 flex-col p-6 sm:p-7">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs uppercase tracking-[0.14em] text-brand-muted">{c.category}</span>
+          <span className="line-clamp-1 text-xs uppercase tracking-[0.14em] text-brand-muted">{c.categories.map((x) => x.name).join(" · ") || c.category}</span>
           <AccessBadge access={c.access} price={c.price} />
         </div>
         <h3 className="mt-6 font-display text-xl font-semibold text-brand-ink">{c.title}</h3>
@@ -34,7 +34,6 @@ export default function CourseCard({ c }: { c: DbCourse }) {
         <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-7 text-sm text-brand-muted">
           <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>
           <span className="inline-flex items-center gap-1.5"><Icon name="PlayCircle" size={15} />{lessonsTotal(c)} уроков</span>
-          <span className="inline-flex items-center gap-1.5"><Icon name="Signal" size={15} />{c.level}</span>
         </div>
         <div className="mt-6 flex items-center justify-between border-t border-brand-ink/10 pt-5">
           <span className="text-sm text-brand-muted">{c.author?.name ?? "JETRA University"}</span>

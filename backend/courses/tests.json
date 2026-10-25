@@ -170,6 +170,46 @@
         "ok": false
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Admin categories without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "admin_categories"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Save category without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "save_category",
+        "name": "Тест"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Public list has categories",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "list"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "ok": true
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

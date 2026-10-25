@@ -2,15 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import Icon from "@/components/ui/icon";
-import { LEVELS, saveCourseFn, uploadCoverFn, type CourseInput, type DbAuthor, type DbCourse } from "@/lib/courses";
+import CategoryPicker from "@/components/workspace/CategoryPicker";
+import { saveCourseFn, uploadCoverFn, type CourseCategory, type CourseInput, type DbAuthor, type DbCourse } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 
 const EMPTY: CourseInput = {
   title: "",
-  category: "",
+  categoryIds: [],
   short: "",
   description: "",
-  level: "Начальный",
   access: "free",
   price: 0,
   authorId: null,
@@ -22,10 +22,9 @@ const EMPTY: CourseInput = {
 const fromCourse = (c: DbCourse): CourseInput => ({
   id: c.id,
   title: c.title,
-  category: c.category,
+  categoryIds: c.categories.map((x) => x.id),
   short: c.short,
   description: c.description,
-  level: c.level,
   access: c.access,
   price: c.price,
   authorId: c.author?.id ?? null,
@@ -59,13 +58,15 @@ export default function CourseForm({
   course,
   authors,
   categories,
+  onCategoryCreated,
   onClose,
   onSaved,
 }: {
   open: boolean;
   course: DbCourse | null;
   authors: DbAuthor[];
-  categories: string[];
+  categories: CourseCategory[];
+  onCategoryCreated: (c: CourseCategory) => void;
   onClose: () => void;
   onSaved: (c: DbCourse, created: boolean) => void;
 }) {
@@ -101,7 +102,7 @@ export default function CourseForm({
     e.preventDefault();
     setError("");
     if (form.title.trim().length < 3) return setError("Укажите название курса (не короче 3 символов)");
-    if (form.category.trim().length < 2) return setError("Укажите категорию");
+    if (!form.categoryIds.length) return setError("Выберите хотя бы одну категорию");
     if (form.access === "paid" && form.price < 1) return setError("Укажите цену платного курса");
     setSaving(true);
     const r = await saveCourseFn({ data: { ...form, price: form.access === "free" ? 0 : form.price } });
@@ -159,24 +160,14 @@ export default function CourseForm({
               <input className={inputCls} value={form.title} maxLength={200} onChange={(e) => set("title", e.target.value)} placeholder="Например, Основы инвестиций" />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label>Категория</Label>
-                <input className={inputCls} list="course-categories" value={form.category} maxLength={80} onChange={(e) => set("category", e.target.value)} placeholder="Выберите или введите новую" />
-                <datalist id="course-categories">
-                  {categories.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
-              </div>
-              <div>
-                <Label>Уровень</Label>
-                <select className={inputCls} value={form.level} onChange={(e) => set("level", e.target.value)}>
-                  {LEVELS.map((l) => (
-                    <option key={l} value={l}>{l}</option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <Label hint="Можно выбрать несколько">Категории</Label>
+              <CategoryPicker
+                categories={categories}
+                value={form.categoryIds}
+                onChange={(ids) => set("categoryIds", ids)}
+                onCreated={onCategoryCreated}
+              />
             </div>
 
             <div>

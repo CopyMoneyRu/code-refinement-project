@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { notFound } from "@tanstack/react-router";
 
-export type CourseLevel = "Начальный" | "Средний" | "Продвинутый";
-export const LEVELS: CourseLevel[] = ["Начальный", "Средний", "Продвинутый"];
+export type CourseCategory = { id: number; name: string };
+export type AdminCategory = CourseCategory & { coursesCount: number };
 
 export type DbLesson = { title: string; duration: string; hasFiles: boolean; hasVideo?: boolean; isFree?: boolean };
 export type DbModule = { title: string; lessons: DbLesson[] };
@@ -40,7 +40,7 @@ export type DbCourse = {
   short: string;
   description: string;
   category: string;
-  level: string;
+  categories: CourseCategory[];
   access: "free" | "paid";
   price: number;
   coverUrl: string;
@@ -53,10 +53,9 @@ export type DbCourse = {
 export type CourseInput = {
   id?: number;
   title: string;
-  category: string;
+  categoryIds: number[];
   short: string;
   description: string;
-  level: string;
   access: "free" | "paid";
   price: number;
   authorId: number | null;
@@ -73,8 +72,10 @@ export const formatPrice = (rub: number) => `${rub.toLocaleString("ru-RU")} ₽`
 
 export const catalogFn = createServerFn({ method: "GET" }).handler(async () => {
   const { callCourses } = await import("./courses.server");
-  const r = await callCourses<{ courses: DbCourse[]; authors: DbAuthor[] }>("list");
-  return r.ok ? { courses: r.courses, authors: r.authors } : { courses: [] as DbCourse[], authors: [] as DbAuthor[] };
+  const r = await callCourses<{ courses: DbCourse[]; authors: DbAuthor[]; categories: AdminCategory[] }>("list");
+  return r.ok
+    ? { courses: r.courses, authors: r.authors, categories: r.categories }
+    : { courses: [] as DbCourse[], authors: [] as DbAuthor[], categories: [] as AdminCategory[] };
 });
 
 export const courseBySlugFn = createServerFn({ method: "GET" })
@@ -88,8 +89,10 @@ export const courseBySlugFn = createServerFn({ method: "GET" })
 
 export const adminCoursesFn = createServerFn({ method: "GET" }).handler(async () => {
   const { callCourses } = await import("./courses.server");
-  const r = await callCourses<{ courses: DbCourse[]; authors: DbAuthor[] }>("admin_list", {}, true);
-  return r.ok ? { courses: r.courses, authors: r.authors } : { courses: [] as DbCourse[], authors: [] as DbAuthor[] };
+  const r = await callCourses<{ courses: DbCourse[]; authors: DbAuthor[]; categories: AdminCategory[] }>("admin_list", {}, true);
+  return r.ok
+    ? { courses: r.courses, authors: r.authors, categories: r.categories }
+    : { courses: [] as DbCourse[], authors: [] as DbAuthor[], categories: [] as AdminCategory[] };
 });
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
@@ -115,10 +118,9 @@ export const saveCourseFn = createServerFn({ method: "POST" })
     return {
       id: Number(o.id) || undefined,
       title: str(o.title, 200),
-      category: str(o.category, 80),
+      categoryIds: (Array.isArray(o.categoryIds) ? o.categoryIds : []).slice(0, 30).map((x) => Math.round(Number(x) || 0)).filter((x) => x > 0),
       short: str(o.short, 400),
       description: str(o.description, 20000),
-      level: str(o.level, 40),
       access: o.access === "paid" ? "paid" : "free",
       price: Math.max(0, Math.round(Number(o.price) || 0)),
       authorId: Number(o.authorId) || null,
@@ -223,3 +225,20 @@ export const setAuthorPublishedFn = createServerFn({ method: "POST" })
 export const deleteAuthorFn = createServerFn({ method: "POST" })
   .validator(idPayload)
   .handler(({ data }) => adminCall<{ name: string; coursesDetached: number }>("delete_author", { id: data.id }));
+
+export const adminCategoriesFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { callCourses } = await import("./courses.server");
+  const r = await callCourses<{ categories: AdminCategory[] }>("admin_categories", {}, true);
+  return r.ok ? r.categories : ([] as AdminCategory[]);
+});
+
+export const saveCategoryFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) => {
+    const o = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+    return { id: Math.max(0, Math.round(Number(o.id) || 0)) || undefined, name: str(o.name, 80) };
+  })
+  .handler(({ data }) => adminCall<{ category: AdminCategory }>("save_category", data));
+
+export const deleteCategoryFn = createServerFn({ method: "POST" })
+  .validator(idPayload)
+  .handler(({ data }) => adminCall<{ name: string }>("delete_category", { id: data.id }));

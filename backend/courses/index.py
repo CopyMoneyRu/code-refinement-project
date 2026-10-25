@@ -16,7 +16,6 @@ CORS = {
     'Access-Control-Max-Age': '86400',
 }
 
-LEVELS = ('Начальный', 'Средний', 'Продвинутый')
 PERMISSIONS = ('users', 'strategies', 'courses', 'lessons', 'authors', 'purchases', 'access')
 MAX_COVER_BYTES = 5 * 1024 * 1024
 COVER_TYPES = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'}
@@ -99,8 +98,7 @@ def course_out(r: dict, public: bool = False) -> dict:
         'title': r['title'],
         'short': r['short'],
         'description': r['description'],
-        'category': r['category'],
-        'level': r['level'],
+        'categories': r.get('categories') or [],
         'access': r['access'],
         'price': r['price'],
         'coverUrl': r['cover_url'],
@@ -147,7 +145,29 @@ def attach_programs(cur, rows):
         by_course.setdefault(m['course_id'], []).append({'title': m['title'], 'lessons': lessons.get(m['id'], [])})
     for r in rows:
         r['modules'] = by_course.get(r['id'], [])
+    cur.execute(
+        f"""SELECT cc.course_id, cat.id, cat.name FROM {t('course_categories')} cc
+            JOIN {t('categories')} cat ON cat.id = cc.category_id
+            WHERE cc.course_id IN %s ORDER BY cat.name""",
+        (ids,),
+    )
+    cats = {}
+    for c in cur.fetchall():
+        cats.setdefault(c['course_id'], []).append({'id': c['id'], 'name': c['name']})
+    for r in rows:
+        r['categories'] = cats.get(r['id'], [])
     return rows
+
+
+def categories_out(cur, public: bool = False):
+    cond = 'AND c.published' if public else ''
+    cur.execute(
+        f"""SELECT cat.id, cat.name,
+                   (SELECT COUNT(*) FROM {t('course_categories')} cc JOIN {t('courses')} c ON c.id = cc.course_id
+                    WHERE cc.category_id = cat.id {cond}) AS courses
+            FROM {t('categories')} cat ORDER BY cat.name"""
+    )
+    return [{'id': r['id'], 'name': r['name'], 'coursesCount': r['courses']} for r in cur.fetchall()]
 
 
 def select_courses(cur, where: str = '', params: tuple = (), public: bool = False):
@@ -208,17 +228,25 @@ def clean_modules(raw):
 def validate(cur, body):
     """Возвращает (данные, None) или (None, ответ-ошибку)."""
     title = str(body.get('title', '')).strip()[:200]
-    category = str(body.get('category', '')).strip()[:80]
+    raw_ids = body.get('categoryIds')
+    if not isinstance(raw_ids, list):
+        raw_ids = []
+    try:
+        cat_ids = sorted({int(x) for x in raw_ids[:30]})
+    except (TypeError, ValueError):
+        return None, err(400, 'invalid_category', 'Некорректная категория')
     short = str(body.get('short', '')).strip()[:400]
     description = str(body.get('description', '')).strip()[:20000]
-    level = str(body.get('level', '')).strip()
     access = body.get('access')
     if len(title) < 3:
         return None, err(400, 'invalid_title', 'Укажите название курса (не короче 3 символов)')
-    if len(category) < 2:
-        return None, err(400, 'invalid_category', 'Укажите категорию')
-    if level not in LEVELS:
-        return None, err(400, 'invalid_level', 'Выберите уровень сложности')
+    if not cat_ids:
+        return None, err(400, 'invalid_category', 'Выберите хотя бы одну категорию')
+    cur.execute(f"SELECT id, name FROM {t('categories')} WHERE id IN %s ORDER BY name", (tuple(cat_ids),))
+    found = cur.fetchall()
+    if len(found) != len(cat_ids):
+        return None, err(400, 'invalid_category', 'Категория не найдена — обновите страницу')
+    category = found[0]['name']
     if access not in ('free', 'paid'):
         return None, err(400, 'invalid_access', 'Выберите тип доступа')
     try:
@@ -244,7 +272,7 @@ def validate(cur, body):
     if cover and not cover.startswith('https://'):
         return None, err(400, 'invalid_cover', 'Некорректная ссылка на обложку')
     return {
-        'title': title, 'category': category, 'short': short, 'description': description, 'level': level,
+        'title': title, 'category': category, 'short': short, 'description': description, 'category_ids': cat_ids,
         'access': access, 'price': price, 'author_id': author_id, 'cover_url': cover,
         'published': bool(body.get('published', True)),
     }, None
@@ -255,6 +283,7 @@ def a_list(cur, _body, _user):
         'ok': True,
         'courses': select_courses(cur, 'WHERE c.published', public=True),
         'authors': authors_out(cur, public=True),
+        'categories': categories_out(cur, public=True),
     })
 
 
@@ -279,7 +308,49 @@ def a_author(cur, body, _user):
 
 
 def a_admin_list(cur, _body, user):
-    return resp(200, {'ok': True, 'courses': select_courses(cur), 'authors': authors_out(cur)})
+    return resp(200, {'ok': True, 'courses': select_courses(cur), 'authors': authors_out(cur), 'categories': categories_out(cur)})
+
+
+def a_admin_categories(cur, _body, user):
+    return resp(200, {'ok': True, 'categories': categories_out(cur)})
+
+
+def a_save_category(cur, body, user):
+    name = re.sub(r'\s+', ' ', str(body.get('name', ''))).strip()[:80]
+    if len(name) < 2:
+        return err(400, 'invalid_name', 'Название категории — не короче 2 символов')
+    cur.execute(f"SELECT id FROM {t('categories')} WHERE LOWER(name) = LOWER(%s)", (name,))
+    row = cur.fetchone()
+    cid = parse_id(body)
+    if row and row['id'] != cid:
+        return err(400, 'duplicate', f'Категория «{name}» уже есть')
+    if cid:
+        cur.execute(f"UPDATE {t('categories')} SET name = %s WHERE id = %s RETURNING id", (name, cid))
+        if not cur.fetchone():
+            return err(404, 'not_found', 'Категория не найдена')
+        cur.execute(
+            f"""UPDATE {t('courses')} c SET category = %s WHERE c.category <> %s AND EXISTS
+                (SELECT 1 FROM {t('course_categories')} cc WHERE cc.course_id = c.id AND cc.category_id = %s)""",
+            (name, name, cid),
+        )
+    else:
+        cur.execute(f"INSERT INTO {t('categories')} (name) VALUES (%s) RETURNING id", (name,))
+        cid = cur.fetchone()['id']
+    item = next(c for c in categories_out(cur) if c['id'] == cid)
+    return resp(200, {'ok': True, 'category': item})
+
+
+def a_delete_category(cur, body, user):
+    cid = parse_id(body)
+    if not cid:
+        return err(400, 'bad_category', 'Некорректная категория')
+    cur.execute(f"SELECT name FROM {t('categories')} WHERE id = %s", (cid,))
+    row = cur.fetchone()
+    if not row:
+        return err(404, 'not_found', 'Категория не найдена')
+    cur.execute(f"DELETE FROM {t('course_categories')} WHERE category_id = %s", (cid,))
+    cur.execute(f"DELETE FROM {t('categories')} WHERE id = %s", (cid,))
+    return resp(200, {'ok': True, 'name': row['name']})
 
 
 def a_save(cur, body, user):
@@ -287,7 +358,7 @@ def a_save(cur, body, user):
     if problem:
         return problem
     cid = body.get('id')
-    fields = ('title', 'category', 'short', 'description', 'level', 'access', 'price', 'author_id', 'cover_url', 'published')
+    fields = ('title', 'category', 'short', 'description', 'access', 'price', 'author_id', 'cover_url', 'published')
     values = [data[f] for f in fields]
     if cid:
         try:
@@ -311,6 +382,9 @@ def a_save(cur, body, user):
             (slug, *values),
         )
         cid = cur.fetchone()['id']
+    cur.execute(f"DELETE FROM {t('course_categories')} WHERE course_id = %s", (cid,))
+    for cat_id in data['category_ids']:
+        cur.execute(f"INSERT INTO {t('course_categories')} (course_id, category_id) VALUES (%s, %s)", (cid, cat_id))
     course = select_courses(cur, 'WHERE c.id = %s', (cid,))[0]
     return resp(200, {'ok': True, 'course': course})
 
@@ -476,6 +550,7 @@ def a_delete_course(cur, body, user):
     cur.execute(f"DELETE FROM {t('lessons')} WHERE module_id IN (SELECT id FROM {t('course_modules')} WHERE course_id = %s)", (cid,))
     cur.execute(f"DELETE FROM {t('course_modules')} WHERE course_id = %s", (cid,))
     cur.execute(f"DELETE FROM {t('course_access')} WHERE course_id = %s", (cid,))
+    cur.execute(f"DELETE FROM {t('course_categories')} WHERE course_id = %s", (cid,))
     cur.execute(f"DELETE FROM {t('courses')} WHERE id = %s", (cid,))
     return resp(200, {'ok': True, 'title': row['title']})
 
@@ -519,6 +594,9 @@ ADMIN = {
     'admin_authors': ('authors', a_admin_authors),
     'save_author': ('authors', a_save_author),
     'upload_author_photo': ('authors', a_upload_author_photo),
+    'admin_categories': ('courses', a_admin_categories),
+    'save_category': ('courses', a_save_category),
+    'delete_category': ('courses', a_delete_category),
 }
 
 

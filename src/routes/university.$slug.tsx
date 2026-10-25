@@ -46,7 +46,7 @@ function CoursePage() {
           <div className="mt-8 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-xs uppercase tracking-[0.14em] text-brand-muted">{course.category}</span>
+                <span className="text-xs uppercase tracking-[0.14em] text-brand-muted">{course.categories.map((x) => x.name).join(" · ") || course.category}</span>
                 <AccessBadge access={course.access} price={course.price} />
               </div>
               <h1 className="mt-5 font-display text-4xl font-light leading-[1.1] text-brand-ink md:text-[52px]">
@@ -60,11 +60,10 @@ function CoursePage() {
                 </div>
               )}
 
-              <div className="mt-10 grid grid-cols-3 gap-4 border-y border-brand-ink/10 py-6">
+              <div className="mt-10 grid grid-cols-2 gap-4 border-y border-brand-ink/10 py-6">
                 {[
                   ["Модулей", course.modules.length],
                   ["Уроков", total],
-                  ["Уровень", course.level],
                 ].map(([k, v]) => (
                   <div key={k}>
                     <div className="text-sm text-brand-muted">{k}</div>

@@ -21,16 +21,23 @@ export const Route = createFileRoute("/university/")({
 });
 
 function UniversityPage() {
-  const { courses: COURSES, authors } = Route.useLoaderData();
+  const { courses: COURSES, authors, categories } = Route.useLoaderData();
   const AUTHORS = useMemo(
     () => authors.filter((a) => COURSES.some((c) => c.author?.id === a.id)),
     [authors, COURSES],
   );
-  const CATEGORIES = useMemo(() => ["Все", ...[...new Set(COURSES.map((c) => c.category))].sort()], [COURSES]);
-  const [cat, setCat] = useState<string>("Все");
+  const CATEGORIES = useMemo(
+    () => [
+      { id: 0, name: "Все", count: COURSES.length },
+      ...categories
+        .map((c) => ({ id: c.id, name: c.name, count: COURSES.filter((x) => x.categories.some((y) => y.id === c.id)).length }))
+        .filter((c) => c.count > 0),
+    ],
+    [COURSES, categories],
+  );
+  const [cat, setCat] = useState<number>(0);
   const [q, setQ] = useState("");
   const [author, setAuthor] = useState<number | null>(null);
-  const [authorView, setAuthorView] = useState<"cards" | "list">("cards");
   const selected = AUTHORS.find((a) => a.id === author) ?? null;
 
   const list = useMemo(
@@ -38,7 +45,7 @@ function UniversityPage() {
       COURSES.filter(
         (c) =>
           (!author || c.author?.id === author) &&
-          (cat === "Все" || c.category === cat) &&
+          (!cat || c.categories.some((x) => x.id === cat)) &&
           c.title.toLowerCase().includes(q.trim().toLowerCase()),
       ),
     [COURSES, cat, q, author],
@@ -50,18 +57,22 @@ function UniversityPage() {
         <div className="container-x">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCat(c)}
-                  className={cn(
-                    "whitespace-nowrap rounded-lg px-4 py-2 text-sm transition-colors",
-                    cat === c ? "bg-brand-blue text-white" : "bg-white text-brand-muted hover:text-brand-ink",
-                  )}
-                >
-                  {c}
-                </button>
-              ))}
+              {CATEGORIES.map((c) => {
+                const active = cat === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => setCat(c.id)}
+                    className={cn(
+                      "inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm transition-colors",
+                      active ? "bg-brand-blue text-white" : "bg-white text-brand-muted hover:text-brand-ink",
+                    )}
+                  >
+                    {c.name}
+                    <span className={cn("text-xs", active ? "text-white/75" : "text-brand-ink/40")}>{c.count}</span>
+                  </button>
+                );
+              })}
             </div>
             <div className="shrink-0">
               <label className="relative">
@@ -77,31 +88,8 @@ function UniversityPage() {
           </div>
 
           <div className="mt-8 border-b border-brand-ink/10 pb-8">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="font-display text-xl font-semibold text-brand-ink">Авторы</h2>
-              <div className="flex rounded-lg bg-white p-1">
-                {([
-                  ["cards", "LayoutGrid", "Иконки"],
-                  ["list", "List", "Список"],
-                ] as const).map(([v, ic, l]) => (
-                  <button
-                    key={v}
-                    onClick={() => setAuthorView(v)}
-                    aria-label={l}
-                    title={l}
-                    className={cn(
-                      "flex h-8 w-9 items-center justify-center rounded-md transition-colors",
-                      authorView === v ? "bg-brand-surface text-brand-ink" : "text-brand-muted hover:text-brand-ink",
-                    )}
-                  >
-                    <Icon name={ic} size={16} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {authorView === "cards" ? (
-              <div className="-mx-1 mt-5 flex gap-3 overflow-x-auto px-1 pb-1">
+            <h2 className="font-display text-xl font-semibold text-brand-ink">Авторы</h2>
+            <div className="-mx-1 mt-5 flex gap-3 overflow-x-auto px-1 pb-1">
                 <AuthorChip active={!author} onClick={() => setAuthor(null)} name="Все авторы" />
                 {AUTHORS.map((a) => (
                   <AuthorChip
@@ -113,40 +101,7 @@ function UniversityPage() {
                     photoUrl={a.photoUrl}
                   />
                 ))}
-              </div>
-            ) : (
-              <ul className="mt-5 divide-y divide-brand-ink/10 overflow-hidden rounded-xl border border-brand-ink/10 bg-white">
-                {[{ id: null as number | null, name: "Все авторы", role: "", photoUrl: "" }, ...AUTHORS].map((a) => {
-                  const count = a.id ? COURSES.filter((c) => c.author?.id === a.id).length : COURSES.length;
-                  return (
-                    <li key={a.id ?? "all"}>
-                      <button
-                        onClick={() => setAuthor(a.id)}
-                        className={cn(
-                          "flex w-full items-center justify-between gap-4 px-5 py-3.5 text-left transition-colors",
-                          author === a.id ? "bg-brand-surface" : "hover:bg-brand-light",
-                        )}
-                      >
-                        <span className="flex items-center gap-3.5">
-                          {a.id ? (
-                            <AuthorAvatar name={a.name} photoUrl={a.photoUrl} className="h-10 w-10" textClassName="text-sm" />
-                          ) : (
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-surface text-brand-muted">
-                              <Icon name="Users" size={17} />
-                            </span>
-                          )}
-                          <span>
-                            <span className="block font-medium text-brand-ink">{a.name}</span>
-                            {a.role && <span className="block text-sm text-brand-muted">{a.role}</span>}
-                          </span>
-                        </span>
-                        <span className="shrink-0 text-sm text-brand-muted">{count} курс.</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            </div>
 
             {selected && (
               <div className="mt-5 flex flex-col gap-5 rounded-2xl border border-brand-ink/10 bg-white p-6 sm:flex-row sm:items-center">

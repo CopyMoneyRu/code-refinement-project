@@ -6,7 +6,7 @@ import ConfirmDelete from "@/components/workspace/ConfirmDelete";
 import PublishToggle from "@/components/workspace/PublishToggle";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { requirePermission } from "@/lib/adminGuard";
-import { adminCoursesFn, deleteCourseFn, formatPrice, lessonsTotal, setCoursePublishedFn, type DbCourse } from "@/lib/courses";
+import { adminCoursesFn, deleteCourseFn, formatPrice, lessonsTotal, setCoursePublishedFn, type CourseCategory, type DbCourse } from "@/lib/courses";
 
 export const Route = createFileRoute("/admin/courses")({
   beforeLoad: ({ context }) => requirePermission(context, "courses"),
@@ -15,7 +15,8 @@ export const Route = createFileRoute("/admin/courses")({
 });
 
 function CoursesAdmin() {
-  const { courses, authors } = Route.useLoaderData();
+  const { courses, authors, categories: loadedCategories } = Route.useLoaderData();
+  const [extraCategories, setExtraCategories] = useState<CourseCategory[]>([]);
   const router = useRouter();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<DbCourse | null>(null);
@@ -50,10 +51,13 @@ function CoursesAdmin() {
     router.invalidate();
   };
 
-  const categories = useMemo(() => [...new Set(courses.map((c) => c.category))].sort(), [courses]);
+  const categories = useMemo(() => {
+    const ids = new Set(loadedCategories.map((c) => c.id));
+    return [...loadedCategories, ...extraCategories.filter((c) => !ids.has(c.id))].sort((a, b) => a.name.localeCompare(b.name, "ru"));
+  }, [loadedCategories, extraCategories]);
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return s ? courses.filter((c) => c.title.toLowerCase().includes(s) || c.category.toLowerCase().includes(s)) : courses;
+    return s ? courses.filter((c) => c.title.toLowerCase().includes(s) || c.categories.some((x) => x.name.toLowerCase().includes(s))) : courses;
   }, [courses, q]);
 
   const openForm = (c: DbCourse | null) => {
@@ -109,7 +113,7 @@ function CoursesAdmin() {
                         <span className="font-medium">{c.title}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-brand-muted">{c.category}</td>
+                    <td className="px-5 py-3.5 text-brand-muted">{c.categories.map((x) => x.name).join(", ") || "—"}</td>
                     <td className="px-5 py-3.5 text-brand-muted">{c.author?.name ?? "—"}</td>
                     <td className="whitespace-nowrap px-5 py-3.5">
                       {c.access === "free" ? <span className="text-emerald-700">Бесплатно</span> : formatPrice(c.price)}
@@ -187,6 +191,7 @@ function CoursesAdmin() {
         course={editing}
         authors={authors}
         categories={categories}
+        onCategoryCreated={(c) => setExtraCategories((list) => [...list, c])}
         onClose={() => setFormOpen(false)}
         onSaved={(c, created) => {
           setFormOpen(false);

@@ -40,7 +40,6 @@ export type CourseHead = {
   coverUrl: string;
   access: "free" | "paid";
   price: number;
-  level: string;
   category: string;
   published: boolean;
   author: { name: string; slug: string } | null;
