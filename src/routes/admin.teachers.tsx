@@ -37,8 +37,8 @@ function AuthorsAdmin() {
       published
         ? a.coursesPublished > 0
           ? `Автор «${a.name}» показан на сайте`
-          : `Автор «${a.name}» включён. На сайте он появится, когда у него будет опубликованный курс`
-        : `Автор «${a.name}» скрыт с сайта. Его курсы остаются в каталоге, но без указания автора`,
+          : `Автор «${a.name}» включён. На сайте он появится, когда у него будет опубликованное обучение`
+        : `Автор «${a.name}» скрыт с сайта. Его обучения остаются в каталоге, но без указания автора`,
     );
     router.invalidate();
   };
@@ -55,7 +55,7 @@ function AuthorsAdmin() {
     if (!r.ok) return setError(r.message);
     setNotice(
       r.coursesDetached > 0
-        ? `Автор «${a.name}» удалён. Курсов без автора: ${r.coursesDetached} — выберите им нового автора в разделе «Курсы»`
+        ? `Автор «${a.name}» удалён. Обучений без автора: ${r.coursesDetached} — выберите им нового автора в разделе «Обучения»`
         : `Автор «${a.name}» удалён`,
     );
     router.invalidate();
@@ -76,7 +76,7 @@ function AuthorsAdmin() {
     <>
       <WsTitle
         title="Авторы"
-        text="Профили авторов курсов. Их можно выбрать в карточке курса, а в университете они показываются с фото и описанием."
+        text="Профили авторов обучений. Их можно выбрать в карточке обучения, а в университете они показываются с фото и описанием."
         action={
           <button onClick={() => openForm(null)} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white hover:bg-[#3271B0]">
             <Icon name="Plus" size={16} /> Добавить автора
@@ -103,7 +103,7 @@ function AuthorsAdmin() {
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
                 <tr>
-                  {["Автор", "Кратко", "Курсов", "На сайте", ""].map((c) => (
+                  {["Автор", "Кратко", "Обучений", "На сайте", ""].map((c) => (
                     <th key={c} className="px-5 py-3.5 font-medium">{c}</th>
                   ))}
                 </tr>
@@ -132,7 +132,7 @@ function AuthorsAdmin() {
                         label={`Показывать автора «${a.name}» на сайте`}
                       />
                       {a.published && a.coursesPublished === 0 && (
-                        <div className="mt-1.5 text-xs text-amber-700">Появится после публикации его курса</div>
+                        <div className="mt-1.5 text-xs text-amber-700">Появится после публикации его обучения</div>
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
@@ -191,7 +191,7 @@ function AuthorsAdmin() {
         </p>
         {toDelete && toDelete.coursesTotal > 0 && (
           <p>
-            Курсы этого автора ({toDelete.coursesTotal}) не удалятся, но останутся без автора.
+            Обучения этого автора ({toDelete.coursesTotal}) не удалятся, но останутся без автора.
           </p>
         )}
         <p>Если нужно просто убрать автора с сайта — отмените и выключите переключатель «На сайте».</p>
@@ -204,7 +204,7 @@ function AuthorsAdmin() {
         onSaved={(a, created) => {
           setFormOpen(false);
           setError("");
-          setNotice(created ? `Автор «${a.name}» добавлен. Теперь его можно выбрать в карточке курса.` : `Профиль «${a.name}» сохранён`);
+          setNotice(created ? `Автор «${a.name}» добавлен. Теперь его можно выбрать в карточке обучения.` : `Профиль «${a.name}» сохранён`);
           router.invalidate();
         }}
       />

@@ -7,12 +7,27 @@ export function AccessBadge({ access, price }: { access: DbCourse["access"]; pri
     <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">Бесплатно</span>
   ) : (
     <span className="rounded-md bg-brand-blue/15 px-2.5 py-1 text-xs font-medium text-brand-blue">
-      {price ? formatPrice(price) : "Платный курс"}
+      {price ? formatPrice(price) : "Платное обучение"}
     </span>
   );
 }
 
+const plural = (n: number, forms: [string, string, string]) => {
+  const m10 = n % 10, m100 = n % 100;
+  return forms[m10 === 1 && m100 !== 11 ? 0 : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? 1 : 2];
+};
+
+export function freeLabel(c: DbCourse) {
+  if (c.access === "free") return "";
+  const freeModules = c.modules.filter((m) => m.lessons.length > 0 && m.lessons.every((l) => l.isFree)).length;
+  if (freeModules > 0) return `${freeModules} ${plural(freeModules, ["модуль", "модуля", "модулей"])} бесплатно`;
+  const freeLessons = c.modules.reduce((n, m) => n + m.lessons.filter((l) => l.isFree).length, 0);
+  if (freeLessons > 0) return `${freeLessons} ${plural(freeLessons, ["урок", "урока", "уроков"])} бесплатно`;
+  return "";
+}
+
 export default function CourseCard({ c }: { c: DbCourse }) {
+  const free = freeLabel(c);
   return (
     <Link
       to="/university/$slug"
@@ -31,6 +46,11 @@ export default function CourseCard({ c }: { c: DbCourse }) {
         </div>
         <h3 className="mt-6 font-display text-xl font-semibold text-brand-ink">{c.title}</h3>
         <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>
+        {free && (
+          <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">
+            <Icon name="Gift" size={13} /> {free}
+          </span>
+        )}
         <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-7 text-sm text-brand-muted">
           <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>
           <span className="inline-flex items-center gap-1.5"><Icon name="PlayCircle" size={15} />{lessonsTotal(c)} уроков</span>

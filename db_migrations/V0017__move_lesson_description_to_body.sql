@@ -1,0 +1,1 @@
+UPDATE lessons SET body = description, description = '' WHERE body = '' AND description <> '';

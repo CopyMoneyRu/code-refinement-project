@@ -13,8 +13,8 @@ export const Route = createFileRoute("/university/$slug")({
     return { course };
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.course.title} — JETRA University` : "Курс — JETRA University";
-    const desc = loaderData?.course.short ?? "Курс JETRA University";
+    const title = loaderData ? `${loaderData.course.title} — JETRA University` : "Обучение — JETRA University";
+    const desc = loaderData?.course.short ?? "Обучение JETRA University";
     return {
       meta: [
         { title },
@@ -41,7 +41,7 @@ function CoursePage() {
       <section className="pb-12 pt-10 md:pt-14">
         <div className="container-x">
           <Link to="/university" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-ink">
-            <Icon name="ArrowLeft" size={16} /> Все курсы
+            <Icon name="ArrowLeft" size={16} /> Все обучения
           </Link>
           <div className="mt-8 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
             <div>
@@ -74,14 +74,14 @@ function CoursePage() {
 
               {course.description && (
                 <>
-                  <h2 className="mt-12 font-display text-2xl font-semibold text-brand-ink">О курсе</h2>
+                  <h2 className="mt-12 font-display text-2xl font-semibold text-brand-ink">Об обучении</h2>
                   <div className="mt-5 whitespace-pre-line text-[16px] leading-relaxed text-brand-ink/80">{course.description}</div>
                 </>
               )}
 
               {course.modules.length > 0 && (
               <>
-              <h2 className="mt-12 font-display text-2xl font-semibold text-brand-ink">Программа курса</h2>
+              <h2 className="mt-12 font-display text-2xl font-semibold text-brand-ink">Программа обучения</h2>
               <Accordion type="multiple" defaultValue={["m0"]} className="mt-6 space-y-3">
                 {course.modules.map((mod, i) => (
                   <AccordionItem key={i} value={`m${i}`} className="rounded-xl border border-brand-ink/10 bg-white px-5">
@@ -121,7 +121,7 @@ function CoursePage() {
 
             <aside className="lg:sticky lg:top-8 lg:self-start">
               <div className="rounded-2xl border border-brand-ink/10 bg-white p-7">
-                <div className="text-sm text-brand-muted">Доступ к курсу</div>
+                <div className="text-sm text-brand-muted">Доступ к обучению</div>
                 <div className="mt-2 font-display text-2xl font-semibold text-brand-ink">
                   {course.access === "free" ? "Бесплатно" : course.price ? formatPrice(course.price) : "Платный доступ"}
                 </div>
@@ -132,7 +132,7 @@ function CoursePage() {
                       : "Зарегистрируйтесь, чтобы начать обучение и сохранять прогресс."
                     : freeCount > 0
                       ? `${freeCount} ${freeCount === 1 ? "урок доступен" : freeCount < 5 ? "урока доступны" : "уроков доступны"} бесплатно после регистрации, остальные — после оплаты.`
-                      : "Доступ открывается после оплаты. Если доступ уже выдан — курс откроется в личном кабинете."}
+                      : "Доступ открывается после оплаты. Если доступ уже выдан — обучение откроется в личном кабинете."}
                 </p>
                 {user ? (
                   <Link
@@ -140,7 +140,7 @@ function CoursePage() {
                     params={{ slug: course.slug }}
                     className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue py-3.5 font-medium text-white transition-colors hover:bg-[#3271B0]"
                   >
-                    <Icon name="Play" size={17} /> {course.access === "free" ? "Перейти к обучению" : freeCount > 0 ? "Смотреть бесплатные уроки" : "Открыть курс"}
+                    <Icon name="Play" size={17} /> {course.access === "free" ? "Перейти к обучению" : freeCount > 0 ? "Смотреть бесплатные уроки" : "Открыть обучение"}
                   </Link>
                 ) : (
                   <>
@@ -163,7 +163,7 @@ function CoursePage() {
               </div>
               {course.author && (
                 <div className="mt-5 rounded-2xl border border-brand-ink/10 bg-white p-6">
-                  <div className="text-xs uppercase tracking-[0.14em] text-brand-muted">Автор курса</div>
+                  <div className="text-xs uppercase tracking-[0.14em] text-brand-muted">Автор обучения</div>
                   <Link to="/university/authors/$slug" params={{ slug: course.author.slug }} className="group mt-4 flex items-center gap-4">
                     <AuthorAvatar name={course.author.name} photoUrl={course.author.photoUrl} className="h-14 w-14" textClassName="text-base" />
                     <div className="min-w-0">

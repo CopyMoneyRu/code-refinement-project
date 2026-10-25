@@ -145,7 +145,7 @@ def load_program(cur, course_id: int, with_content: bool, public: bool = False):
         }
         if with_content:
             item.update({
-                'description': l['description'], 'videoType': l['video_type'], 'videoUrl': l['video_url'],
+                'description': l['description'], 'body': l.get('body') or '', 'videoType': l['video_type'], 'videoUrl': l['video_url'],
                 'materials': [
                     {'id': m['id'], 'title': m['title'], 'kind': m['kind'], 'url': m['url'], 'fileSize': m['file_size']}
                     for m in mats
@@ -241,10 +241,10 @@ def progress_of(modules) -> dict:
 def a_course_learn(cur, body, user):
     course = course_by(cur, 'c.slug = %s', (str(body.get('slug', ''))[:120],))
     if not course:
-        return err(404, 'not_found', 'Курс не найден')
+        return err(404, 'not_found', 'Обучение не найдено')
     state = access_state(cur, user, course)
     if state == 'hidden':
-        return err(404, 'not_found', 'Курс не найден')
+        return err(404, 'not_found', 'Обучение не найдено')
     modules = load_program(cur, course['id'], with_content=False, public=True)
     done = done_set(cur, user['id'], course['id']) if user else set()
     apply_locks(modules, done, can_preview(user), state == 'open')
@@ -271,7 +271,7 @@ def a_lesson_get(cur, body, user):
     course = course_by(cur, 'c.id = %s', (row['course_id'],))
     state = access_state(cur, user, course)
     if state not in ('open', 'paid'):
-        return err(403, state, 'Нет доступа к этому курсу')
+        return err(403, state, 'Нет доступа к этому обучению')
     modules = apply_locks(
         load_program(cur, course['id'], with_content=True, public=True), done_set(cur, user['id'], course['id']), can_preview(user), state == 'open'
     )
@@ -281,7 +281,7 @@ def a_lesson_get(cur, body, user):
         return err(404, 'not_found', 'Урок не найден или скрыт')
     module, lesson = flat[idx]
     if lesson['paidLocked']:
-        return err(403, 'paid', 'Этот урок доступен после оплаты курса')
+        return err(403, 'paid', 'Этот урок доступен после оплаты обучения')
     if lesson['locked']:
         return err(403, 'locked', 'Урок откроется после прохождения предыдущих уроков модуля')
     prev_l = flat[idx - 1][1] if idx > 0 else None
@@ -305,14 +305,14 @@ def a_lesson_complete(cur, body, user):
     course = course_by(cur, 'c.id = %s', (row['course_id'],))
     state = access_state(cur, user, course)
     if state not in ('open', 'paid'):
-        return err(403, 'forbidden', 'Нет доступа к этому курсу')
+        return err(403, 'forbidden', 'Нет доступа к этому обучению')
     full = state == 'open'
     modules = apply_locks(load_program(cur, course['id'], with_content=False, public=True), done_set(cur, user['id'], course['id']), can_preview(user), full)
     lesson = next((l for m in modules for l in m['lessons'] if l['id'] == lid), None)
     if lesson is None:
         return err(404, 'not_found', 'Урок не найден или скрыт')
     if lesson['paidLocked']:
-        return err(403, 'paid', 'Этот урок доступен после оплаты курса')
+        return err(403, 'paid', 'Этот урок доступен после оплаты обучения')
     if lesson['locked']:
         return err(403, 'locked', 'Сначала пройдите предыдущие уроки модуля')
     if body.get('completed', True):
@@ -373,7 +373,7 @@ def a_program_get(cur, body, user):
     cid = to_int(body.get('courseId'))
     course = course_by(cur, 'c.id = %s', (cid,)) if cid else None
     if not course:
-        return err(404, 'not_found', 'Курс не найден')
+        return err(404, 'not_found', 'Обучение не найдено')
     return resp(200, {'ok': True, 'course': course_head(course), 'modules': load_program(cur, cid, with_content=True)})
 
 
@@ -407,7 +407,7 @@ def a_module_save(cur, body, user):
     else:
         cid = to_int(body.get('courseId'))
         if not cid or not course_by(cur, 'c.id = %s', (cid,)):
-            return err(404, 'not_found', 'Курс не найден')
+            return err(404, 'not_found', 'Обучение не найдено')
         cur.execute(
             f"""INSERT INTO {t('course_modules')} (course_id, title, description, unlock_mode, position)
                 VALUES (%s, %s, %s, %s, (SELECT COALESCE(MAX(position), 0) + 1 FROM {t('course_modules')} WHERE course_id = %s))
@@ -497,6 +497,7 @@ def clean_materials(raw):
 def a_lesson_save(cur, body, user):
     title = str(body.get('title', '')).strip()[:200]
     description = str(body.get('description', '')).strip()[:50000]
+    text = str(body.get('body', '')).strip()[:100000]
     duration = str(body.get('duration', '')).strip()[:30]
     vtype = body.get('videoType', 'none')
     vurl = str(body.get('videoUrl', '')).strip()[:1000]
@@ -518,9 +519,9 @@ def a_lesson_save(cur, body, user):
     lid = to_int(body.get('id'))
     if lid:
         cur.execute(
-            f"""UPDATE {t('lessons')} SET title = %s, description = %s, duration = %s, video_type = %s, video_url = %s,
+            f"""UPDATE {t('lessons')} SET title = %s, description = %s, body = %s, duration = %s, video_type = %s, video_url = %s,
                 is_free = %s, updated_at = NOW() WHERE id = %s RETURNING module_id""",
-            (title, description, duration, vtype, vurl, is_free, lid),
+            (title, description, text, duration, vtype, vurl, is_free, lid),
         )
         row = cur.fetchone()
         if not row:
@@ -532,10 +533,10 @@ def a_lesson_save(cur, body, user):
         if not mid or not course_of_module(cur, mid):
             return err(404, 'not_found', 'Модуль не найден')
         cur.execute(
-            f"""INSERT INTO {t('lessons')} (module_id, title, description, duration, video_type, video_url, is_free, position)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, (SELECT COALESCE(MAX(position), 0) + 1 FROM {t('lessons')} WHERE module_id = %s))
+            f"""INSERT INTO {t('lessons')} (module_id, title, description, body, duration, video_type, video_url, is_free, position)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, (SELECT COALESCE(MAX(position), 0) + 1 FROM {t('lessons')} WHERE module_id = %s))
                 RETURNING id""",
-            (mid, title, description, duration, vtype, vurl, is_free, mid),
+            (mid, title, description, text, duration, vtype, vurl, is_free, mid),
         )
         lid = cur.fetchone()['id']
     for i, m in enumerate(materials, start=1):
@@ -792,9 +793,9 @@ def a_access_grant(cur, body, user):
         return err(404, 'user_not_found', 'Пользователь с таким email не зарегистрирован')
     course = course_by(cur, 'c.id = %s', (cid,)) if cid else None
     if not course:
-        return err(404, 'not_found', 'Курс не найден')
+        return err(404, 'not_found', 'Обучение не найдено')
     if course['access'] == 'free':
-        return err(400, 'free_course', 'Этот курс бесплатный — он и так открыт всем пользователям')
+        return err(400, 'free_course', 'Это обучение бесплатное — оно и так открыто всем пользователям')
     cur.execute(
         f"""INSERT INTO {t('course_access')} (user_id, course_id, granted_by) VALUES (%s, %s, %s)
             ON CONFLICT (user_id, course_id) DO NOTHING RETURNING id""",
@@ -856,6 +857,8 @@ def handler(event: dict, context) -> dict:
         if action in TOKEN:
             return TOKEN[action](cur, body, None)
         user = session_user(cur, headers.get('x-session-token'))
+        if user and user['role'] == 'superadmin' and headers.get('x-view-as') == 'user' and action not in ADMIN:
+            user = {**dict(user), 'role': 'user', 'permissions': ''}
         if action in OPTIONAL_USER:
             return OPTIONAL_USER[action](cur, body, user)
         if action in USER:

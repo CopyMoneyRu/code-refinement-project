@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/university/")({
   head: () => ({
     meta: [
-      { title: "JETRA University — курсы по инвестициям" },
-      { name: "description", content: "Бесплатные и платные курсы JETRA University: модули, видеоуроки и материалы." },
+      { title: "JETRA University — обучение инвестициям" },
+      { name: "description", content: "Бесплатное и платное обучение JETRA University: модули, видеоуроки и материалы." },
       { property: "og:title", content: "JETRA University" },
-      { property: "og:description", content: "Курсы по инвестициям и управлению капиталом." },
+      { property: "og:description", content: "Обучение инвестициям и управлению капиталом." },
     ],
   }),
   loader: () => catalogFn(),
@@ -80,7 +80,7 @@ function UniversityPage() {
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Поиск курса"
+                  placeholder="Поиск обучения"
                   className="h-10 w-full rounded-lg border border-brand-ink/10 bg-transparent pl-9 pr-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-blue focus:outline-none sm:w-56"
                 />
               </label>
@@ -129,7 +129,7 @@ function UniversityPage() {
               ))}
             </div>
           ) : (
-            <div className="mt-16 text-center text-brand-muted">По выбранным условиям курсов не найдено.</div>
+            <div className="mt-16 text-center text-brand-muted">По выбранным условиям обучений не найдено.</div>
           )}
         </div>
       </section>

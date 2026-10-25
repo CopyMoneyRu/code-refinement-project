@@ -11,7 +11,7 @@ export const Route = createFileRoute("/cabinet/learn/$slug/")({
     if (!r.ok) throw notFound();
     return r;
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.course.title ?? "Курс"} — обучение JETRA` }] }),
+  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.course.title ?? "Обучение"} — JETRA University` }] }),
   component: CourseProgram,
 });
 
@@ -27,7 +27,7 @@ function CourseProgram() {
   return (
     <>
       <Link to="/cabinet/courses" className="mb-5 inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-ink">
-        <Icon name="ArrowLeft" size={16} /> Мои курсы
+        <Icon name="ArrowLeft" size={16} /> Мои обучения
       </Link>
 
       <WsCard className="overflow-hidden p-0">
@@ -40,7 +40,7 @@ function CourseProgram() {
             {canLearn ? (
               <>
                 <div className="mt-7 flex items-center justify-between text-sm">
-                  <span className="font-medium">{finished ? "Курс пройден" : `Пройдено ${progress.done} из ${progress.total} уроков`}</span>
+                  <span className="font-medium">{finished ? "Обучение пройдено" : `Пройдено ${progress.done} из ${progress.total} уроков`}</span>
                   <span className="tabular-nums text-brand-muted">{progress.percent}%</span>
                 </div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-surface">
@@ -70,22 +70,22 @@ function CourseProgram() {
                       {freeLessons === 1 ? "урок" : freeLessons < 5 ? "урока" : "уроков"}
                     </div>
                     <p className="mt-1.5 text-brand-muted">
-                      Остальные уроки откроются после оплаты курса{course.price ? ` (${formatPrice(course.price)})` : ""}. Пока доступ выдаёт администратор.
+                      Остальные уроки откроются после оплаты обучения{course.price ? ` (${formatPrice(course.price)})` : ""}. Пока доступ выдаёт администратор.
                     </p>
                   </div>
                 )}
                 {preview && (
-                  <p className="mt-4 text-xs text-brand-muted">Вы видите курс как администратор: все уроки открыты без ограничений.</p>
+                  <p className="mt-4 text-xs text-brand-muted">Вы видите обучение как администратор: все уроки открыты без ограничений.</p>
                 )}
               </>
             ) : (
               <div className="mt-7 rounded-xl border border-brand-ink/10 bg-brand-light p-5">
                 <div className="flex items-center gap-2 font-medium">
-                  <Icon name="Lock" size={17} className="text-brand-blue" /> Доступ к курсу закрыт
+                  <Icon name="Lock" size={17} className="text-brand-blue" /> Доступ к обучению закрыт
                 </div>
                 <p className="mt-2 text-sm text-brand-muted">
-                  Это платный курс{course.price ? ` (${formatPrice(course.price)})` : ""}. Доступ открывается после оплаты — пока его выдаёт администратор.
-                  Программа курса доступна для ознакомления ниже.
+                  Это платное обучение{course.price ? ` (${formatPrice(course.price)})` : ""}. Доступ открывается после оплаты — пока его выдаёт администратор.
+                  Программа обучения доступна для ознакомления ниже.
                 </p>
               </div>
             )}
@@ -101,7 +101,7 @@ function CourseProgram() {
       <h2 className="mb-4 mt-10 font-display text-xl font-semibold">Программа</h2>
       {modules.length === 0 ? (
         <WsCard>
-          <p className="text-brand-muted">Уроки этого курса скоро появятся.</p>
+          <p className="text-brand-muted">Уроки этого обучения скоро появятся.</p>
         </WsCard>
       ) : (
         <div className="space-y-4">

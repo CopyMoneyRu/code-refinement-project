@@ -13,6 +13,7 @@ const empty = (moduleId: number): LessonInput => ({
   moduleId,
   title: "",
   description: "",
+  body: "",
   duration: "",
   videoType: "none",
   videoUrl: "",
@@ -55,6 +56,7 @@ export default function LessonForm({
             moduleId,
             title: lesson.title,
             description: lesson.description,
+            body: lesson.body ?? "",
             duration: lesson.duration,
             videoType: lesson.videoType,
             videoUrl: lesson.videoUrl,
@@ -134,7 +136,7 @@ export default function LessonForm({
         <form onSubmit={submit} className="flex min-h-full flex-col">
           <div className="sticky top-0 z-10 border-b border-brand-ink/10 bg-white px-6 py-5">
             <SheetTitle className="font-display text-xl text-brand-ink">{form.id ? "Редактирование урока" : "Новый урок"}</SheetTitle>
-            <SheetDescription className="text-brand-muted">Видео, описание и материалы, которые увидит ученик.</SheetDescription>
+            <SheetDescription className="text-brand-muted">Описание, видео, текст и материалы, которые увидит ученик.</SheetDescription>
           </div>
 
           <div className="flex-1 space-y-7 px-6 py-6">
@@ -154,10 +156,24 @@ export default function LessonForm({
                 <input type="checkbox" checked={form.isFree} onChange={(e) => set("isFree", e.target.checked)} className="mt-0.5 h-4 w-4 accent-emerald-600" />
                 <span>
                   <span className="block text-sm font-medium">Бесплатный урок</span>
-                  <span className="block text-xs text-brand-muted">Доступен всем зарегистрированным пользователям без оплаты курса</span>
+                  <span className="block text-xs text-brand-muted">Доступен всем зарегистрированным пользователям без оплаты обучения</span>
                 </span>
               </label>
             )}
+
+            <div>
+              <div className="mb-1.5 flex items-baseline justify-between">
+                <span className="text-sm font-medium">Описание урока</span>
+                <span className="text-xs text-brand-muted">пустая строка — новый абзац</span>
+              </div>
+              <textarea
+                className={cn(inputCls, "h-auto min-h-[110px] py-2.5")}
+                maxLength={5000}
+                value={form.description}
+                onChange={(e) => set("description", e.target.value)}
+                placeholder="Коротко: о чём урок и что узнает ученик. Показывается над видео"
+              />
+            </div>
 
             <div>
               <div className="mb-2 text-sm font-medium">Видео</div>
@@ -231,15 +247,15 @@ export default function LessonForm({
 
             <div>
               <div className="mb-1.5 flex items-baseline justify-between">
-                <span className="text-sm font-medium">Описание урока</span>
+                <span className="text-sm font-medium">Текст урока</span>
                 <span className="text-xs text-brand-muted">пустая строка — новый абзац</span>
               </div>
               <textarea
                 className={cn(inputCls, "h-auto min-h-[200px] py-2.5")}
-                maxLength={50000}
-                value={form.description}
-                onChange={(e) => set("description", e.target.value)}
-                placeholder="О чём урок, ключевые тезисы, задание для самостоятельной работы"
+                maxLength={100000}
+                value={form.body}
+                onChange={(e) => set("body", e.target.value)}
+                placeholder="Конспект, ключевые тезисы, задание. Показывается под видео"
               />
             </div>
 

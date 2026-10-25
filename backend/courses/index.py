@@ -239,7 +239,7 @@ def validate(cur, body):
     description = str(body.get('description', '')).strip()[:20000]
     access = body.get('access')
     if len(title) < 3:
-        return None, err(400, 'invalid_title', 'Укажите название курса (не короче 3 символов)')
+        return None, err(400, 'invalid_title', 'Укажите название обучения (не короче 3 символов)')
     if not cat_ids:
         return None, err(400, 'invalid_category', 'Выберите хотя бы одну категорию')
     cur.execute(f"SELECT id, name FROM {t('categories')} WHERE id IN %s ORDER BY name", (tuple(cat_ids),))
@@ -256,7 +256,7 @@ def validate(cur, body):
     if access == 'free':
         price = 0
     elif price < 1 or price > 10_000_000:
-        return None, err(400, 'invalid_price', 'Укажите цену платного курса в рублях')
+        return None, err(400, 'invalid_price', 'Укажите цену платного обучения в рублях')
     author_id = body.get('authorId')
     if author_id in (None, '', 0):
         author_id = None
@@ -291,7 +291,7 @@ def a_get(cur, body, _user):
     slug = str(body.get('slug', ''))[:120]
     rows = select_courses(cur, 'WHERE c.published AND c.slug = %s', (slug,), public=True)
     if not rows:
-        return err(404, 'not_found', 'Курс не найден')
+        return err(404, 'not_found', 'Обучение не найдено')
     return resp(200, {'ok': True, 'course': rows[0]})
 
 
@@ -364,10 +364,10 @@ def a_save(cur, body, user):
         try:
             cid = int(cid)
         except (TypeError, ValueError):
-            return err(400, 'bad_course', 'Некорректный курс')
+            return err(400, 'bad_course', 'Некорректное обучение')
         cur.execute(f"SELECT id FROM {t('courses')} WHERE id = %s", (cid,))
         if not cur.fetchone():
-            return err(404, 'not_found', 'Курс не найден')
+            return err(404, 'not_found', 'Обучение не найдено')
         sets = ', '.join(f'{f} = %s' for f in fields)
         cur.execute(
             f"UPDATE {t('courses')} SET {sets}, updated_at = NOW() WHERE id = %s",
@@ -526,24 +526,24 @@ def parse_id(body):
 def a_set_course_published(cur, body, user):
     cid = parse_id(body)
     if not cid:
-        return err(400, 'bad_course', 'Некорректный курс')
+        return err(400, 'bad_course', 'Некорректное обучение')
     cur.execute(
         f"UPDATE {t('courses')} SET published = %s, updated_at = NOW() WHERE id = %s RETURNING id",
         (bool(body.get('published')), cid),
     )
     if not cur.fetchone():
-        return err(404, 'not_found', 'Курс не найден')
+        return err(404, 'not_found', 'Обучение не найдено')
     return resp(200, {'ok': True, 'course': select_courses(cur, 'WHERE c.id = %s', (cid,))[0]})
 
 
 def a_delete_course(cur, body, user):
     cid = parse_id(body)
     if not cid:
-        return err(400, 'bad_course', 'Некорректный курс')
+        return err(400, 'bad_course', 'Некорректное обучение')
     cur.execute(f"SELECT title FROM {t('courses')} WHERE id = %s", (cid,))
     row = cur.fetchone()
     if not row:
-        return err(404, 'not_found', 'Курс не найден')
+        return err(404, 'not_found', 'Обучение не найдено')
     lessons_sub = f"SELECT l.id FROM {t('lessons')} l JOIN {t('course_modules')} m ON m.id = l.module_id WHERE m.course_id = %s"
     cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE lesson_id IN ({lessons_sub})", (cid,))
     cur.execute(f"DELETE FROM {t('lesson_materials')} WHERE lesson_id IN ({lessons_sub})", (cid,))

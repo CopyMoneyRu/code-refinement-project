@@ -18,6 +18,7 @@ export type LessonBrief = {
 };
 export type LessonFull = LessonBrief & {
   description: string;
+  body: string;
   videoType: VideoType;
   videoUrl: string;
   materials: Material[];
@@ -140,6 +141,7 @@ export type LessonInput = {
   moduleId: number;
   title: string;
   description: string;
+  body: string;
   duration: string;
   videoType: VideoType;
   videoUrl: string;
@@ -156,6 +158,7 @@ export const lessonSaveFn = createServerFn({ method: "POST" })
       moduleId: num(o.moduleId),
       title: str(o.title, 200),
       description: str(o.description, 50000),
+      body: str(o.body, 100000),
       duration: str(o.duration, 30),
       videoType: vt,
       videoUrl: str(o.videoUrl, 1000),

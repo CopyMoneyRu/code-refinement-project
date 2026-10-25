@@ -34,7 +34,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
 
 const SECTIONS = [
   { prefix: "/strategies", label: "Стратегии", text: "Инвестиционные стратегии", icon: "LineChart", bg: "TrendingUp" },
-  { prefix: "/university", label: "Университет", text: "Обучение и курсы", icon: "GraduationCap", bg: "BookOpen" },
+  { prefix: "/university", label: "Университет", text: "Обучение инвестициям", icon: "GraduationCap", bg: "BookOpen" },
 ];
 
 function SectionMark() {

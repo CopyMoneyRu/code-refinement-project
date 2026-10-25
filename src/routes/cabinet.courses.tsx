@@ -25,7 +25,7 @@ function MyCourses() {
 
   return (
     <>
-      <WsTitle title="Мои курсы" text="Курсы, которые вы начали, и платные курсы с открытым доступом." />
+      <WsTitle title="Мои обучения" text="Обучения, которые вы начали, и платные обучения с открытым доступом." />
       <div className="mb-5 flex gap-1 rounded-lg bg-brand-surface p-1 sm:inline-flex">
         {TABS.map((t) => (
           <button
@@ -69,10 +69,10 @@ function MyCourses() {
           <EmptyState
             icon="GraduationCap"
             title={courses.length ? "В этом разделе пока пусто" : "Вы ещё не начали обучение"}
-            text={courses.length ? "Переключите вкладку, чтобы увидеть другие курсы." : "Выберите курс в каталоге и нажмите «Начать обучение» — он появится здесь вместе с прогрессом."}
+            text={courses.length ? "Переключите вкладку, чтобы увидеть другие обучения." : "Выберите обучение в каталоге и нажмите «Начать обучение» — он появится здесь вместе с прогрессом."}
           />
           <div className="pb-6 text-center">
-            <Link to="/university" className="text-sm font-medium text-brand-blue hover:underline">Открыть каталог курсов</Link>
+            <Link to="/university" className="text-sm font-medium text-brand-blue hover:underline">Открыть каталог обучений</Link>
           </div>
         </WsCard>
       )}

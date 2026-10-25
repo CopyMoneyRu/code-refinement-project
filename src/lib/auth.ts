@@ -12,6 +12,7 @@ export type AuthUser = {
   emailVerified: boolean;
   hasPassword: boolean;
   createdAt: string | null;
+  viewAs?: "user";
 };
 
 export type ActionResult = { ok: true; emailSent?: boolean } | { ok: false; error: string; message: string };
@@ -144,4 +145,11 @@ export const adminDeleteUserFn = createServerFn({ method: "POST" })
     const { callAuth } = await import("./auth.server");
     const r = await callAuth("admin_delete_user", data, true);
     return r.ok ? { ok: true } : fail(r);
+  });
+
+export const setViewAsFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) => ({ mode: obj(input).mode === "user" ? ("user" as const) : ("" as const) }))
+  .handler(async ({ data }) => {
+    const { setViewAs } = await import("./auth.server");
+    return { ok: await setViewAs(data.mode) };
   });

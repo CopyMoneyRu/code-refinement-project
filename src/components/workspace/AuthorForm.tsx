@@ -94,7 +94,7 @@ export default function AuthorForm({
           <div className="sticky top-0 z-10 border-b border-brand-ink/10 bg-white px-6 py-5">
             <SheetTitle className="font-display text-xl text-brand-ink">{form.id ? "Редактирование автора" : "Новый автор"}</SheetTitle>
             <SheetDescription className="text-brand-muted">
-              Автор и его страница появятся в университете, когда у него будет хотя бы один опубликованный курс.
+              Автор и его страница появятся в университете, когда у него будет хотя бы одно опубликованное обучение.
             </SheetDescription>
           </div>
 
@@ -144,7 +144,7 @@ export default function AuthorForm({
             <div>
               <div className="mb-1.5 flex items-baseline justify-between">
                 <span className="text-sm font-medium">Кратко об авторе</span>
-                <span className="text-xs text-brand-muted">{form.bio.length}/500 · в каталоге и на курсах</span>
+                <span className="text-xs text-brand-muted">{form.bio.length}/500 · в каталоге и на страницах обучений</span>
               </div>
               <textarea
                 className={cn(inputCls, "h-auto min-h-[90px] py-2.5")}

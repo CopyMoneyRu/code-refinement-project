@@ -16,14 +16,14 @@ function CabinetHome() {
   const { user } = cabinetApi.useRouteContext();
   const { courses } = Route.useLoaderData();
   const tiles = [
-    { label: "Курсов в обучении", icon: "GraduationCap" },
+    { label: "Обучений в процессе", icon: "GraduationCap" },
     { label: "Пройдено уроков", icon: "CheckCircle2" },
     { label: "Сертификатов", icon: "Award" },
   ];
   const adminSections = ADMIN_SECTIONS.filter((s) => can(user, s.perm));
   return (
     <>
-      <WsTitle title={`Добро пожаловать, ${user.name}`} text="Здесь будут ваши курсы, прогресс обучения и покупки." />
+      <WsTitle title={`Добро пожаловать, ${user.name}`} text="Здесь будут ваши обучения, прогресс и покупки." />
       {user.role !== "user" && (
         <WsCard className="mb-6">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -67,8 +67,8 @@ function CabinetHome() {
           <div className="border-b border-brand-ink/[0.08] px-6 py-4 font-semibold">Продолжить обучение</div>
           <EmptyState
             icon="BookOpen"
-            title="Вы ещё не начали курсы"
-            text="Выберите курс в каталоге JETRA University — прогресс будет сохраняться автоматически."
+            title="Вы ещё не начали обучение"
+            text="Выберите обучение в каталоге JETRA University — прогресс будет сохраняться автоматически."
           />
           <div className="px-6 pb-6 text-center">
             <Link to="/university" className="inline-flex rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-medium text-white hover:bg-[#3271B0]">

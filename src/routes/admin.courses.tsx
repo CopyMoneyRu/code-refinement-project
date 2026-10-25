@@ -33,7 +33,7 @@ function CoursesAdmin() {
     const r = await setCoursePublishedFn({ data: { id: c.id, published } });
     setBusy(null);
     if (!r.ok) return setError(r.message);
-    setNotice(published ? `Курс «${c.title}» показан на сайте` : `Курс «${c.title}» скрыт с сайта и хранится в админке`);
+    setNotice(published ? `Обучение «${c.title}» показано на сайте` : `Обучение «${c.title}» скрыто с сайта и хранится в админке`);
     router.invalidate();
   };
 
@@ -47,7 +47,7 @@ function CoursesAdmin() {
     setBusy(null);
     setToDelete(null);
     if (!r.ok) return setError(r.message);
-    setNotice(`Курс «${c.title}» удалён`);
+    setNotice(`Обучение «${c.title}» удалено`);
     router.invalidate();
   };
 
@@ -69,11 +69,11 @@ function CoursesAdmin() {
   return (
     <>
       <WsTitle
-        title="Курсы"
-        text="Добавление и редактирование курсов JETRA University. Изменения сразу появляются в каталоге."
+        title="Обучения"
+        text="Добавление и редактирование обучений JETRA University. Изменения сразу появляются в каталоге."
         action={
           <button onClick={() => openForm(null)} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white hover:bg-[#3271B0]">
-            <Icon name="Plus" size={16} /> Добавить курс
+            <Icon name="Plus" size={16} /> Добавить обучение
           </button>
         }
       />
@@ -97,7 +97,7 @@ function CoursesAdmin() {
             <table className="w-full min-w-[940px] text-left text-sm">
               <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
                 <tr>
-                  {["Курс", "Категория", "Автор", "Цена", "Программа", "На сайте", ""].map((c) => (
+                  {["Обучение", "Категория", "Автор", "Цена", "Программа", "На сайте", ""].map((c) => (
                     <th key={c} className="px-5 py-3.5 font-medium">{c}</th>
                   ))}
                 </tr>
@@ -126,7 +126,7 @@ function CoursesAdmin() {
                         checked={c.published}
                         disabled={busy === c.id}
                         onChange={(v) => togglePublished(c, v)}
-                        label={`Показывать курс «${c.title}» на сайте`}
+                        label={`Показывать обучение «${c.title}» на сайте`}
                       />
                     </td>
                     <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
@@ -151,8 +151,8 @@ function CoursesAdmin() {
                         <button
                           disabled={busy === c.id}
                           onClick={() => setToDelete(c)}
-                          aria-label={`Удалить курс «${c.title}»`}
-                          title="Удалить курс"
+                          aria-label={`Удалить обучение «${c.title}»`}
+                          title="Удалить обучение"
                           className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
                         >
                           <Icon name="Trash2" size={15} />
@@ -167,23 +167,23 @@ function CoursesAdmin() {
         ) : (
           <EmptyState
             icon="GraduationCap"
-            title={courses.length ? "Ничего не найдено" : "Курсов пока нет"}
-            text={courses.length ? "Измените условия поиска." : "Нажмите «Добавить курс», чтобы создать первый курс."}
+            title={courses.length ? "Ничего не найдено" : "Обучений пока нет"}
+            text={courses.length ? "Измените условия поиска." : "Нажмите «Добавить обучение», чтобы создать первое обучение."}
           />
         )}
       </WsCard>
 
       <ConfirmDelete
         open={!!toDelete}
-        title="Удалить курс?"
+        title="Удалить обучение?"
         busy={busy !== null}
         onCancel={() => setToDelete(null)}
         onConfirm={confirmDelete}
       >
         <p>
-          Курс <span className="font-medium text-brand-ink">«{toDelete?.title}»</span> будет удалён безвозвратно вместе с программой.
+          Обучение <span className="font-medium text-brand-ink">«{toDelete?.title}»</span> будет удалено безвозвратно вместе с программой.
         </p>
-        <p>Если нужно просто убрать курс с сайта — отмените и выключите переключатель «На сайте».</p>
+        <p>Если нужно просто убрать обучение с сайта — отмените и выключите переключатель «На сайте».</p>
       </ConfirmDelete>
 
       <CourseForm
@@ -198,9 +198,9 @@ function CoursesAdmin() {
           setNotice(
             created
               ? c.published
-                ? `Курс «${c.title}» создан и опубликован в каталоге`
-                : `Курс «${c.title}» создан (скрыт из каталога)`
-              : `Курс «${c.title}» сохранён`,
+                ? `Обучение «${c.title}» создано и опубликовано в каталоге`
+                : `Обучение «${c.title}» создано (скрыто из каталога)`
+              : `Обучение «${c.title}» сохранено`,
           );
           router.invalidate();
         }}

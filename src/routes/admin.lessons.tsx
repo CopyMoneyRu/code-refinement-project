@@ -18,7 +18,7 @@ function LessonsAdmin() {
 
   return (
     <>
-      <WsTitle title="Уроки" text="Выберите курс, чтобы настроить модули, уроки, видео и материалы." />
+      <WsTitle title="Уроки" text="Выберите обучение, чтобы настроить модули, уроки, видео и материалы." />
       <WsCard className="p-0">
         <div className="flex flex-col gap-3 border-b border-brand-ink/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between">
           <label className="relative flex-1">
@@ -26,11 +26,11 @@ function LessonsAdmin() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Поиск курса"
+              placeholder="Поиск обучения"
               className="h-10 w-full rounded-lg border border-brand-ink/15 pl-9 pr-3 text-sm focus:border-brand-blue focus:outline-none sm:max-w-xs"
             />
           </label>
-          <span className="text-sm text-brand-muted">Курсов: {courses.length}</span>
+          <span className="text-sm text-brand-muted">Обучений: {courses.length}</span>
         </div>
         {list.length ? (
           <ul className="divide-y divide-brand-ink/[0.06]">
@@ -64,7 +64,7 @@ function LessonsAdmin() {
             ))}
           </ul>
         ) : (
-          <EmptyState icon="PlayCircle" title="Курсов не найдено" text="Создайте курс в разделе «Курсы», затем добавьте в него уроки здесь." />
+          <EmptyState icon="PlayCircle" title="Обучений не найдено" text="Создайте обучение в разделе «Обучения», затем добавьте в него уроки здесь." />
         )}
       </WsCard>
     </>

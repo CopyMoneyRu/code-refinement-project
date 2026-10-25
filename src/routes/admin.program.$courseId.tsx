@@ -75,11 +75,11 @@ function ProgramEditor() {
   return (
     <>
       <Link to="/admin/lessons" className="mb-4 inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-ink">
-        <Icon name="ArrowLeft" size={16} /> Все курсы
+        <Icon name="ArrowLeft" size={16} /> Все обучения
       </Link>
       <WsTitle
         title={course.title}
-        text={`Программа курса: ${modules.length} мод. · ${totalLessons} ур.${
+        text={`Программа обучения: ${modules.length} мод. · ${totalLessons} ур.${
           hiddenModules || hiddenLessons ? ` Скрыто: ${hiddenModules ? `${hiddenModules} мод.` : ""}${hiddenModules && hiddenLessons ? ", " : ""}${hiddenLessons ? `${hiddenLessons} ур.` : ""}` : ""
         } Изменения сразу видны ученикам.`}
         action={
@@ -107,7 +107,7 @@ function ProgramEditor() {
         <div className="mb-4 flex items-start gap-3 rounded-lg border border-brand-blue/20 bg-brand-blue/5 p-4 text-sm">
           <Icon name="Gift" size={18} className="mt-0.5 shrink-0 text-brand-blue" />
           <div>
-            <span className="font-medium">Курс платный.</span>{" "}
+            <span className="font-medium">Обучение платное.</span>{" "}
             {freeTotal > 0
               ? `Бесплатных уроков: ${freeTotal} из ${totalLessons} — они открыты всем зарегистрированным, остальные после оплаты.`
               : "Отметьте галочкой «Бесплатно» уроки, которые можно пройти без оплаты — например, первый модуль."}
@@ -119,7 +119,7 @@ function ProgramEditor() {
 
       {modules.length === 0 ? (
         <WsCard>
-          <EmptyState icon="Layers" title="В курсе пока нет модулей" text="Добавьте первый модуль, а в нём — уроки с видео и материалами." />
+          <EmptyState icon="Layers" title="В обучении пока нет модулей" text="Добавьте первый модуль, а в нём — уроки с видео и материалами." />
         </WsCard>
       ) : (
         <div className="space-y-4">

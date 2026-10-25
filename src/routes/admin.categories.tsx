@@ -52,7 +52,7 @@ function CategoriesAdmin() {
 
   return (
     <>
-      <WsTitle title="Категории" text="Категории курсов университета. Один курс может входить в несколько категорий." />
+      <WsTitle title="Категории" text="Категории обучений университета. Одно обучение может входить в несколько категорий." />
       {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
       <WsCard className="p-0">
@@ -111,7 +111,7 @@ function CategoriesAdmin() {
                       <Icon name="Tag" size={16} />
                     </span>
                     <span className="flex-1 font-medium">{c.name}</span>
-                    <span className="hidden text-brand-muted sm:inline">Курсов: {c.coursesCount}</span>
+                    <span className="hidden text-brand-muted sm:inline">Обучений: {c.coursesCount}</span>
                     <button
                       onClick={() => {
                         setEditId(c.id);
@@ -136,14 +136,14 @@ function CategoriesAdmin() {
             ))}
           </ul>
         ) : (
-          <EmptyState icon="Tags" title="Категорий пока нет" text="Добавьте первую категорию — затем выберите её в карточке курса." />
+          <EmptyState icon="Tags" title="Категорий пока нет" text="Добавьте первую категорию — затем выберите её в карточке обучения." />
         )}
       </WsCard>
 
       <ConfirmDelete open={!!toDelete} title="Удалить категорию?" busy={busy} onCancel={() => setToDelete(null)} onConfirm={confirmDelete}>
         <p>
           Категория <span className="font-medium text-brand-ink">«{toDelete?.name}»</span> будет удалена.
-          {toDelete && toDelete.coursesCount > 0 && ` Её уберут из ${toDelete.coursesCount} курс(ов), сами курсы останутся.`}
+          {toDelete && toDelete.coursesCount > 0 && ` Её уберут из ${toDelete.coursesCount} обуч., сами обучения останутся.`}
         </p>
       </ConfirmDelete>
     </>

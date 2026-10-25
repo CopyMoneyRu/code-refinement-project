@@ -10,7 +10,7 @@ export const Route = createFileRoute("/university/authors/$slug")({
   head: ({ loaderData }) => {
     const a = loaderData?.author;
     const title = a ? `${a.name} — автор JETRA University` : "Автор — JETRA University";
-    const desc = a ? a.bio || `${a.name}${a.role ? `, ${a.role}` : ""}. Курсы автора в JETRA University.` : "Автор курсов JETRA University";
+    const desc = a ? a.bio || `${a.name}${a.role ? `, ${a.role}` : ""}. Обучения автора в JETRA University.` : "Автор обучений JETRA University";
     return {
       meta: [
         { title },
@@ -50,7 +50,7 @@ function AuthorPage() {
       <section className="pb-24 pt-10 md:pt-14">
         <div className="container-x">
           <Link to="/university" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-ink">
-            <Icon name="ArrowLeft" size={16} /> Все курсы
+            <Icon name="ArrowLeft" size={16} /> Все обучения
           </Link>
 
           <div className="mt-8 grid gap-10 lg:grid-cols-[340px_1fr] lg:gap-14">
@@ -68,7 +68,7 @@ function AuthorPage() {
                 <div className="mt-6 grid grid-cols-2 gap-3 border-t border-brand-ink/10 pt-6 text-left">
                   <div>
                     <div className="font-display text-2xl font-semibold text-brand-ink">{courses.length}</div>
-                    <div className="text-sm text-brand-muted">{courses.length === 1 ? "курс" : courses.length < 5 ? "курса" : "курсов"}</div>
+                    <div className="text-sm text-brand-muted">{courses.length === 1 ? "обучение" : courses.length < 5 ? "обучения" : "обучений"}</div>
                   </div>
                   <div>
                     <div className="font-display text-2xl font-semibold text-brand-ink">{lessons}</div>
@@ -120,7 +120,7 @@ function AuthorPage() {
               )}
 
               <div className={author.facts.length > 0 || paragraphs.length > 0 ? "mt-14" : ""}>
-                <h2 className="font-display text-2xl font-semibold text-brand-ink">Курсы автора</h2>
+                <h2 className="font-display text-2xl font-semibold text-brand-ink">Обучения автора</h2>
                 <div className="mt-6 grid gap-5 sm:grid-cols-2">
                   {courses.map((c) => (
                     <CourseCard key={c.id} c={c} />

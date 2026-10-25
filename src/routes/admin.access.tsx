@@ -35,12 +35,12 @@ function AccessAdmin() {
     setError("");
     setNotice("");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("Введите email пользователя");
-    if (!courseId) return setError("Выберите курс");
+    if (!courseId) return setError("Выберите обучение");
     setBusy(true);
     const r = await accessGrantFn({ data: { email: email.trim(), courseId } });
     setBusy(false);
     if (!r.ok) return setError(r.message);
-    setNotice(r.created ? `Доступ к курсу «${r.courseTitle}» выдан: ${r.userName}` : `У пользователя ${r.userName} уже есть доступ к «${r.courseTitle}»`);
+    setNotice(r.created ? `Доступ к обучению «${r.courseTitle}» выдан: ${r.userName}` : `У пользователя ${r.userName} уже есть доступ к «${r.courseTitle}»`);
     setEmail("");
     router.invalidate();
   };
@@ -55,13 +55,13 @@ function AccessAdmin() {
     setBusy(false);
     setToRevoke(null);
     if (!r.ok) return setError(r.message);
-    setNotice(`Доступ ${g.user.name} к курсу «${g.course.title}» отозван`);
+    setNotice(`Доступ ${g.user.name} к обучению «${g.course.title}» отозван`);
     router.invalidate();
   };
 
   return (
     <>
-      <WsTitle title="Доступы" text="Платные курсы открываются только тем, кому выдан доступ. Бесплатные курсы доступны всем зарегистрированным." />
+      <WsTitle title="Доступы" text="Платные обучения открываются только тем, кому выдан доступ. Бесплатные обучения доступны всем зарегистрированным." />
       {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
@@ -81,7 +81,7 @@ function AccessAdmin() {
               onChange={(e) => setCourseId(Number(e.target.value))}
               className="h-11 rounded-lg border border-brand-ink/15 bg-white px-3.5 text-[15px] focus:border-brand-blue focus:outline-none"
             >
-              <option value={0}>Выберите платный курс</option>
+              <option value={0}>Выберите платное обучение</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.title}{c.published ? "" : " (скрыт)"}
@@ -93,7 +93,7 @@ function AccessAdmin() {
             </button>
           </form>
         ) : (
-          <p className="mt-3 text-sm text-brand-muted">Платных курсов пока нет. Сделайте курс платным в разделе «Курсы».</p>
+          <p className="mt-3 text-sm text-brand-muted">Платных обучений пока нет. Сделайте обучение платным в разделе «Обучения».</p>
         )}
         <p className="mt-3 text-xs text-brand-muted">Пользователь должен быть зарегистрирован. После подключения оплаты доступ будет выдаваться автоматически.</p>
       </WsCard>
@@ -105,7 +105,7 @@ function AccessAdmin() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Поиск по пользователю или курсу"
+              placeholder="Поиск по пользователю или обучению"
               className="h-10 w-full rounded-lg border border-brand-ink/15 pl-9 pr-3 text-sm focus:border-brand-blue focus:outline-none sm:max-w-xs"
             />
           </label>
@@ -116,7 +116,7 @@ function AccessAdmin() {
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
                 <tr>
-                  {["Пользователь", "Курс", "Выдал", "Дата", ""].map((c) => (
+                  {["Пользователь", "Обучение", "Выдал", "Дата", ""].map((c) => (
                     <th key={c} className="px-5 py-3.5 font-medium">{c}</th>
                   ))}
                 </tr>
@@ -146,13 +146,13 @@ function AccessAdmin() {
             </table>
           </div>
         ) : (
-          <EmptyState icon="KeyRound" title={grants.length ? "Ничего не найдено" : "Выданных доступов нет"} text={grants.length ? "Измените условия поиска." : "Выдайте доступ к платному курсу через форму выше."} />
+          <EmptyState icon="KeyRound" title={grants.length ? "Ничего не найдено" : "Выданных доступов нет"} text={grants.length ? "Измените условия поиска." : "Выдайте доступ к платному обучению через форму выше."} />
         )}
       </WsCard>
 
       <ConfirmDelete open={!!toRevoke} title="Отозвать доступ?" busy={busy} onCancel={() => setToRevoke(null)} onConfirm={revoke} confirmLabel="Отозвать доступ">
         <p>
-          {toRevoke?.user.name} ({toRevoke?.user.email}) потеряет доступ к курсу <span className="font-medium text-brand-ink">«{toRevoke?.course.title}»</span>.
+          {toRevoke?.user.name} ({toRevoke?.user.email}) потеряет доступ к обучению <span className="font-medium text-brand-ink">«{toRevoke?.course.title}»</span>.
           Прогресс сохранится — если выдать доступ снова, ученик продолжит с того же места.
         </p>
       </ConfirmDelete>

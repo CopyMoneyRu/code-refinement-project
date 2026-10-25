@@ -3,7 +3,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import Logo from "@/components/brand/Logo";
 import Icon from "@/components/ui/icon";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { logoutFn, type AuthUser } from "@/lib/auth";
+import { logoutFn, setViewAsFn, type AuthUser } from "@/lib/auth";
 import { isStaff, ROLE_LABEL } from "@/lib/permissions";
 
 export type NavItem = { to: string; label: string; icon: string; exact?: boolean };
@@ -47,6 +47,15 @@ export default function WorkspaceLayout({
     router.navigate({ to: "/login" });
   };
 
+  const [switching, setSwitching] = useState(false);
+  const switchView = async (mode: "user" | "") => {
+    setSwitching(true);
+    await setViewAsFn({ data: { mode } });
+    await router.invalidate();
+    await router.navigate({ to: mode ? "/cabinet" : "/admin" });
+    setSwitching(false);
+  };
+
   const sidebar = (onNavigate?: () => void) => (
     <div className="flex h-full flex-col">
       <Logo />
@@ -58,6 +67,18 @@ export default function WorkspaceLayout({
         <Link to="/" onClick={onNavigate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink">
           <Icon name="Globe" size={17} /> На сайт
         </Link>
+        {user.role === "superadmin" && section === "Администрирование" && (
+          <button
+            disabled={switching}
+            onClick={() => {
+              onNavigate?.();
+              switchView("user");
+            }}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-brand-muted hover:text-brand-ink disabled:opacity-60"
+          >
+            <Icon name="Eye" size={17} /> ЛК пользователя
+          </button>
+        )}
         {isStaff(user.role) && (
           <Link
             to={section === "Администрирование" ? "/cabinet" : "/admin"}
@@ -80,6 +101,20 @@ export default function WorkspaceLayout({
       <aside className="fixed inset-y-0 left-0 hidden w-[260px] border-r border-brand-ink/10 bg-white p-6 lg:block">{sidebar()}</aside>
 
       <div className="lg:pl-[260px]">
+        {user.viewAs === "user" && (
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 bg-amber-100 px-5 py-2.5 text-sm text-amber-900">
+            <span className="inline-flex items-center gap-2">
+              <Icon name="Eye" size={16} /> Вы смотрите личный кабинет глазами обычного пользователя
+            </span>
+            <button
+              disabled={switching}
+              onClick={() => switchView("")}
+              className="inline-flex items-center gap-1.5 rounded-md bg-amber-900 px-3 py-1 text-xs font-medium text-white hover:bg-amber-800 disabled:opacity-60"
+            >
+              <Icon name="ShieldCheck" size={14} /> Вернуться в администрирование
+            </button>
+          </div>
+        )}
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-brand-ink/10 bg-brand-light/95 px-5 backdrop-blur sm:px-8">
           <div className="flex items-center gap-3">
             <Sheet open={open} onOpenChange={setOpen}>

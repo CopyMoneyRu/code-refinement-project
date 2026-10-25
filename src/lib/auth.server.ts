@@ -4,6 +4,7 @@ import func2url from "../../backend/func2url.json";
 import type { Permission, Role } from "./permissions";
 
 export const SESSION_COOKIE = "__Host-jetra_session";
+export const VIEW_COOKIE = "__Host-jetra_view";
 
 export type AuthUser = {
   id: number;
@@ -14,6 +15,7 @@ export type AuthUser = {
   emailVerified: boolean;
   hasPassword: boolean;
   createdAt: string | null;
+  viewAs?: "user";
 };
 
 export type AuthResult<T = Record<string, unknown>> =
@@ -62,5 +64,17 @@ export async function currentUser(): Promise<AuthUser | null> {
   const r = await callAuth<{ user: AuthUser | null }>("me", {}, true);
   if (!r.ok) return null;
   if (!r.user) clearSession();
+  if (r.user && r.user.role === "superadmin" && getCookie(VIEW_COOKIE) === "user") {
+    return { ...r.user, role: "user", permissions: [], viewAs: "user" };
+  }
   return r.user;
+}
+
+export async function setViewAs(mode: "user" | "") {
+  if (!getCookie(SESSION_COOKIE)) return false;
+  const r = await callAuth<{ user: AuthUser | null }>("me", {}, true);
+  if (!r.ok || !r.user || r.user.role !== "superadmin") return false;
+  if (mode) setCookie(VIEW_COOKIE, mode, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 12 });
+  else deleteCookie(VIEW_COOKIE, { httpOnly: true, secure: true, sameSite: "lax", path: "/" });
+  return true;
 }

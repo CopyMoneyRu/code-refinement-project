@@ -39,7 +39,7 @@ function LessonPage() {
       l.error === "locked"
         ? "Этот урок откроется после прохождения предыдущих уроков модуля."
         : l.error === "paid"
-          ? "Этот урок доступен после оплаты курса. Бесплатные уроки отмечены в программе курса."
+          ? "Этот урок доступен после оплаты обучения. Бесплатные уроки отмечены в программе обучения."
           : "Урок не найден или недоступен.";
     return (
       <WsCard className="mx-auto max-w-lg text-center">
@@ -48,7 +48,7 @@ function LessonPage() {
         </div>
         <p className="mt-5 text-brand-ink">{text}</p>
         <Link to="/cabinet/learn/$slug" params={{ slug }} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-3 text-sm font-medium text-white">
-          К программе курса
+          К программе обучения
         </Link>
       </WsCard>
     );
@@ -56,7 +56,11 @@ function LessonPage() {
 
   const { lesson, module, position, prev, next, state } = l;
   const trial = state === "paid";
-  const paragraphs = lesson.description.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const split = (t: string) => t.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const intro = split(lesson.description);
+  const paragraphs = split(lesson.body ?? "");
+  const files = lesson.materials.filter((m) => m.kind === "file");
+  const links = lesson.materials.filter((m) => m.kind === "link");
   const nextPaid = !!next?.paidLocked;
   const isLast = !next || (trial && nextPaid);
 
@@ -145,9 +149,17 @@ function LessonPage() {
           onClick={() => setSidebarOpen((v) => !v)}
           className="mt-4 inline-flex items-center gap-2 rounded-lg border border-brand-ink/15 bg-white px-3.5 py-2 text-sm font-medium xl:hidden"
         >
-          <Icon name="ListTree" size={16} /> Программа курса
+          <Icon name="ListTree" size={16} /> Программа обучения
         </button>
         {sidebarOpen && <WsCard className="mt-3 xl:hidden">{outline}</WsCard>}
+
+        {intro.length > 0 && (
+          <div className="mt-5 space-y-3 text-[16px] leading-relaxed text-brand-ink/75">
+            {intro.map((p, i) => (
+              <p key={i} className="whitespace-pre-line">{p}</p>
+            ))}
+          </div>
+        )}
 
         {lesson.videoType !== "none" && lesson.videoUrl && (
           <div className="mt-6">
@@ -157,7 +169,10 @@ function LessonPage() {
 
         {paragraphs.length > 0 && (
           <WsCard className="mt-6">
-            <div className="space-y-4 text-[16px] leading-relaxed text-brand-ink/85">
+            <div className="flex items-center gap-2 font-semibold">
+              <Icon name="FileText" size={17} className="text-brand-blue" /> Текст урока
+            </div>
+            <div className="mt-4 space-y-4 text-[16px] leading-relaxed text-brand-ink/85">
               {paragraphs.map((p, i) => (
                 <p key={i} className="whitespace-pre-line">{p}</p>
               ))}
@@ -165,34 +180,10 @@ function LessonPage() {
           </WsCard>
         )}
 
-        {lesson.materials.length > 0 && (
-          <WsCard className="mt-6">
-            <div className="flex items-center gap-2 font-semibold">
-              <Icon name="Paperclip" size={17} className="text-brand-blue" /> Материалы к уроку
-            </div>
-            <ul className="mt-4 divide-y divide-brand-ink/[0.07]">
-              {lesson.materials.map((m, i) => (
-                <li key={i}>
-                  <a
-                    href={m.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download={m.kind === "file" ? true : undefined}
-                    className="flex items-center gap-3 py-3 text-[15px] hover:text-brand-blue"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-surface text-brand-blue">
-                      <Icon name={m.kind === "file" ? "FileDown" : "ExternalLink"} size={17} />
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{m.title}</span>
-                    <span className="shrink-0 text-xs text-brand-muted">{m.kind === "file" ? formatSize(m.fileSize) || "Скачать" : "Ссылка"}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </WsCard>
-        )}
+        {files.length > 0 && <MaterialList title="Файлы к уроку" icon="Paperclip" items={files} />}
+        {links.length > 0 && <MaterialList title="Полезные ссылки" icon="Link" items={links} />}
 
-        {lesson.videoType === "none" && paragraphs.length === 0 && lesson.materials.length === 0 && (
+        {lesson.videoType === "none" && intro.length === 0 && paragraphs.length === 0 && lesson.materials.length === 0 && (
           <WsCard className="mt-6">
             <p className="text-brand-muted">Содержимое этого урока скоро появится.</p>
           </WsCard>
@@ -217,7 +208,7 @@ function LessonPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
               >
                 {saving ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="Check" size={16} />}
-                {!next ? "Урок пройден — завершить курс" : nextPaid ? "Урок пройден" : "Урок пройден, дальше"}
+                {!next ? "Урок пройден — завершить обучение" : nextPaid ? "Урок пройден" : "Урок пройден, дальше"}
               </button>
             )}
             <div className="flex gap-2">
@@ -256,7 +247,7 @@ function LessonPage() {
             <div className="mt-4 flex items-start gap-3 rounded-lg border border-brand-blue/20 bg-brand-blue/5 p-4 text-sm">
               <Icon name="Lock" size={17} className="mt-0.5 shrink-0 text-brand-blue" />
               <div>
-                <div className="font-medium">Следующие уроки доступны после оплаты курса</div>
+                <div className="font-medium">Следующие уроки доступны после оплаты обучения</div>
                 <Link to="/cabinet/learn/$slug" params={{ slug }} className="mt-1 inline-block text-brand-blue hover:underline">
                   Вернуться к программе
                 </Link>
@@ -273,5 +264,34 @@ function LessonPage() {
         <WsCard className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">{outline}</WsCard>
       </aside>
     </div>
+  );
+}
+
+function MaterialList({ title, icon, items }: { title: string; icon: string; items: { title: string; kind: "file" | "link"; url: string; fileSize: number }[] }) {
+  return (
+    <WsCard className="mt-6">
+      <div className="flex items-center gap-2 font-semibold">
+        <Icon name={icon} size={17} className="text-brand-blue" /> {title}
+      </div>
+      <ul className="mt-4 divide-y divide-brand-ink/[0.07]">
+        {items.map((m, i) => (
+          <li key={i}>
+            <a
+              href={m.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={m.kind === "file" ? true : undefined}
+              className="flex items-center gap-3 py-3 text-[15px] hover:text-brand-blue"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-surface text-brand-blue">
+                <Icon name={m.kind === "file" ? "FileDown" : "ExternalLink"} size={17} />
+              </span>
+              <span className="min-w-0 flex-1 truncate">{m.title}</span>
+              <span className="shrink-0 text-xs text-brand-muted">{m.kind === "file" ? formatSize(m.fileSize) || "Скачать" : "Открыть"}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </WsCard>
   );
 }

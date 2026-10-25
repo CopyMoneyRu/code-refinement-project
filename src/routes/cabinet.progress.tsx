@@ -9,12 +9,12 @@ export const Route = createFileRoute("/cabinet/progress")({
 function ProgressPage() {
   return (
     <>
-      <WsTitle title="Прогресс обучения" text="Пройденные уроки и модули по каждому курсу." />
+      <WsTitle title="Прогресс обучения" text="Пройденные уроки и модули по каждому обучению." />
       <div className="grid gap-4 md:grid-cols-3">
         {[
           ["Общий прогресс", "Target"],
           ["Время обучения", "Clock"],
-          ["Завершено курсов", "Award"],
+          ["Завершено обучений", "Award"],
         ].map(([label, icon]) => (
           <WsCard key={label}>
             <div className="flex items-center gap-2 text-sm text-brand-muted">

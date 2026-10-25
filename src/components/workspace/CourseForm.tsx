@@ -101,9 +101,9 @@ export default function CourseForm({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (form.title.trim().length < 3) return setError("Укажите название курса (не короче 3 символов)");
+    if (form.title.trim().length < 3) return setError("Укажите название обучения (не короче 3 символов)");
     if (!form.categoryIds.length) return setError("Выберите хотя бы одну категорию");
-    if (form.access === "paid" && form.price < 1) return setError("Укажите цену платного курса");
+    if (form.access === "paid" && form.price < 1) return setError("Укажите цену платного обучения");
     setSaving(true);
     const r = await saveCourseFn({ data: { ...form, price: form.access === "free" ? 0 : form.price } });
     setSaving(false);
@@ -116,7 +116,7 @@ export default function CourseForm({
       <SheetContent side="right" className="theme-light w-full overflow-y-auto border-0 bg-brand-light p-0 text-brand-ink sm:max-w-[640px]">
         <form onSubmit={submit} className="flex min-h-full flex-col">
           <div className="sticky top-0 z-10 border-b border-brand-ink/10 bg-white px-6 py-5">
-            <SheetTitle className="font-display text-xl text-brand-ink">{form.id ? "Редактирование курса" : "Новый курс"}</SheetTitle>
+            <SheetTitle className="font-display text-xl text-brand-ink">{form.id ? "Редактирование обучения" : "Новое обучение"}</SheetTitle>
             <SheetDescription className="text-brand-muted">Изменения сразу появятся в каталоге университета.</SheetDescription>
           </div>
 
@@ -126,7 +126,7 @@ export default function CourseForm({
               <div className="flex items-start gap-4">
                 <div className="relative flex aspect-[16/10] w-48 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-ink/10 bg-brand-surface">
                   {form.coverUrl ? (
-                    <img src={form.coverUrl} alt="Обложка курса" className="h-full w-full object-cover" />
+                    <img src={form.coverUrl} alt="Обложка обучения" className="h-full w-full object-cover" />
                   ) : (
                     <Icon name="ImagePlus" size={28} className="text-brand-muted" />
                   )}
@@ -236,7 +236,7 @@ export default function CourseForm({
                 maxLength={20000}
                 value={form.description}
                 onChange={(e) => set("description", e.target.value)}
-                placeholder="Для кого курс, чему научится слушатель, что входит в программу"
+                placeholder="Для кого это обучение, чему научится слушатель, что входит в программу"
               />
             </div>
 
@@ -249,7 +249,7 @@ export default function CourseForm({
                 <span className="flex items-center gap-3">
                   <Icon name="Layers" size={19} className="text-brand-blue" />
                   <span>
-                    <span className="block text-sm font-medium">Программа курса</span>
+                    <span className="block text-sm font-medium">Программа обучения</span>
                     <span className="block text-xs text-brand-muted">Модули, уроки, видео, материалы и порядок открытия</span>
                   </span>
                 </span>
@@ -257,7 +257,7 @@ export default function CourseForm({
               </Link>
             ) : (
               <p className="rounded-lg border border-dashed border-brand-ink/15 p-4 text-sm text-brand-muted">
-                Модули и уроки добавляются после создания курса — в разделе «Уроки».
+                Модули и уроки добавляются после создания обучения — в разделе «Уроки».
               </p>
             )}
 
@@ -265,7 +265,7 @@ export default function CourseForm({
               <input type="checkbox" checked={form.published} onChange={(e) => set("published", e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#397FC4]" />
               <span>
                 <span className="block text-sm font-medium">Показывать на сайте</span>
-                <span className="block text-xs text-brand-muted">Снимите галочку, чтобы скрыть курс. Он останется в админке</span>
+                <span className="block text-xs text-brand-muted">Снимите галочку, чтобы скрыть обучение. Оно останется в админке</span>
               </span>
             </label>
           </div>
@@ -282,7 +282,7 @@ export default function CourseForm({
                 className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-medium text-white hover:bg-[#3271B0] disabled:opacity-60"
               >
                 {saving && <Icon name="Loader2" size={15} className="animate-spin" />}
-                {form.id ? "Сохранить" : "Создать курс"}
+                {form.id ? "Сохранить" : "Создать обучение"}
               </button>
             </div>
           </div>
