@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getRouteApi, Link } from "@tanstack/react-router";
+import { getRouteApi, Link, useRouterState } from "@tanstack/react-router";
 import Logo from "@/components/brand/Logo";
 import ClubLink from "@/components/site/ClubLink";
 import Icon from "@/components/ui/icon";
@@ -20,6 +20,8 @@ const navLink = "text-[17px] font-medium text-brand-muted transition-colors hove
 export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
   const [open, setOpen] = useState(false);
   const user = rootApi.useLoaderData();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isHome = pathname === "/";
 
   return (
     <header className="sticky top-0 z-40 bg-brand-light/95 backdrop-blur supports-[backdrop-filter]:bg-brand-light/85">
@@ -32,7 +34,7 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`${navLink} inline-flex items-center gap-2 px-4 py-2`}
+                className={`${navLink} inline-flex items-center gap-2 px-4 py-2 ${isHome && item.to === "/strategies" ? "!text-brand-blue" : ""}`}
                 activeProps={{ className: "!text-brand-blue" }}
               >
                 {item.label}
