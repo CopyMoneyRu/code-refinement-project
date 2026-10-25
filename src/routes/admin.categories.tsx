@@ -46,7 +46,7 @@ function CategoriesAdmin() {
     setBusy(false);
     setToDelete(null);
     if (!r.ok) return setError(r.message);
-    setNotice(`Категория «${r.name}» удалена`);
+    setNotice(`Категория «${r.name}» перемещена в архив`);
     router.invalidate();
   };
 
@@ -140,10 +140,9 @@ function CategoriesAdmin() {
         )}
       </WsCard>
 
-      <ConfirmDelete open={!!toDelete} title="Удалить категорию?" busy={busy} onCancel={() => setToDelete(null)} onConfirm={confirmDelete}>
+      <ConfirmDelete open={!!toDelete} title="Переместить категорию в архив?" busy={busy} onCancel={() => setToDelete(null)} onConfirm={confirmDelete}>
         <p>
-          Категория <span className="font-medium text-brand-ink">«{toDelete?.name}»</span> будет удалена.
-          {toDelete && toDelete.coursesCount > 0 && ` Её уберут из ${toDelete.coursesCount} обуч., сами обучения останутся.`}
+          Категория <span className="font-medium text-brand-ink">«{toDelete?.name}»</span> будет перемещена в архив и пропадёт из каталога. Восстановить или удалить навсегда можно в разделе «Архив».
         </p>
       </ConfirmDelete>
     </>

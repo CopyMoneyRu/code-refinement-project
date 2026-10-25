@@ -242,3 +242,38 @@ export const saveCategoryFn = createServerFn({ method: "POST" })
 export const deleteCategoryFn = createServerFn({ method: "POST" })
   .validator(idPayload)
   .handler(({ data }) => adminCall<{ name: string }>("delete_category", { id: data.id }));
+
+export type ArchiveKind = "course" | "author" | "category" | "user";
+export type ArchiveItem = { kind: ArchiveKind; id: number; title: string; archivedAt: string };
+
+export const archiveListFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { callCourses } = await import("./courses.server");
+  const { callAuth } = await import("./auth.server");
+  const [a, b] = await Promise.all([
+    callCourses<{ items: ArchiveItem[] }>("archive_list", {}, true),
+    callAuth<{ items: ArchiveItem[] }>("admin_archived_users", {}, true),
+  ]);
+  const items = [...(a.ok ? a.items : []), ...(b.ok ? b.items : [])];
+  return items.sort((x, y) => String(y.archivedAt).localeCompare(String(x.archivedAt)));
+});
+
+const archivePayload = (input: unknown) => {
+  const o = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  const kinds: ArchiveKind[] = ["course", "author", "category", "user"];
+  return {
+    kind: (kinds.includes(o.kind as ArchiveKind) ? o.kind : "course") as ArchiveKind,
+    id: Math.max(0, Math.round(Number(o.id) || 0)),
+    purge: o.purge === true,
+  };
+};
+
+export const archiveActionFn = createServerFn({ method: "POST" })
+  .validator(archivePayload)
+  .handler(async ({ data }): Promise<{ ok: true; title: string } | Fail> => {
+    if (data.kind === "user") {
+      const { callAuth } = await import("./auth.server");
+      const r = await callAuth<{ title: string }>(data.purge ? "admin_purge_user" : "admin_restore_user", { id: data.id }, true);
+      return r.ok ? { ok: true, title: r.title } : { ok: false, error: r.error, message: r.message };
+    }
+    return adminCall<{ title: string }>(data.purge ? "archive_purge" : "archive_restore", { kind: data.kind, id: data.id });
+  });

@@ -54,9 +54,7 @@ function AuthorsAdmin() {
     setToDelete(null);
     if (!r.ok) return setError(r.message);
     setNotice(
-      r.coursesDetached > 0
-        ? `Автор «${a.name}» удалён. Обучений без автора: ${r.coursesDetached} — выберите им нового автора в разделе «Обучения»`
-        : `Автор «${a.name}» удалён`,
+      `Автор «${a.name}» перемещён в архив`,
     );
     router.invalidate();
   };
@@ -181,17 +179,17 @@ function AuthorsAdmin() {
 
       <ConfirmDelete
         open={!!toDelete}
-        title="Удалить автора?"
+        title="Переместить автора в архив?"
         busy={busy !== null}
         onCancel={() => setToDelete(null)}
         onConfirm={confirmDelete}
       >
         <p>
-          Профиль <span className="font-medium text-brand-ink">«{toDelete?.name}»</span> будет удалён безвозвратно вместе с фото, описанием и ссылками.
+          Профиль <span className="font-medium text-brand-ink">«{toDelete?.name}»</span> будет перемещён в архив. Восстановить или удалить навсегда можно в разделе «Архив».
         </p>
         {toDelete && toDelete.coursesTotal > 0 && (
           <p>
-            Обучения этого автора ({toDelete.coursesTotal}) не удалятся, но останутся без автора.
+            Пока автор в архиве, его обучения ({toDelete.coursesTotal}) будут показываться без автора.
           </p>
         )}
         <p>Если нужно просто убрать автора с сайта — отмените и выключите переключатель «На сайте».</p>

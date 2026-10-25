@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import Logo from "@/components/brand/Logo";
+import ClubLink from "@/components/site/ClubLink";
 
 export default function SiteFooter() {
   return (
@@ -17,6 +18,7 @@ export default function SiteFooter() {
             <ul className="mt-4 space-y-3 text-sm text-brand-muted">
               <li><Link to="/strategies" className="hover:text-brand-ink">Стратегии</Link></li>
               <li><Link to="/university" className="hover:text-brand-ink">Университет</Link></li>
+              <li><ClubLink className="hover:text-brand-ink">Клуб</ClubLink></li>
             </ul>
           </div>
           <div>

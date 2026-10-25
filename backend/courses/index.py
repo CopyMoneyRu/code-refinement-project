@@ -59,7 +59,7 @@ def session_user(cur, token):
         return None
     cur.execute(
         f"""SELECT u.* FROM {t('sessions')} s JOIN {t('users')} u ON u.id = s.user_id
-            WHERE s.token_hash = %s AND s.revoked_at IS NULL AND s.expires_at > NOW()""",
+            WHERE s.token_hash = %s AND s.revoked_at IS NULL AND s.expires_at > NOW() AND u.archived_at IS NULL""",
         (sha(token),),
     )
     return cur.fetchone()
@@ -107,13 +107,13 @@ def course_out(r: dict, public: bool = False) -> dict:
         'author': {
             'id': r['author_id'], 'slug': r.get('author_slug') or '', 'name': r.get('author_name') or '',
             'role': r.get('author_role') or '', 'photoUrl': r.get('author_photo') or '', 'bio': r.get('author_bio') or '',
-        } if r['author_id'] and (not public or r.get('author_published')) else None,
+        } if r['author_id'] and not r.get('author_archived') and (not public or r.get('author_published')) else None,
         'updatedAt': r['updated_at'],
     }
 
 
 COURSE_SELECT = """SELECT c.*, a.slug AS author_slug, a.name AS author_name, a.role AS author_role,
-    a.photo_url AS author_photo, a.bio AS author_bio, a.published AS author_published
+    a.photo_url AS author_photo, a.bio AS author_bio, a.published AS author_published, a.archived_at AS author_archived
     FROM {courses} c LEFT JOIN {authors} a ON a.id = c.author_id"""
 
 
@@ -148,7 +148,7 @@ def attach_programs(cur, rows):
     cur.execute(
         f"""SELECT cc.course_id, cat.id, cat.name FROM {t('course_categories')} cc
             JOIN {t('categories')} cat ON cat.id = cc.category_id
-            WHERE cc.course_id IN %s ORDER BY cat.name""",
+            WHERE cc.course_id IN %s AND cat.archived_at IS NULL ORDER BY cat.name""",
         (ids,),
     )
     cats = {}
@@ -164,14 +164,16 @@ def categories_out(cur, public: bool = False):
     cur.execute(
         f"""SELECT cat.id, cat.name,
                    (SELECT COUNT(*) FROM {t('course_categories')} cc JOIN {t('courses')} c ON c.id = cc.course_id
-                    WHERE cc.category_id = cat.id {cond}) AS courses
-            FROM {t('categories')} cat ORDER BY cat.name"""
+                    WHERE cc.category_id = cat.id AND c.archived_at IS NULL {cond}) AS courses
+            FROM {t('categories')} cat WHERE cat.archived_at IS NULL ORDER BY cat.name"""
     )
     return [{'id': r['id'], 'name': r['name'], 'coursesCount': r['courses']} for r in cur.fetchall()]
 
 
-def select_courses(cur, where: str = '', params: tuple = (), public: bool = False):
+def select_courses(cur, where: str = '', params: tuple = (), public: bool = False, archived: bool = False):
     sql = COURSE_SELECT.format(courses=t('courses'), authors=t('authors'))
+    cond = 'c.archived_at IS NOT NULL' if archived else 'c.archived_at IS NULL'
+    where = f'WHERE {cond} AND {where[6:]}' if where.startswith('WHERE ') else f'WHERE {cond}'
     cur.execute(f'{sql} {where} ORDER BY c.id', params)
     rows = attach_programs(cur, [dict(r) for r in cur.fetchall()])
     return [course_out(r, public) for r in rows]
@@ -186,11 +188,11 @@ def author_profile(r: dict) -> dict:
 
 
 def authors_out(cur, with_counts: bool = False, public: bool = False):
-    where = 'WHERE a.published' if public else ''
+    where = 'WHERE a.archived_at IS NULL AND a.published' if public else 'WHERE a.archived_at IS NULL'
     cur.execute(
         f"""SELECT a.id, a.slug, a.name, a.role, a.photo_url, a.bio, a.about, a.links, a.facts, a.published,
-                   (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id) AS courses_total,
-                   (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id AND c.published) AS courses_published
+                   (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id AND c.archived_at IS NULL) AS courses_total,
+                   (SELECT COUNT(*) FROM {t('courses')} c WHERE c.author_id = a.id AND c.published AND c.archived_at IS NULL) AS courses_published
             FROM {t('authors')} a {where} ORDER BY a.id"""
     )
     out = []
@@ -242,7 +244,7 @@ def validate(cur, body):
         return None, err(400, 'invalid_title', 'Укажите название обучения (не короче 3 символов)')
     if not cat_ids:
         return None, err(400, 'invalid_category', 'Выберите хотя бы одну категорию')
-    cur.execute(f"SELECT id, name FROM {t('categories')} WHERE id IN %s ORDER BY name", (tuple(cat_ids),))
+    cur.execute(f"SELECT id, name FROM {t('categories')} WHERE id IN %s AND archived_at IS NULL ORDER BY name", (tuple(cat_ids),))
     found = cur.fetchall()
     if len(found) != len(cat_ids):
         return None, err(400, 'invalid_category', 'Категория не найдена — обновите страницу')
@@ -265,7 +267,7 @@ def validate(cur, body):
             author_id = int(author_id)
         except (TypeError, ValueError):
             return None, err(400, 'invalid_author', 'Некорректный автор')
-        cur.execute(f"SELECT id FROM {t('authors')} WHERE id = %s", (author_id,))
+        cur.execute(f"SELECT id FROM {t('authors')} WHERE id = %s AND archived_at IS NULL", (author_id,))
         if not cur.fetchone():
             return None, err(400, 'invalid_author', 'Автор не найден')
     cover = str(body.get('coverUrl', '')).strip()[:500]
@@ -297,7 +299,7 @@ def a_get(cur, body, _user):
 
 def a_author(cur, body, _user):
     slug = str(body.get('slug', ''))[:60]
-    cur.execute(f"SELECT * FROM {t('authors')} WHERE slug = %s AND published", (slug,))
+    cur.execute(f"SELECT * FROM {t('authors')} WHERE slug = %s AND published AND archived_at IS NULL", (slug,))
     row = cur.fetchone()
     if not row:
         return err(404, 'not_found', 'Автор не найден')
@@ -319,10 +321,12 @@ def a_save_category(cur, body, user):
     name = re.sub(r'\s+', ' ', str(body.get('name', ''))).strip()[:80]
     if len(name) < 2:
         return err(400, 'invalid_name', 'Название категории — не короче 2 символов')
-    cur.execute(f"SELECT id FROM {t('categories')} WHERE LOWER(name) = LOWER(%s)", (name,))
+    cur.execute(f"SELECT id, archived_at FROM {t('categories')} WHERE LOWER(name) = LOWER(%s)", (name,))
     row = cur.fetchone()
     cid = parse_id(body)
     if row and row['id'] != cid:
+        if row['archived_at']:
+            return err(400, 'duplicate', f'Категория «{name}» лежит в архиве — восстановите её в разделе «Архив»')
         return err(400, 'duplicate', f'Категория «{name}» уже есть')
     if cid:
         cur.execute(f"UPDATE {t('categories')} SET name = %s WHERE id = %s RETURNING id", (name, cid))
@@ -340,17 +344,24 @@ def a_save_category(cur, body, user):
     return resp(200, {'ok': True, 'category': item})
 
 
+def archive_row(cur, table: str, rid, missing: str):
+    if not rid:
+        return err(400, 'bad_id', 'Некорректный запрос')
+    cur.execute(
+        f"UPDATE {t(table)} SET archived_at = NOW() WHERE id = %s AND archived_at IS NULL RETURNING id",
+        (rid,),
+    )
+    if not cur.fetchone():
+        return err(404, 'not_found', missing)
+    return None
+
+
 def a_delete_category(cur, body, user):
-    cid = parse_id(body)
-    if not cid:
-        return err(400, 'bad_category', 'Некорректная категория')
-    cur.execute(f"SELECT name FROM {t('categories')} WHERE id = %s", (cid,))
-    row = cur.fetchone()
-    if not row:
-        return err(404, 'not_found', 'Категория не найдена')
-    cur.execute(f"DELETE FROM {t('course_categories')} WHERE category_id = %s", (cid,))
-    cur.execute(f"DELETE FROM {t('categories')} WHERE id = %s", (cid,))
-    return resp(200, {'ok': True, 'name': row['name']})
+    problem = archive_row(cur, 'categories', parse_id(body), 'Категория не найдена')
+    if problem:
+        return problem
+    cur.execute(f"SELECT name FROM {t('categories')} WHERE id = %s", (parse_id(body),))
+    return resp(200, {'ok': True, 'name': cur.fetchone()['name'], 'archived': True})
 
 
 def a_save(cur, body, user):
@@ -537,21 +548,81 @@ def a_set_course_published(cur, body, user):
 
 
 def a_delete_course(cur, body, user):
-    cid = parse_id(body)
-    if not cid:
-        return err(400, 'bad_course', 'Некорректное обучение')
-    cur.execute(f"SELECT title FROM {t('courses')} WHERE id = %s", (cid,))
-    row = cur.fetchone()
-    if not row:
-        return err(404, 'not_found', 'Обучение не найдено')
+    problem = archive_row(cur, 'courses', parse_id(body), 'Обучение не найдено')
+    if problem:
+        return problem
+    cur.execute(f"SELECT title FROM {t('courses')} WHERE id = %s", (parse_id(body),))
+    return resp(200, {'ok': True, 'title': cur.fetchone()['title'], 'archived': True})
+
+
+def purge_course(cur, cid: int):
     lessons_sub = f"SELECT l.id FROM {t('lessons')} l JOIN {t('course_modules')} m ON m.id = l.module_id WHERE m.course_id = %s"
     cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE lesson_id IN ({lessons_sub})", (cid,))
+    cur.execute(f"DELETE FROM {t('lesson_notifications')} WHERE lesson_id IN ({lessons_sub})", (cid,))
     cur.execute(f"DELETE FROM {t('lesson_materials')} WHERE lesson_id IN ({lessons_sub})", (cid,))
     cur.execute(f"DELETE FROM {t('lessons')} WHERE module_id IN (SELECT id FROM {t('course_modules')} WHERE course_id = %s)", (cid,))
     cur.execute(f"DELETE FROM {t('course_modules')} WHERE course_id = %s", (cid,))
     cur.execute(f"DELETE FROM {t('course_access')} WHERE course_id = %s", (cid,))
     cur.execute(f"DELETE FROM {t('course_categories')} WHERE course_id = %s", (cid,))
     cur.execute(f"DELETE FROM {t('courses')} WHERE id = %s", (cid,))
+
+
+def purge_author(cur, aid: int):
+    cur.execute(f"UPDATE {t('courses')} SET author_id = NULL, updated_at = NOW() WHERE author_id = %s", (aid,))
+    cur.execute(f"DELETE FROM {t('authors')} WHERE id = %s", (aid,))
+
+
+def purge_category(cur, cid: int):
+    cur.execute(f"DELETE FROM {t('course_categories')} WHERE category_id = %s", (cid,))
+    cur.execute(f"DELETE FROM {t('categories')} WHERE id = %s", (cid,))
+
+
+ARCHIVE_KINDS = {
+    'course': ('courses', 'courses', 'title', purge_course),
+    'author': ('authors', 'authors', 'name', purge_author),
+    'category': ('categories', 'courses', 'name', purge_category),
+}
+
+
+def a_archive_list(cur, _body, user):
+    items = []
+    for kind, (table, perm, label, _) in ARCHIVE_KINDS.items():
+        if not has_perm(user, perm):
+            continue
+        cur.execute(f"SELECT id, {label} AS title, archived_at FROM {t(table)} WHERE archived_at IS NOT NULL ORDER BY archived_at DESC")
+        items += [{'kind': kind, 'id': r['id'], 'title': r['title'], 'archivedAt': r['archived_at']} for r in cur.fetchall()]
+    items.sort(key=lambda x: str(x['archivedAt']), reverse=True)
+    return resp(200, {'ok': True, 'items': items})
+
+
+def archive_target(cur, body, user):
+    kind = body.get('kind')
+    if kind not in ARCHIVE_KINDS:
+        return None, None, err(400, 'bad_kind', 'Некорректный тип записи')
+    table, perm, label, purge = ARCHIVE_KINDS[kind]
+    if not has_perm(user, perm):
+        return None, None, err(403, 'forbidden', 'Недостаточно прав для этого раздела')
+    rid = parse_id(body)
+    cur.execute(f"SELECT id, {label} AS title FROM {t(table)} WHERE id = %s AND archived_at IS NOT NULL", (rid,))
+    row = cur.fetchone()
+    if not row:
+        return None, None, err(404, 'not_found', 'Запись в архиве не найдена')
+    return row, (table, purge), None
+
+
+def a_archive_restore(cur, body, user):
+    row, meta, problem = archive_target(cur, body, user)
+    if problem:
+        return problem
+    cur.execute(f"UPDATE {t(meta[0])} SET archived_at = NULL WHERE id = %s", (row['id'],))
+    return resp(200, {'ok': True, 'title': row['title']})
+
+
+def a_archive_purge(cur, body, user):
+    row, meta, problem = archive_target(cur, body, user)
+    if problem:
+        return problem
+    meta[1](cur, row['id'])
     return resp(200, {'ok': True, 'title': row['title']})
 
 
@@ -570,17 +641,11 @@ def a_set_author_published(cur, body, user):
 
 
 def a_delete_author(cur, body, user):
-    aid = parse_id(body)
-    if not aid:
-        return err(400, 'bad_author', 'Некорректный автор')
-    cur.execute(f"SELECT name FROM {t('authors')} WHERE id = %s", (aid,))
-    row = cur.fetchone()
-    if not row:
-        return err(404, 'not_found', 'Автор не найден')
-    cur.execute(f"UPDATE {t('courses')} SET author_id = NULL, updated_at = NOW() WHERE author_id = %s", (aid,))
-    detached = cur.rowcount
-    cur.execute(f"DELETE FROM {t('authors')} WHERE id = %s", (aid,))
-    return resp(200, {'ok': True, 'name': row['name'], 'coursesDetached': detached})
+    problem = archive_row(cur, 'authors', parse_id(body), 'Автор не найден')
+    if problem:
+        return problem
+    cur.execute(f"SELECT name FROM {t('authors')} WHERE id = %s", (parse_id(body),))
+    return resp(200, {'ok': True, 'name': cur.fetchone()['name'], 'coursesDetached': 0, 'archived': True})
 
 
 ADMIN = {
@@ -597,6 +662,9 @@ ADMIN = {
     'admin_categories': ('courses', a_admin_categories),
     'save_category': ('courses', a_save_category),
     'delete_category': ('courses', a_delete_category),
+    'archive_list': (None, a_archive_list),
+    'archive_restore': (None, a_archive_restore),
+    'archive_purge': (None, a_archive_purge),
 }
 
 
@@ -625,7 +693,9 @@ def handler(event: dict, context) -> dict:
             if not user:
                 return err(401, 'unauthorized', 'Требуется вход')
             perm, fn = ADMIN[action]
-            if not has_perm(user, perm):
+            if not perm and user['role'] not in ('admin', 'superadmin'):
+                return err(403, 'forbidden', 'Недостаточно прав для этого раздела')
+            if perm and not has_perm(user, perm):
                 return err(403, 'forbidden', 'Недостаточно прав для этого раздела')
             return fn(cur, body, user)
         return err(400, 'unknown_action', 'Неизвестное действие')

@@ -17,7 +17,7 @@ export default function ConfirmDelete({
   busy,
   onCancel,
   onConfirm,
-  confirmLabel = "Удалить навсегда",
+  confirmLabel = "В архив",
 }: {
   open: boolean;
   title: string;

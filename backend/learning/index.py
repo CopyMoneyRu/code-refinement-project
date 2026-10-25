@@ -1,4 +1,9 @@
 import base64
+import html
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import hashlib
 import hmac
 import json
@@ -81,7 +86,7 @@ def session_user(cur, token):
         return None
     cur.execute(
         f"""SELECT u.* FROM {t('sessions')} s JOIN {t('users')} u ON u.id = s.user_id
-            WHERE s.token_hash = %s AND s.revoked_at IS NULL AND s.expires_at > NOW()""",
+            WHERE s.token_hash = %s AND s.revoked_at IS NULL AND s.expires_at > NOW() AND u.archived_at IS NULL""",
         (sha(token),),
     )
     return cur.fetchone()
@@ -181,7 +186,8 @@ def free_count(modules) -> int:
 def course_by(cur, where: str, params: tuple):
     cur.execute(
         f"""SELECT c.*, a.name AS author_name, a.slug AS author_slug, a.published AS author_published
-            FROM {t('courses')} c LEFT JOIN {t('authors')} a ON a.id = c.author_id WHERE {where}""",
+            FROM {t('courses')} c LEFT JOIN {t('authors')} a ON a.id = c.author_id AND a.archived_at IS NULL
+            WHERE c.archived_at IS NULL AND ({where})""",
         params,
     )
     return cur.fetchone()
@@ -323,13 +329,81 @@ def a_lesson_complete(cur, body, user):
     else:
         cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE user_id = %s AND lesson_id = %s", (user['id'], lid))
     modules = apply_locks(load_program(cur, course['id'], with_content=False, public=True), done_set(cur, user['id'], course['id']), can_preview(user), full)
+    if body.get('completed', True) and user.get('role') == 'user':
+        flat = [l for m in modules for l in m['lessons']]
+        idx = next((i for i, l in enumerate(flat) if l['id'] == lid), None)
+        nxt = next((l for l in flat[idx + 1:] if not l['completed'] and not l['locked']), None) if idx is not None else None
+        if nxt:
+            send_next_lesson_mail(cur, user, course, nxt)
     return resp(200, {'ok': True, 'modules': modules, 'progress': progress_of(modules)})
+
+
+def minutes_of(duration: str) -> int:
+    d = (duration or '').lower()
+    h = re.search(r'(\d+)\s*(ч|h)', d)
+    m = re.search(r'(\d+)\s*(мин|m)', d)
+    total = (int(h.group(1)) * 60 if h else 0) + (int(m.group(1)) if m else 0)
+    if not h and not m:
+        n = re.search(r'\d+', d)
+        total = int(n.group(0)) if n else 0
+    return min(total, 600)
+
+
+def send_next_lesson_mail(cur, user, course, lesson) -> None:
+    if not all(os.environ.get(k) for k in ('SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD')):
+        print('[learning] SMTP не настроен, письмо о новом уроке не отправлено')
+        return
+    cur.execute(
+        f"""INSERT INTO {t('lesson_notifications')} (user_id, lesson_id) VALUES (%s, %s)
+            ON CONFLICT DO NOTHING RETURNING lesson_id""",
+        (user['id'], lesson['id']),
+    )
+    if not cur.fetchone():
+        return
+    cur.execute(f"SELECT description FROM {t('lessons')} WHERE id = %s", (lesson['id'],))
+    row = cur.fetchone()
+    desc = (row['description'] if row else '').strip()
+    if len(desc) > 300:
+        desc = desc[:297].rsplit(' ', 1)[0] + '…'
+    site = os.environ.get('SITE_URL', '').rstrip('/')
+    link = f"{site}/cabinet/learn/{course['slug']}/{lesson['id']}"
+    title, ctitle = html.escape(lesson['title']), html.escape(course['title'])
+    body = f"""<!doctype html><html><body style="margin:0;background:#F5F7FA;font-family:Arial,sans-serif;color:#17263C">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px">
+<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-radius:12px;padding:40px">
+<tr><td style="font-size:22px;font-weight:800;letter-spacing:4px">JETRA</td></tr>
+<tr><td style="padding-top:28px;font-size:14px;color:#5A6B82">Вам открыт следующий урок обучения «{ctitle}»</td></tr>
+<tr><td style="padding-top:8px;font-size:22px;font-weight:700">{title}</td></tr>
+{f'<tr><td style="padding-top:12px;font-size:15px;line-height:1.6;color:#5A6B82">{html.escape(desc)}</td></tr>' if desc else ''}
+<tr><td style="padding-top:28px"><a href="{html.escape(link)}" style="display:inline-block;background:#397FC4;color:#fff;text-decoration:none;border-radius:8px;padding:14px 28px;font-size:15px;font-weight:600">Перейти к уроку</a></td></tr>
+<tr><td style="padding-top:24px;font-size:12px;color:#8A97A8">Продолжайте обучение — каждый урок приближает к цели.</td></tr>
+</table></td></tr></table></body></html>"""
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = f'Следующий урок: {lesson["title"]}'
+    msg['From'] = f'JETRA <{os.environ["SMTP_USER"]}>'
+    msg['To'] = user['email']
+    msg.attach(MIMEText(f'Вам открыт следующий урок «{lesson["title"]}» обучения «{course["title"]}».\n\n{desc}\n\nПерейти к уроку: {link}', 'plain', 'utf-8'))
+    msg.attach(MIMEText(body, 'html', 'utf-8'))
+    host, port = os.environ['SMTP_HOST'], int(os.environ['SMTP_PORT'])
+    ctx = ssl.create_default_context()
+    try:
+        if port == 465:
+            with smtplib.SMTP_SSL(host, port, context=ctx, timeout=4) as smtp:
+                smtp.login(os.environ['SMTP_USER'], os.environ['SMTP_PASSWORD'])
+                smtp.sendmail(os.environ['SMTP_USER'], [user['email']], msg.as_string())
+        else:
+            with smtplib.SMTP(host, port, timeout=4) as smtp:
+                smtp.starttls(context=ctx)
+                smtp.login(os.environ['SMTP_USER'], os.environ['SMTP_PASSWORD'])
+                smtp.sendmail(os.environ['SMTP_USER'], [user['email']], msg.as_string())
+    except Exception as e:
+        print(f'[learning] ошибка отправки письма о новом уроке: {type(e).__name__}: {e}')
 
 
 def a_my_courses(cur, _body, user):
     cur.execute(
         f"""SELECT DISTINCT c.id FROM {t('courses')} c
-            WHERE c.published AND (
+            WHERE c.published AND c.archived_at IS NULL AND (
               EXISTS (SELECT 1 FROM {t('course_access')} ca WHERE ca.course_id = c.id AND ca.user_id = %s)
               OR EXISTS (
                 SELECT 1 FROM {t('lesson_progress')} p JOIN {t('lessons')} l ON l.id = p.lesson_id
@@ -348,7 +422,13 @@ def a_my_courses(cur, _body, user):
             (cid, user['id']),
         )
         last = cur.fetchone()['last']
-        out.append({**course_head(course), 'progress': progress_of(modules), 'lastActivity': last, 'state': state})
+        flat = [l for m in modules for l in m['lessons']]
+        minutes = sum(minutes_of(l['duration']) for l in flat if l['completed'])
+        nxt = next((l for l in flat if not l['completed'] and not l['locked']), None)
+        out.append({
+            **course_head(course), 'progress': progress_of(modules), 'lastActivity': last, 'state': state,
+            'minutesSpent': minutes, 'nextLessonTitle': nxt['title'] if nxt else None,
+        })
     out.sort(key=lambda c: str(c['lastActivity'] or ''), reverse=True)
     return resp(200, {'ok': True, 'courses': out})
 
@@ -364,7 +444,7 @@ def a_program_courses(cur, _body, user):
                      WHERE m.course_id = c.id AND NOT l.published) AS hidden_lessons,
                    (SELECT COUNT(*) FROM {t('lessons')} l JOIN {t('course_modules')} m ON m.id = l.module_id
                      WHERE m.course_id = c.id) AS lessons
-            FROM {t('courses')} c ORDER BY c.id"""
+            FROM {t('courses')} c WHERE c.archived_at IS NULL ORDER BY c.id"""
     )
     return resp(200, {'ok': True, 'courses': [dict(r) for r in cur.fetchall()]})
 
@@ -423,6 +503,7 @@ def delete_lessons(cur, where: str, params: tuple):
     ids = tuple(r['id'] for r in cur.fetchall())
     if ids:
         cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE lesson_id IN %s", (ids,))
+        cur.execute(f"DELETE FROM {t('lesson_notifications')} WHERE lesson_id IN %s", (ids,))
         cur.execute(f"DELETE FROM {t('lesson_materials')} WHERE lesson_id IN %s", (ids,))
         cur.execute(f"DELETE FROM {t('lessons')} WHERE id IN %s", (ids,))
     return len(ids)
@@ -768,7 +849,7 @@ def a_access_list(cur, _body, user):
                    c.id AS course_id, c.title AS course_title, g.name AS granted_by
             FROM {t('course_access')} ca
             JOIN {t('users')} u ON u.id = ca.user_id
-            JOIN {t('courses')} c ON c.id = ca.course_id
+            JOIN {t('courses')} c ON c.id = ca.course_id AND c.archived_at IS NULL
             LEFT JOIN {t('users')} g ON g.id = ca.granted_by
             ORDER BY ca.created_at DESC LIMIT 1000"""
     )
@@ -780,14 +861,14 @@ def a_access_list(cur, _body, user):
         }
         for r in cur.fetchall()
     ]
-    cur.execute(f"SELECT id, title, published FROM {t('courses')} WHERE access = 'paid' ORDER BY title")
+    cur.execute(f"SELECT id, title, published FROM {t('courses')} WHERE access = 'paid' AND archived_at IS NULL ORDER BY title")
     return resp(200, {'ok': True, 'grants': rows, 'courses': [dict(r) for r in cur.fetchall()]})
 
 
 def a_access_grant(cur, body, user):
     email = str(body.get('email', '')).strip().lower()[:255]
     cid = to_int(body.get('courseId'))
-    cur.execute(f"SELECT id, name FROM {t('users')} WHERE email = %s", (email,))
+    cur.execute(f"SELECT id, name FROM {t('users')} WHERE email = %s AND archived_at IS NULL", (email,))
     target = cur.fetchone()
     if not target:
         return err(404, 'user_not_found', 'Пользователь с таким email не зарегистрирован')

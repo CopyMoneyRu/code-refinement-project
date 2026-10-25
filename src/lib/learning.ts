@@ -87,7 +87,19 @@ export const lessonCompleteFn = createServerFn({ method: "POST" })
   .validator((i: unknown) => ({ lessonId: num(obj(i).lessonId), completed: obj(i).completed !== false }))
   .handler(({ data }) => call<{ modules: ModuleBrief[]; progress: Progress }>("lesson_complete", data));
 
-export type MyCourse = CourseHead & { progress: Progress; lastActivity: string | null; state: AccessState };
+export type MyCourse = CourseHead & {
+  progress: Progress;
+  lastActivity: string | null;
+  state: AccessState;
+  minutesSpent: number;
+  nextLessonTitle: string | null;
+};
+
+export const formatMinutes = (m: number) => {
+  if (!m) return "0 мин";
+  const h = Math.floor(m / 60);
+  return h ? `${h} ч${m % 60 ? ` ${m % 60} мин` : ""}` : `${m} мин`;
+};
 export const myCoursesFn = createServerFn({ method: "GET" }).handler(async () => {
   const r = await call<{ courses: MyCourse[] }>("my_courses");
   return r.ok ? r.courses : ([] as MyCourse[]);

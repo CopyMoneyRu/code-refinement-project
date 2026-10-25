@@ -1,6 +1,6 @@
-import type { Permission } from "./permissions";
+import type { SectionPerm } from "./permissions";
 
-export type AdminSection = { to: string; label: string; icon: string; perm: Permission; text: string };
+export type AdminSection = { to: string; label: string; icon: string; perm: SectionPerm; text: string };
 
 export const ADMIN_SECTIONS: AdminSection[] = [
   { to: "/admin/users", label: "Пользователи", icon: "Users", perm: "users", text: "Аккаунты, роли и права администраторов" },
@@ -11,4 +11,5 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { to: "/admin/teachers", label: "Авторы", icon: "UserRound", perm: "authors", text: "Профили авторов обучений" },
   { to: "/admin/purchases", label: "Покупки", icon: "Receipt", perm: "purchases", text: "Платежи и их статусы" },
   { to: "/admin/access", label: "Доступы", icon: "KeyRound", perm: "access", text: "Выдача и отзыв доступа к обучениям" },
+  { to: "/admin/archive", label: "Архив", icon: "Archive", perm: "any", text: "Удалённые записи: восстановить или удалить навсегда" },
 ];

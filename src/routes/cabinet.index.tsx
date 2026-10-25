@@ -1,12 +1,17 @@
 import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
+import ContinueLearning from "@/components/learning/ContinueLearning";
 import { catalogFn } from "@/lib/courses";
+import { myCoursesFn } from "@/lib/learning";
 import { ADMIN_SECTIONS } from "@/lib/adminSections";
 import { can, ROLE_LABEL } from "@/lib/permissions";
 
 export const Route = createFileRoute("/cabinet/")({
-  loader: () => catalogFn(),
+  loader: async () => {
+    const [catalog, mine] = await Promise.all([catalogFn(), myCoursesFn()]);
+    return { courses: catalog.courses, mine };
+  },
   component: CabinetHome,
 });
 
@@ -14,11 +19,13 @@ const cabinetApi = getRouteApi("/cabinet");
 
 function CabinetHome() {
   const { user } = cabinetApi.useRouteContext();
-  const { courses } = Route.useLoaderData();
+  const { courses, mine } = Route.useLoaderData();
+  const isDone = (c: (typeof mine)[number]) => c.progress.total > 0 && c.progress.done === c.progress.total;
+  const current = mine.find((c) => !isDone(c)) ?? mine[0] ?? null;
   const tiles = [
-    { label: "Обучений в процессе", icon: "GraduationCap" },
-    { label: "Пройдено уроков", icon: "CheckCircle2" },
-    { label: "Сертификатов", icon: "Award" },
+    { label: "Обучений в процессе", icon: "GraduationCap", value: mine.filter((c) => !isDone(c)).length },
+    { label: "Пройдено уроков", icon: "CheckCircle2", value: mine.reduce((n, c) => n + c.progress.done, 0) },
+    { label: "Завершено обучений", icon: "Award", value: mine.filter(isDone).length },
   ];
   const adminSections = ADMIN_SECTIONS.filter((s) => can(user, s.perm));
   return (
@@ -57,7 +64,7 @@ function CabinetHome() {
               <span className="text-sm">{t.label}</span>
               <Icon name={t.icon} size={18} className="text-brand-blue" />
             </div>
-            <div className="mt-4 font-display text-3xl font-bold text-brand-ink/30">—</div>
+            <div className="mt-4 font-display text-3xl font-bold text-brand-ink">{t.value}</div>
           </WsCard>
         ))}
       </div>
@@ -65,16 +72,22 @@ function CabinetHome() {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <WsCard className="p-0">
           <div className="border-b border-brand-ink/[0.08] px-6 py-4 font-semibold">Продолжить обучение</div>
-          <EmptyState
-            icon="BookOpen"
-            title="Вы ещё не начали обучение"
-            text="Выберите обучение в каталоге JETRA University — прогресс будет сохраняться автоматически."
-          />
-          <div className="px-6 pb-6 text-center">
-            <Link to="/university" className="inline-flex rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-medium text-white hover:bg-[#3271B0]">
-              Перейти в каталог
-            </Link>
-          </div>
+          {current ? (
+            <ContinueLearning course={current} />
+          ) : (
+            <>
+              <EmptyState
+                icon="BookOpen"
+                title="Вы ещё не начали обучение"
+                text="Выберите обучение в каталоге JETRA University — прогресс будет сохраняться автоматически."
+              />
+              <div className="px-6 pb-6 text-center">
+                <Link to="/university" className="inline-flex rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-medium text-white hover:bg-[#3271B0]">
+                  Перейти в каталог
+                </Link>
+              </div>
+            </>
+          )}
         </WsCard>
         <WsCard>
           <div className="font-semibold">Рекомендуем начать</div>

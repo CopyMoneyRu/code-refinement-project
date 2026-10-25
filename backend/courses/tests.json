@@ -210,6 +210,34 @@
         "ok": true
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Archive list without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "archive_list"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Archive purge without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "archive_purge",
+        "kind": "course",
+        "id": 1
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

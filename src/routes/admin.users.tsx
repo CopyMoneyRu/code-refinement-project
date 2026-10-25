@@ -68,7 +68,7 @@ function UsersAdmin() {
     setToDelete(null);
     if (!r.ok) setError(r.message);
     else {
-      setNotice(`Пользователь ${target.email} удалён`);
+      setNotice(`Пользователь ${target.email} перемещён в архив`);
       router.invalidate();
     }
   };
@@ -180,10 +180,10 @@ function UsersAdmin() {
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent className="theme-light bg-white text-brand-ink">
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить пользователя?</AlertDialogTitle>
+            <AlertDialogTitle>Переместить пользователя в архив?</AlertDialogTitle>
             <AlertDialogDescription className="text-brand-muted">
-              Аккаунт <span className="font-medium text-brand-ink">{toDelete?.name}</span> ({toDelete?.email}) будет удалён безвозвратно.
-              Пользователь будет сразу разлогинен на всех устройствах.
+              Аккаунт <span className="font-medium text-brand-ink">{toDelete?.name}</span> ({toDelete?.email}) будет перемещён в архив и сразу разлогинен на всех устройствах.
+              Восстановить или удалить навсегда можно в разделе «Архив».
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -196,7 +196,7 @@ function UsersAdmin() {
               disabled={busy !== null}
               className="bg-red-600 text-white hover:bg-red-700"
             >
-              Удалить
+              В архив
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

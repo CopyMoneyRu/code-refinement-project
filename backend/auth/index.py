@@ -215,7 +215,7 @@ def session_user(cur, token: str | None):
         return None
     cur.execute(
         f"""SELECT u.* FROM {t('sessions')} s JOIN {t('users')} u ON u.id = s.user_id
-            WHERE s.token_hash = %s AND s.revoked_at IS NULL AND s.expires_at > NOW()""",
+            WHERE s.token_hash = %s AND s.revoked_at IS NULL AND s.expires_at > NOW() AND u.archived_at IS NULL""",
         (sha(token),),
     )
     return cur.fetchone()
@@ -274,6 +274,8 @@ def a_register(cur, body, _token):
         return err(400, 'weak_password', problem)
 
     existing = find_user(cur, email)
+    if existing and existing.get('archived_at'):
+        return err(403, 'archived', 'Этот аккаунт заблокирован. Обратитесь к администратору.')
     if existing:
         if not existing['email_verified']:
             sent = send_verify(cur, existing)
@@ -341,6 +343,8 @@ def a_login(cur, body, _token):
     if not user:
         hash_password(password)
         return generic
+    if user.get('archived_at'):
+        return err(403, 'archived', 'Этот аккаунт заблокирован. Обратитесь к администратору.')
     if user['locked_until'] and user['locked_until'] > now():
         return err(429, 'locked', 'Слишком много попыток входа. Попробуйте через 15 минут.')
     if not check_password(password, user['password_hash']):
@@ -376,7 +380,7 @@ def a_logout(cur, _body, token):
 def a_forgot(cur, body, _token):
     email = str(body.get('email', '')).strip().lower()
     user = find_user(cur, email) if EMAIL_RE.match(email) else None
-    if user:
+    if user and not user.get('archived_at'):
         code = issue_code(cur, user['id'], 'reset')
         send_code_mail(
             user['email'],
@@ -466,7 +470,7 @@ def a_admin_users(cur, _body, token):
     _, denied = require_perm(cur, token, 'users')
     if denied:
         return denied
-    cur.execute(f"SELECT * FROM {t('users')} ORDER BY created_at DESC LIMIT 500")
+    cur.execute(f"SELECT * FROM {t('users')} WHERE archived_at IS NULL ORDER BY created_at DESC LIMIT 500")
     return resp(200, {'ok': True, 'users': [public_user(u) for u in cur.fetchall()]})
 
 
@@ -509,7 +513,7 @@ def a_admin_delete_user(cur, body, token):
         return err(400, 'bad_user', 'Некорректный пользователь')
     if uid == admin['id']:
         return err(400, 'self_delete', 'Нельзя удалить собственный аккаунт')
-    cur.execute(f"SELECT id, role FROM {t('users')} WHERE id = %s", (uid,))
+    cur.execute(f"SELECT id, role FROM {t('users')} WHERE id = %s AND archived_at IS NULL", (uid,))
     target = cur.fetchone()
     if not target:
         return err(404, 'not_found', 'Пользователь не найден')
@@ -517,14 +521,8 @@ def a_admin_delete_user(cur, body, token):
         return err(400, 'protected', 'Супер администратора удалить нельзя')
     if target['role'] == 'admin' and admin['role'] != 'superadmin':
         return err(403, 'forbidden', 'Удалять администраторов может только супер администратор')
-    cur.execute(f"DELETE FROM {t('sessions')} WHERE user_id = %s", (uid,))
-    cur.execute(f"DELETE FROM {t('email_tokens')} WHERE user_id = %s", (uid,))
-    cur.execute(f"DELETE FROM {t('oauth_accounts')} WHERE user_id = %s", (uid,))
-    cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE user_id = %s", (uid,))
-    cur.execute(f"DELETE FROM {t('course_access')} WHERE user_id = %s", (uid,))
-    cur.execute(f"UPDATE {t('course_access')} SET granted_by = NULL WHERE granted_by = %s", (uid,))
-    cur.execute(f"DELETE FROM {t('file_uploads')} WHERE user_id = %s", (uid,))
-    cur.execute(f"DELETE FROM {t('users')} WHERE id = %s", (uid,))
+    cur.execute(f"UPDATE {t('users')} SET archived_at = NOW(), updated_at = NOW() WHERE id = %s", (uid,))
+    cur.execute(f"UPDATE {t('sessions')} SET revoked_at = NOW() WHERE user_id = %s AND revoked_at IS NULL", (uid,))
     return resp(200, {'ok': True})
 
 
@@ -569,12 +567,69 @@ def a_oauth_login(cur, body, _token):
                 VALUES (%s, %s, %s, %s) ON CONFLICT (provider, provider_user_id) DO NOTHING""",
             (user['id'], provider, puid, email),
         )
+    if user.get('archived_at'):
+        return err(403, 'archived', 'Этот аккаунт заблокирован. Обратитесь к администратору.')
     user = ensure_superadmin(cur, user)
     raw = create_session(cur, user['id'], body)
     return resp(200, {'ok': True, 'token': raw, 'maxAge': SESSION_DAYS * 86400, 'user': public_user(user)})
 
 
+def a_admin_archived_users(cur, _body, token):
+    _, denied = require_perm(cur, token, 'users')
+    if denied:
+        return denied
+    cur.execute(f"SELECT id, name, email, archived_at FROM {t('users')} WHERE archived_at IS NOT NULL ORDER BY archived_at DESC")
+    return resp(200, {'ok': True, 'items': [
+        {'kind': 'user', 'id': r['id'], 'title': f"{r['name']} ({r['email']})", 'archivedAt': r['archived_at']} for r in cur.fetchall()
+    ]})
+
+
+def archived_user(cur, body, token):
+    admin, denied = require_perm(cur, token, 'users')
+    if denied:
+        return None, denied
+    try:
+        uid = int(body.get('id'))
+    except (TypeError, ValueError):
+        return None, err(400, 'bad_user', 'Некорректный пользователь')
+    cur.execute(f"SELECT * FROM {t('users')} WHERE id = %s AND archived_at IS NOT NULL", (uid,))
+    target = cur.fetchone()
+    if not target:
+        return None, err(404, 'not_found', 'Пользователь в архиве не найден')
+    if target['role'] == 'admin' and admin['role'] != 'superadmin':
+        return None, err(403, 'forbidden', 'Администраторов может восстанавливать и удалять только супер администратор')
+    return target, None
+
+
+def a_admin_restore_user(cur, body, token):
+    target, problem = archived_user(cur, body, token)
+    if problem:
+        return problem
+    cur.execute(f"UPDATE {t('users')} SET archived_at = NULL, updated_at = NOW() WHERE id = %s", (target['id'],))
+    return resp(200, {'ok': True, 'title': target['name']})
+
+
+def a_admin_purge_user(cur, body, token):
+    target, problem = archived_user(cur, body, token)
+    if problem:
+        return problem
+    uid = target['id']
+    cur.execute(f"DELETE FROM {t('sessions')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('email_tokens')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('oauth_accounts')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('lesson_notifications')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('course_access')} WHERE user_id = %s", (uid,))
+    cur.execute(f"UPDATE {t('course_access')} SET granted_by = NULL WHERE granted_by = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('file_uploads')} WHERE user_id = %s", (uid,))
+    cur.execute(f"DELETE FROM {t('users')} WHERE id = %s", (uid,))
+    return resp(200, {'ok': True, 'title': target['name']})
+
+
 ACTIONS = {
+    'admin_archived_users': a_admin_archived_users,
+    'admin_restore_user': a_admin_restore_user,
+    'admin_purge_user': a_admin_purge_user,
     'oauth_login': a_oauth_login,
     'admin_delete_user': a_admin_delete_user,
     'register': a_register,

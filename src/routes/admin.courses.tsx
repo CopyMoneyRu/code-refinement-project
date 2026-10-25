@@ -47,7 +47,7 @@ function CoursesAdmin() {
     setBusy(null);
     setToDelete(null);
     if (!r.ok) return setError(r.message);
-    setNotice(`Обучение «${c.title}» удалено`);
+    setNotice(`Обучение «${c.title}» перемещено в архив`);
     router.invalidate();
   };
 
@@ -175,13 +175,13 @@ function CoursesAdmin() {
 
       <ConfirmDelete
         open={!!toDelete}
-        title="Удалить обучение?"
+        title="Переместить обучение в архив?"
         busy={busy !== null}
         onCancel={() => setToDelete(null)}
         onConfirm={confirmDelete}
       >
         <p>
-          Обучение <span className="font-medium text-brand-ink">«{toDelete?.title}»</span> будет удалено безвозвратно вместе с программой.
+          Обучение <span className="font-medium text-brand-ink">«{toDelete?.title}»</span> будет перемещено в архив вместе с программой и пропадёт с сайта. Восстановить или удалить навсегда можно в разделе «Архив».
         </p>
         <p>Если нужно просто убрать обучение с сайта — отмените и выключите переключатель «На сайте».</p>
       </ConfirmDelete>

@@ -142,6 +142,33 @@
         "ok": false
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Archived users without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "admin_archived_users"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Purge user without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "admin_purge_user",
+        "id": 1
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "ok": false
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

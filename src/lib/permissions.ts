@@ -20,5 +20,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 
 export const isStaff = (role: Role) => role === "admin" || role === "superadmin";
 
-export const can = (u: { role: Role; permissions: Permission[] }, p: Permission) =>
-  u.role === "superadmin" || (u.role === "admin" && u.permissions.includes(p));
+export type SectionPerm = Permission | "any";
+
+export const can = (u: { role: Role; permissions: Permission[] }, p: SectionPerm) =>
+  u.role === "superadmin" || (u.role === "admin" && (p === "any" || u.permissions.includes(p)));

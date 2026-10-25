@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { getRouteApi, Link, useRouterState } from "@tanstack/react-router";
 import Logo from "@/components/brand/Logo";
 import ClubLink from "@/components/site/ClubLink";
 import Icon from "@/components/ui/icon";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const NAV = [
   { to: "/strategies", label: "Стратегии", icon: "LineChart" },
@@ -18,7 +16,6 @@ const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 const navLink = "text-[17px] font-medium text-brand-muted transition-colors hover:text-brand-ink";
 
 export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
-  const [open, setOpen] = useState(false);
   const user = rootApi.useLoaderData();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isHome = pathname === "/";
@@ -26,8 +23,34 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
   return (
     <header className="sticky top-0 z-40 bg-brand-light/95 backdrop-blur supports-[backdrop-filter]:bg-brand-light/85">
       <div className="container-x">
-        <div className="relative flex h-[80px] items-center justify-between border-b border-brand-ink/10 md:h-[88px]">
-          <Logo />
+        <div className="relative flex h-[64px] items-center justify-between gap-2 border-b border-brand-ink/10 md:h-[88px]">
+          <Logo withWordmark={false} size={34} className="shrink-0 md:hidden" />
+          <Logo className="hidden md:inline-flex" />
+
+          <nav className="flex min-w-0 items-center gap-1 md:hidden">
+            {NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-[15px] font-medium text-brand-muted transition-colors hover:text-brand-ink ${isHome && item.to === "/strategies" ? "!text-brand-blue" : ""}`}
+                activeProps={{ className: "!text-brand-blue" }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <Link
+            to={user ? "/cabinet" : "/login"}
+            aria-label={user ? "Личный кабинет" : "Вход"}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-ink/15 text-brand-ink md:hidden"
+          >
+            {user ? (
+              <span className="flex h-full w-full items-center justify-center rounded-full bg-brand-blue text-[15px] font-semibold text-white">{initial(user.name)}</span>
+            ) : (
+              <Icon name="User" size={19} />
+            )}
+          </Link>
 
           <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-4 md:flex lg:gap-6">
             {NAV.map((item) => (
@@ -66,64 +89,6 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
             </Link>
           )}
 
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <button
-                aria-label="Открыть меню"
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-brand-ink hover:bg-brand-surface md:hidden"
-              >
-                <Icon name="Menu" size={22} />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] border-brand-ink/10 bg-brand-light text-brand-ink">
-              <SheetTitle className="sr-only">Меню</SheetTitle>
-              <div className="mt-2">
-                <Logo size={32} />
-              </div>
-              <nav className="mt-10 flex flex-col">
-                {[{ to: "/", label: "Главная", icon: "Home" }, ...NAV].map((item) => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setOpen(false)}
-                    activeOptions={{ exact: item.to === "/" }}
-                    className="flex items-center gap-3 border-b border-brand-ink/10 py-4 text-lg text-brand-ink/85 hover:text-brand-ink"
-                    activeProps={{ className: "!text-brand-blue font-medium" }}
-                  >
-                    <Icon name={item.icon} size={19} />
-                    {item.label}
-                  </Link>
-                ))}
-                <ClubLink
-                  onClose={() => setOpen(false)}
-                  className="flex items-center justify-between border-b border-brand-ink/10 py-4 text-lg text-brand-ink/85 hover:text-brand-ink"
-                >
-                  Клуб <Icon name="ArrowUpRight" size={18} className="text-brand-muted" />
-                </ClubLink>
-              </nav>
-              {user ? (
-                <Link
-                  to="/cabinet"
-                  onClick={() => setOpen(false)}
-                  className="mt-8 flex items-center gap-3 rounded-lg border border-brand-ink/10 bg-white p-3"
-                >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-blue font-semibold text-white">
-                    {initial(user.name)}
-                  </span>
-                  <span className="min-w-0 truncate font-medium">{user.name}</span>
-                  <Icon name="ChevronRight" size={18} className="ml-auto text-brand-muted" />
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setOpen(false)}
-                  className="mt-8 flex items-center justify-center gap-2 rounded-lg bg-brand-blue py-3 font-medium text-white"
-                >
-                  <Icon name="User" size={18} /> Вход
-                </Link>
-              )}
-            </SheetContent>
-          </Sheet>
         </div>
       </div>
     </header>

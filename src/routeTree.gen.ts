@@ -18,6 +18,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as StrategiesRouteImport } from './routes/strategies'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
+import { Route as AdminArchiveRouteImport } from './routes/admin.archive'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
@@ -81,6 +82,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminAccessRoute = AdminAccessRouteImport.update({
   id: '/access',
   path: '/access',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminArchiveRoute = AdminArchiveRouteImport.update({
+  id: '/archive',
+  path: '/archive',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/strategies': typeof StrategiesRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/strategies': typeof StrategiesRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/strategies': typeof StrategiesRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/strategies'
     | '/admin/access'
+    | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
     | '/admin/lessons'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/strategies'
     | '/admin/access'
+    | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
     | '/admin/lessons'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/strategies'
     | '/admin/access'
+    | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
     | '/admin/lessons'
@@ -437,6 +449,13 @@ declare module '@tanstack/react-router' {
       path: '/access'
       fullPath: '/admin/access'
       preLoaderRoute: typeof AdminAccessRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/archive': {
+      id: '/admin/archive'
+      path: '/archive'
+      fullPath: '/admin/archive'
+      preLoaderRoute: typeof AdminArchiveRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/categories': {
@@ -577,6 +596,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAccessRoute: typeof AdminAccessRoute
+  AdminArchiveRoute: typeof AdminArchiveRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCoursesRoute: typeof AdminCoursesRoute
   AdminLessonsRoute: typeof AdminLessonsRoute
@@ -590,6 +610,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAccessRoute: AdminAccessRoute,
+  AdminArchiveRoute: AdminArchiveRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCoursesRoute: AdminCoursesRoute,
   AdminLessonsRoute: AdminLessonsRoute,
