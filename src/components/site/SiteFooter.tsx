@@ -16,7 +16,7 @@ export default function SiteFooter() {
             <div className="text-sm font-semibold">Платформа</div>
             <ul className="mt-4 space-y-3 text-sm text-brand-muted">
               <li><Link to="/strategies" className="hover:text-brand-ink">Стратегии</Link></li>
-              <li><Link to="/university" className="hover:text-brand-ink">JETRA University</Link></li>
+              <li><Link to="/university" className="hover:text-brand-ink">Университет</Link></li>
             </ul>
           </div>
           <div>
