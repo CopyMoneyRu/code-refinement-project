@@ -32,17 +32,10 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`${navLink} inline-flex items-center gap-2 rounded-full px-4 py-2 transition-all`}
-                activeProps={{
-                  className: "!text-brand-blue bg-brand-blue/10 ring-1 ring-brand-blue/20 shadow-[0_0_18px_rgba(57,127,196,0.35)]",
-                }}
+                className={`${navLink} inline-flex items-center gap-2 px-4 py-2`}
+                activeProps={{ className: "!text-brand-ink" }}
               >
-                {({ isActive }) => (
-                  <>
-                    {isActive && <Icon name={item.icon} size={18} />}
-                    {item.label}
-                  </>
-                )}
+                {item.label}
               </Link>
             ))}
             <ClubLink className={`${navLink} px-4 py-2`}>Клуб</ClubLink>

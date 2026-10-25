@@ -36,7 +36,6 @@ function UniversityPage() {
     [COURSES, categories],
   );
   const [cat, setCat] = useState<number>(0);
-  const [q, setQ] = useState("");
   const [author, setAuthor] = useState<number | null>(null);
   const selected = AUTHORS.find((a) => a.id === author) ?? null;
 
@@ -45,10 +44,9 @@ function UniversityPage() {
       COURSES.filter(
         (c) =>
           (!author || c.author?.id === author) &&
-          (!cat || c.categories.some((x) => x.id === cat)) &&
-          c.title.toLowerCase().includes(q.trim().toLowerCase()),
+          (!cat || c.categories.some((x) => x.id === cat)) ,
       ),
-    [COURSES, cat, q, author],
+    [COURSES, cat, author],
   );
 
   return (
@@ -73,17 +71,6 @@ function UniversityPage() {
                   </button>
                 );
               })}
-            </div>
-            <div className="shrink-0">
-              <label className="relative">
-                <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-ink/50" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Поиск обучения"
-                  className="h-10 w-full rounded-lg border border-brand-ink/10 bg-transparent pl-9 pr-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-blue focus:outline-none sm:w-56"
-                />
-              </label>
             </div>
           </div>
 
