@@ -27,13 +27,15 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
         <div className="relative flex h-[80px] items-center justify-between border-b border-brand-ink/10 md:h-[88px]">
           <Logo />
 
-          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-10 md:flex lg:gap-12">
+          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-4 md:flex lg:gap-6">
             {NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`${navLink} relative inline-flex items-center gap-2 py-2 after:absolute after:inset-x-0 after:-bottom-[22px] after:h-[3px] after:rounded-full after:bg-transparent after:transition-colors md:after:-bottom-[26px]`}
-                activeProps={{ className: "!text-brand-blue after:!bg-brand-blue" }}
+                className={`${navLink} inline-flex items-center gap-2 rounded-full px-4 py-2 transition-all`}
+                activeProps={{
+                  className: "!text-brand-blue bg-brand-blue/10 ring-1 ring-brand-blue/20 shadow-[0_0_18px_rgba(57,127,196,0.35)]",
+                }}
               >
                 {({ isActive }) => (
                   <>
@@ -43,7 +45,7 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
                 )}
               </Link>
             ))}
-            <ClubLink className={navLink}>Клуб</ClubLink>
+            <ClubLink className={`${navLink} px-4 py-2`}>Клуб</ClubLink>
           </nav>
 
           {user ? (
