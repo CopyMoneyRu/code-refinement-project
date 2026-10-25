@@ -33,7 +33,7 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
                 key={item.to}
                 to={item.to}
                 className={`${navLink} inline-flex items-center gap-2 px-4 py-2`}
-                activeProps={{ className: "!text-brand-ink" }}
+                activeProps={{ className: "!text-brand-blue" }}
               >
                 {item.label}
               </Link>
