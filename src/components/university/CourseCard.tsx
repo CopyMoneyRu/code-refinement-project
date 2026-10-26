@@ -33,11 +33,7 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
   const cats = c.categories.length ? c.categories.map((x) => x.name) : c.category ? [c.category] : [];
   const finished = !!progress && progress.done >= progress.total;
   return (
-    <Link
-      to="/university/$slug"
-      params={{ slug: c.slug }}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-brand-ink/10 bg-white transition-colors hover:border-brand-blue/40"
-    >
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-brand-ink/10 bg-white transition-colors hover:border-brand-blue/40">
       {c.coverUrl && (
         <div className="aspect-[16/9] overflow-hidden bg-brand-surface">
           <img src={c.coverUrl} alt={c.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
@@ -54,7 +50,11 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           </div>
           <span className="shrink-0"><AccessBadge access={c.access} price={c.price} /></span>
         </div>
-        <h3 className="mt-6 font-display text-xl font-semibold text-brand-ink">{c.title}</h3>
+        <h3 className="mt-6 font-display text-xl font-semibold text-brand-ink">
+          <Link to="/university/$slug" params={{ slug: c.slug }} className="after:absolute after:inset-0 after:content-['']">
+            {c.title}
+          </Link>
+        </h3>
         <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>
         {free && (
           <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">
@@ -81,20 +81,25 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           </div>
         )}
         <div className="mt-6 flex items-center justify-between border-t border-brand-ink/10 pt-5">
-          {c.author ? (
-            <span className="flex min-w-0 items-center gap-3">
+          {c.author?.slug ? (
+            <Link
+              to="/university/authors/$slug"
+              params={{ slug: c.author.slug }}
+              title={`Все обучения автора ${c.author.name}`}
+              className="relative z-10 -m-1.5 flex min-w-0 items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-brand-light [&:hover_.author-name]:text-brand-blue"
+            >
               <AuthorAvatar name={c.author.name} photoUrl={c.author.photoUrl} className="h-9 w-9 shrink-0" textClassName="text-xs" />
               <span className="min-w-0 text-sm leading-snug">
                 <span className="text-brand-muted">Автор: </span>
-                <span className="font-medium text-brand-ink">{c.author.name}</span>
+                <span className="author-name font-medium text-brand-ink transition-colors">{c.author.name}</span>
               </span>
-            </span>
+            </Link>
           ) : (
             <span className="text-sm text-brand-muted">JETRA University</span>
           )}
           <Icon name="ArrowUpRight" size={18} className="text-brand-blue transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
