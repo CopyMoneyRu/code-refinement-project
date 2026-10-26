@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import BrandLockup from "@/components/brand/BrandLockup";
-import ClubLink from "@/components/site/ClubLink";
 import BrandIcon from "@/components/site/BrandIcon";
 import Icon from "@/components/ui/icon";
 import { COMPANY, LEGAL_DOCS, SOCIALS } from "@/lib/company";
@@ -11,8 +10,8 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-brand-ink/10 bg-brand-light text-brand-ink">
       <div className="container-x py-14">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.3fr]">
-          <div>
+        <div className="grid items-start gap-10 text-center md:grid-cols-3 md:gap-8">
+          <div className="flex flex-col items-center md:items-start md:text-left">
             <BrandLockup size={34} />
             <div className="mt-6 flex gap-2.5">
               {SOCIALS.map((s) => (
@@ -30,17 +29,8 @@ export default function SiteFooter() {
               ))}
             </div>
           </div>
-          <div>
-            <div className="text-sm font-semibold">Платформа</div>
-            <ul className="mt-4 space-y-3 text-sm text-brand-muted">
-              <li><Link to="/strategies" className="hover:text-brand-ink">Стратегии</Link></li>
-              <li><Link to="/university" className="hover:text-brand-ink">Университет</Link></li>
-              <li><ClubLink className="hover:text-brand-ink">Клуб</ClubLink></li>
-              <li><Link to="/cabinet" className="hover:text-brand-ink">Личный кабинет</Link></li>
-              <li><Link to="/admin" className="hover:text-brand-ink">Администрирование</Link></li>
-            </ul>
-          </div>
-          <div>
+
+          <div className="flex flex-col items-center">
             <div className="text-sm font-semibold">Документы</div>
             <ul className="mt-4 space-y-3 text-sm text-brand-muted">
               {LEGAL_DOCS.map((d) => (
@@ -48,15 +38,12 @@ export default function SiteFooter() {
               ))}
             </ul>
           </div>
-          <div>
+
+          <div className="flex flex-col items-center md:items-end md:text-right">
             <div className="text-sm font-semibold">Контакты</div>
-            <ul className="mt-4 space-y-3 text-sm text-brand-muted">
-              <li>
-                <a href={MAILTO} className="inline-flex items-center gap-2 hover:text-brand-ink">
-                  <Icon name="Mail" size={16} className="text-brand-blue" /> {COMPANY.email}
-                </a>
-              </li>
-            </ul>
+            <a href={MAILTO} className="mt-4 inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-ink">
+              <Icon name="Mail" size={16} className="text-brand-blue" /> {COMPANY.email}
+            </a>
             <a
               href={COMPANY.support}
               target="_blank"
@@ -68,18 +55,15 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 grid gap-4 border-t border-brand-ink/10 pt-6 text-xs leading-relaxed text-brand-ink/55 md:grid-cols-2">
-          <div>
-            {COMPANY.short}
-            <br />
-            ИНН {COMPANY.inn} · ОГРНИП {COMPANY.ogrnip}
-          </div>
-          <div className="md:text-right">
+        <div className="mt-12 border-t border-brand-ink/10 pt-6 text-center text-xs leading-relaxed text-brand-ink/55">
+          <p className="mx-auto max-w-3xl">
             Материалы платформы носят информационный и образовательный характер и не являются индивидуальной инвестиционной рекомендацией.
             Инвестиции связаны с риском потери капитала.{" "}
             <Link to="/disclaimer" className="underline hover:text-brand-ink">Подробнее</Link>
-            <div className="mt-2">© JETRA, 2026</div>
-          </div>
+          </p>
+          <p className="mt-3">
+            © JETRA, 2026 · {COMPANY.short} · ИНН {COMPANY.inn} · ОГРНИП {COMPANY.ogrnip}
+          </p>
         </div>
       </div>
     </footer>
