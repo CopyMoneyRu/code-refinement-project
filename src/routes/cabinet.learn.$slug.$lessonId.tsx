@@ -90,9 +90,11 @@ function LessonPage() {
       </div>
       {modules.map((m, mi) => (
         <div key={m.id}>
-          <div className="mb-1.5 text-xs font-medium uppercase tracking-[0.1em] text-brand-muted">
-            {mi + 1}. {m.title}
-          </div>
+          {!course.flat && (
+            <div className="mb-1.5 text-xs font-medium uppercase tracking-[0.1em] text-brand-muted">
+              {mi + 1}. {m.title}
+            </div>
+          )}
           <ul className="space-y-0.5">
             {m.lessons.map((x) => {
               const active = x.id === lesson.id;
@@ -134,8 +136,12 @@ function LessonPage() {
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-brand-muted">
           <Link to="/cabinet/learn/$slug" params={{ slug }} className="hover:text-brand-ink">{course.title}</Link>
-          <Icon name="ChevronRight" size={14} />
-          <span>{module.title}</span>
+          {!course.flat && (
+            <>
+              <Icon name="ChevronRight" size={14} />
+              <span>{module.title}</span>
+            </>
+          )}
           <span className="ml-auto tabular-nums">Урок {position.index} из {position.total}</span>
         </div>
         <h1 className="mt-3 font-display text-2xl font-bold leading-tight md:text-[30px]">{lesson.title}</h1>

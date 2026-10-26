@@ -19,7 +19,7 @@ const plural = (n: number, forms: [string, string, string]) => {
 
 export function freeLabel(c: DbCourse) {
   if (c.access === "free") return "";
-  const freeModules = c.modules.filter((m) => m.lessons.length > 0 && m.lessons.every((l) => l.isFree)).length;
+  const freeModules = c.flatProgram ? 0 : c.modules.filter((m) => m.lessons.length > 0 && m.lessons.every((l) => l.isFree)).length;
   if (freeModules > 0) return `${freeModules} ${plural(freeModules, ["модуль", "модуля", "модулей"])} бесплатно`;
   const freeLessons = c.modules.reduce((n, m) => n + m.lessons.filter((l) => l.isFree).length, 0);
   if (freeLessons > 0) return `${freeLessons} ${plural(freeLessons, ["урок", "урока", "уроков"])} бесплатно`;
@@ -52,7 +52,7 @@ export default function CourseCard({ c }: { c: DbCourse }) {
           </span>
         )}
         <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-7 text-sm text-brand-muted">
-          <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>
+          {!c.flatProgram && <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>}
           <span className="inline-flex items-center gap-1.5"><Icon name="PlayCircle" size={15} />{lessonsTotal(c)} уроков</span>
         </div>
         <div className="mt-6 flex items-center justify-between border-t border-brand-ink/10 pt-5">

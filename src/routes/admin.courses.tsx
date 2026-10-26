@@ -119,7 +119,7 @@ function CoursesAdmin() {
                       {c.access === "free" ? <span className="text-emerald-700">Бесплатно</span> : formatPrice(c.price)}
                     </td>
                     <td className="whitespace-nowrap px-5 py-3.5 text-brand-muted">
-                      {c.modules.length} мод. · {lessonsTotal(c)} ур.
+                      {c.flatProgram ? "" : `${c.modules.length} мод. · `}{lessonsTotal(c)} ур.
                     </td>
                     <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                       <PublishToggle

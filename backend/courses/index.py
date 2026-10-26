@@ -104,6 +104,7 @@ def course_out(r: dict, public: bool = False) -> dict:
         'coverUrl': r['cover_url'],
         'published': r['published'],
         'modules': r['modules'] or [],
+        'flatProgram': bool(r.get('flat_program')),
         'author': {
             'id': r['author_id'], 'slug': r.get('author_slug') or '', 'name': r.get('author_name') or '',
             'role': r.get('author_role') or '', 'photoUrl': r.get('author_photo') or '', 'bio': r.get('author_bio') or '',

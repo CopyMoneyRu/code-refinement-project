@@ -12,7 +12,7 @@
       "path": "/",
       "body": {
         "action": "course_learn",
-        "slug": "osnovy-investiciy"
+        "slug": "finansovye-instrumenty"
       },
       "expectedStatus": 200,
       "expectedBody": {

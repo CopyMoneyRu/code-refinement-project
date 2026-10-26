@@ -223,7 +223,7 @@ def course_head(c) -> dict:
     return {
         'id': c['id'], 'slug': c['slug'], 'title': c['title'], 'short': c['short'], 'coverUrl': c['cover_url'],
         'access': c['access'], 'price': c['price'], 'category': c['category'],
-        'published': c['published'],
+        'published': c['published'], 'flat': bool(c.get('flat_program')),
         'author': {'name': c['author_name'], 'slug': c['author_slug']} if c.get('author_name') and c.get('author_published') else None,
     }
 
@@ -443,7 +443,8 @@ def a_program_courses(cur, _body, user):
                    (SELECT COUNT(*) FROM {t('lessons')} l JOIN {t('course_modules')} m ON m.id = l.module_id
                      WHERE m.course_id = c.id AND NOT l.published) AS hidden_lessons,
                    (SELECT COUNT(*) FROM {t('lessons')} l JOIN {t('course_modules')} m ON m.id = l.module_id
-                     WHERE m.course_id = c.id) AS lessons
+                     WHERE m.course_id = c.id) AS lessons,
+                   c.flat_program
             FROM {t('courses')} c WHERE c.archived_at IS NULL ORDER BY c.id"""
     )
     return resp(200, {'ok': True, 'courses': [dict(r) for r in cur.fetchall()]})
@@ -454,6 +455,39 @@ def a_program_get(cur, body, user):
     course = course_by(cur, 'c.id = %s', (cid,)) if cid else None
     if not course:
         return err(404, 'not_found', 'Обучение не найдено')
+    return resp(200, {'ok': True, 'course': course_head(course), 'modules': load_program(cur, cid, with_content=True)})
+
+
+def a_program_set_flat(cur, body, user):
+    cid = to_int(body.get('courseId'))
+    course = course_by(cur, 'c.id = %s', (cid,)) if cid else None
+    if not course:
+        return err(404, 'not_found', 'Обучение не найдено')
+    flat = bool(body.get('flat'))
+    if flat:
+        cur.execute(f"SELECT id FROM {t('course_modules')} WHERE course_id = %s ORDER BY position, id", (cid,))
+        ids = [r['id'] for r in cur.fetchall()]
+        if not ids:
+            cur.execute(
+                f"""INSERT INTO {t('course_modules')} (course_id, title, unlock_mode, position)
+                    VALUES (%s, %s, 'all', 1) RETURNING id""",
+                (cid, 'Уроки'),
+            )
+            ids = [cur.fetchone()['id']]
+        main = ids[0]
+        for other in ids[1:]:
+            cur.execute(
+                f"""UPDATE {t('lessons')} SET module_id = %s,
+                    position = position + (SELECT COALESCE(MAX(position), 0) FROM {t('lessons')} WHERE module_id = %s),
+                    published = published AND (SELECT published FROM {t('course_modules')} WHERE id = %s)
+                    WHERE module_id = %s""",
+                (main, main, other, other),
+            )
+            cur.execute(f"DELETE FROM {t('course_modules')} WHERE id = %s", (other,))
+        cur.execute(f"UPDATE {t('course_modules')} SET published = TRUE, position = 1, updated_at = NOW() WHERE id = %s", (main,))
+        renumber(cur, 'lessons', 'module_id', main)
+    cur.execute(f"UPDATE {t('courses')} SET flat_program = %s, updated_at = NOW() WHERE id = %s", (flat, cid))
+    course = course_by(cur, 'c.id = %s', (cid,))
     return resp(200, {'ok': True, 'course': course_head(course), 'modules': load_program(cur, cid, with_content=True)})
 
 
@@ -908,6 +942,7 @@ ADMIN = {
     'lesson_move': ('lessons', a_lesson_move),
     'lesson_set_free': ('lessons', a_lesson_set_free),
     'module_set_free': ('lessons', a_module_set_free),
+    'program_set_flat': ('lessons', a_program_set_flat),
     'lesson_set_published': ('lessons', a_lesson_set_published),
     'module_set_published': ('lessons', a_module_set_published),
     'upload_start': ('lessons', a_upload_start),

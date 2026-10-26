@@ -46,6 +46,7 @@ export type DbCourse = {
   coverUrl: string;
   published: boolean;
   modules: DbModule[];
+  flatProgram?: boolean;
   author: DbAuthor | null;
   updatedAt: string;
 };

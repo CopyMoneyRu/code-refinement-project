@@ -43,6 +43,7 @@ export type CourseHead = {
   price: number;
   category: string;
   published: boolean;
+  flat?: boolean;
   author: { name: string; slug: string } | null;
 };
 export type Progress = { done: number; total: number; percent: number; nextLessonId: number | null };
@@ -115,6 +116,7 @@ export type ProgramCourse = {
   lessons: number;
   hidden_modules: number;
   hidden_lessons: number;
+  flat_program?: boolean;
 };
 export const programCoursesFn = createServerFn({ method: "GET" }).handler(async () => {
   const r = await call<{ courses: ProgramCourse[] }>("program_courses");
@@ -124,6 +126,10 @@ export const programCoursesFn = createServerFn({ method: "GET" }).handler(async 
 export const programGetFn = createServerFn({ method: "GET" })
   .validator((i: unknown) => ({ courseId: num(obj(i).courseId) }))
   .handler(({ data }) => call<{ course: CourseHead; modules: ModuleFull[] }>("program_get", data));
+
+export const programSetFlatFn = createServerFn({ method: "POST" })
+  .validator((i: unknown) => ({ courseId: num(obj(i).courseId), flat: obj(i).flat === true }))
+  .handler(({ data }) => call<{ course: CourseHead; modules: ModuleFull[] }>("program_set_flat", data));
 
 export const moduleSaveFn = createServerFn({ method: "POST" })
   .validator((i: unknown) => {

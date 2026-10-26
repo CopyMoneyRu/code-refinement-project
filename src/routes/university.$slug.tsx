@@ -61,10 +61,10 @@ function CoursePage() {
               )}
 
               <div className="mt-10 grid grid-cols-2 gap-4 border-y border-brand-ink/10 py-6">
-                {[
+                {(course.flatProgram ? [["Уроков", total]] : [
                   ["Модулей", course.modules.length],
                   ["Уроков", total],
-                ].map(([k, v]) => (
+                ]).map(([k, v]) => (
                   <div key={k}>
                     <div className="text-sm text-brand-muted">{k}</div>
                     <div className="mt-1 font-display text-xl font-semibold text-brand-ink">{v}</div>
@@ -82,6 +82,27 @@ function CoursePage() {
               {course.modules.length > 0 && (
               <>
               <h2 className="mt-12 font-display text-2xl font-semibold text-brand-ink">Программа обучения</h2>
+              {course.flatProgram ? (
+                <ul className="mt-6 divide-y divide-brand-ink/[0.08] rounded-xl border border-brand-ink/10 bg-white px-3">
+                  {course.modules.flatMap((m) => m.lessons).map((l, li) => (
+                    <li key={li} className="flex items-center justify-between gap-3 px-2 py-3.5 text-[15px] text-brand-ink/85">
+                      <span className="flex items-center gap-3">
+                        <span className="w-6 shrink-0 font-display text-sm tabular-nums text-brand-blue">{String(li + 1).padStart(2, "0")}</span>
+                        {l.title}
+                        {course.access === "paid" && l.isFree && (
+                          <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700">Бесплатно</span>
+                        )}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-3 text-sm text-brand-ink/50">
+                        {course.access === "paid" && !l.isFree && <Icon name="Lock" size={14} />}
+                        {l.hasVideo && <Icon name="PlayCircle" size={14} />}
+                        {l.hasFiles && <Icon name="Paperclip" size={14} />}
+                        {l.duration}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
               <Accordion type="multiple" defaultValue={["m0"]} className="mt-6 space-y-3">
                 {course.modules.map((mod, i) => (
                   <AccordionItem key={i} value={`m${i}`} className="rounded-xl border border-brand-ink/10 bg-white px-5">
@@ -115,6 +136,7 @@ function CoursePage() {
                   </AccordionItem>
                 ))}
               </Accordion>
+              )}
               </>
               )}
             </div>

@@ -112,10 +112,10 @@ function CourseProgram() {
                 <div className="flex items-start justify-between gap-4 border-b border-brand-ink/[0.08] px-5 py-4 sm:px-6">
                   <div className="min-w-0">
                     <div className="flex items-center gap-3">
-                      <span className="font-display text-sm tabular-nums text-brand-blue">{String(mi + 1).padStart(2, "0")}</span>
-                      <span className="font-semibold">{m.title}</span>
+                      {!course.flat && <span className="font-display text-sm tabular-nums text-brand-blue">{String(mi + 1).padStart(2, "0")}</span>}
+                      <span className="font-semibold">{course.flat ? `Уроки · ${m.lessons.length}` : m.title}</span>
                     </div>
-                    {m.description && <p className="mt-1.5 text-sm text-brand-muted">{m.description}</p>}
+                    {!course.flat && m.description && <p className="mt-1.5 text-sm text-brand-muted">{m.description}</p>}
                     {canLearn && m.unlockMode === "sequential" && m.lessons.length > 1 && (
                       <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-brand-muted">
                         <Icon name="ListOrdered" size={13} /> Уроки открываются по порядку
@@ -129,7 +129,7 @@ function CourseProgram() {
                   )}
                 </div>
                 <ul className="p-2">
-                  {m.lessons.map((l) => {
+                  {m.lessons.map((l, li) => {
                     const clickable = canLearn && !l.locked;
                     const inner = (
                       <>
@@ -142,7 +142,10 @@ function CourseProgram() {
                           <Icon name={l.completed ? "Check" : !canLearn || l.locked ? "Lock" : l.hasVideo ? "Play" : "FileText"} size={15} />
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className={cn("block truncate text-[15px]", clickable ? "text-brand-ink" : "text-brand-muted")}>{l.title}</span>
+                          <span className={cn("block truncate text-[15px]", clickable ? "text-brand-ink" : "text-brand-muted")}>
+                            {course.flat && <span className="mr-1.5 tabular-nums text-brand-muted">{li + 1}.</span>}
+                            {l.title}
+                          </span>
                           {canLearn && l.paidLocked && <span className="block text-xs text-brand-muted">Доступен после оплаты</span>}
                           {canLearn && l.locked && !l.paidLocked && <span className="block text-xs text-brand-muted">Откроется после предыдущего урока</span>}
                         </span>
