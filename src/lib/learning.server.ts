@@ -5,6 +5,8 @@ import { SESSION_COOKIE, VIEW_COOKIE } from "./auth.server";
 
 export type LearnResult<T> = ({ ok: true } & T) | { ok: false; error: string; message: string };
 
+export const hasSession = () => !!getCookie(SESSION_COOKIE);
+
 export async function callLearning<T = Record<string, unknown>>(
   action: string,
   payload: Record<string, unknown> = {},

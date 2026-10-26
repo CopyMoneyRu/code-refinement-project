@@ -69,14 +69,38 @@ type Fail = { ok: false; error: string; message: string };
 
 export const lessonsTotal = (c: { modules: DbModule[] }) => c.modules.reduce((n, m) => n + m.lessons.length, 0);
 
+export const durationMinutes = (d: string) => {
+  const s = (d || "").toLowerCase();
+  const h = s.match(/(\d+)\s*(ч|h)/);
+  const m = s.match(/(\d+)\s*(мин|m)/);
+  if (!h && !m) return Number(s.match(/\d+/)?.[0] ?? 0);
+  return (h ? Number(h[1]) * 60 : 0) + (m ? Number(m[1]) : 0);
+};
+
+export const courseMinutes = (c: { modules: DbModule[] }) =>
+  c.modules.reduce((n, m) => n + m.lessons.reduce((k, l) => k + durationMinutes(l.duration), 0), 0);
+
+export const formatDuration = (min: number) => {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h ? `${h} ч${m ? ` ${m} мин` : ""}` : `${m} мин`;
+};
+
+export type CourseProgress = { courseId: number; done: number; total: number; percent: number };
+
 export const formatPrice = (rub: number) => `${rub.toLocaleString("ru-RU")} ₽`;
 
 export const catalogFn = createServerFn({ method: "GET" }).handler(async () => {
   const { callCourses } = await import("./courses.server");
-  const r = await callCourses<{ courses: DbCourse[]; authors: DbAuthor[]; categories: AdminCategory[] }>("list");
+  const { callLearning, hasSession } = await import("./learning.server");
+  const [r, p] = await Promise.all([
+    callCourses<{ courses: DbCourse[]; authors: DbAuthor[]; categories: AdminCategory[] }>("list"),
+    hasSession() ? callLearning<{ progress: CourseProgress[] }>("my_progress") : Promise.resolve(null),
+  ]);
+  const progress = p && p.ok ? p.progress : ([] as CourseProgress[]);
   return r.ok
-    ? { courses: r.courses, authors: r.authors, categories: r.categories }
-    : { courses: [] as DbCourse[], authors: [] as DbAuthor[], categories: [] as AdminCategory[] };
+    ? { courses: r.courses, authors: r.authors, categories: r.categories, progress }
+    : { courses: [] as DbCourse[], authors: [] as DbAuthor[], categories: [] as AdminCategory[], progress };
 });
 
 export const courseBySlugFn = createServerFn({ method: "GET" })

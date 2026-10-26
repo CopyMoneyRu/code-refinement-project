@@ -139,6 +139,15 @@
         "ok": false
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "My progress without session",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "my_progress"
+      },
+      "expectedStatus": 401
     }
   ]
 }

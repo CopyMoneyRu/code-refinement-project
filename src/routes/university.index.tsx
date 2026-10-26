@@ -21,7 +21,7 @@ export const Route = createFileRoute("/university/")({
 });
 
 function UniversityPage() {
-  const { courses: COURSES, authors, categories } = Route.useLoaderData();
+  const { courses: COURSES, authors, categories, progress } = Route.useLoaderData();
   const AUTHORS = useMemo(
     () => authors.filter((a) => COURSES.some((c) => c.author?.id === a.id)),
     [authors, COURSES],
@@ -112,7 +112,7 @@ function UniversityPage() {
           {list.length ? (
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((c) => (
-                <CourseCard key={c.id} c={c} />
+                <CourseCard key={c.id} c={c} progress={progress.find((p) => p.courseId === c.id)} />
               ))}
             </div>
           ) : (

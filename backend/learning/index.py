@@ -433,6 +433,23 @@ def a_my_courses(cur, _body, user):
     return resp(200, {'ok': True, 'courses': out})
 
 
+def a_my_progress(cur, _body, user):
+    cur.execute(
+        f"""SELECT m.course_id, COUNT(*) AS total, COUNT(p.lesson_id) AS done
+            FROM {t('lessons')} l
+            JOIN {t('course_modules')} m ON m.id = l.module_id
+            JOIN {t('courses')} c ON c.id = m.course_id AND c.archived_at IS NULL
+            LEFT JOIN {t('lesson_progress')} p ON p.lesson_id = l.id AND p.user_id = %s
+            WHERE l.published AND m.published
+            GROUP BY m.course_id HAVING COUNT(p.lesson_id) > 0""",
+        (user['id'],),
+    )
+    return resp(200, {'ok': True, 'progress': [
+        {'courseId': r['course_id'], 'done': r['done'], 'total': r['total'], 'percent': round(r['done'] * 100 / r['total'])}
+        for r in cur.fetchall()
+    ]})
+
+
 # ---------- админка: программа ----------
 
 def a_program_courses(cur, _body, user):
@@ -929,7 +946,7 @@ def a_access_revoke(cur, body, user):
 
 
 OPTIONAL_USER = {'course_learn': a_course_learn}
-USER = {'lesson_get': a_lesson_get, 'lesson_complete': a_lesson_complete, 'my_courses': a_my_courses}
+USER = {'lesson_get': a_lesson_get, 'lesson_complete': a_lesson_complete, 'my_courses': a_my_courses, 'my_progress': a_my_progress}
 TOKEN = {'upload_chunk': a_upload_chunk, 'upload_finish': a_upload_finish, 'upload_cleanup': a_upload_cleanup}
 ADMIN = {
     'program_courses': ('lessons', a_program_courses),

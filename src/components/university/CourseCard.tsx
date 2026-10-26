@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
-import { formatPrice, lessonsTotal, type DbCourse } from "@/lib/courses";
+import { courseMinutes, formatDuration, formatPrice, lessonsTotal, type CourseProgress, type DbCourse } from "@/lib/courses";
 
 export function AccessBadge({ access, price }: { access: DbCourse["access"]; price?: number }) {
   return access === "free" ? (
@@ -26,8 +26,11 @@ export function freeLabel(c: DbCourse) {
   return "";
 }
 
-export default function CourseCard({ c }: { c: DbCourse }) {
+export default function CourseCard({ c, progress }: { c: DbCourse; progress?: CourseProgress }) {
   const free = freeLabel(c);
+  const minutes = courseMinutes(c);
+  const cats = c.categories.length ? c.categories.map((x) => x.name) : c.category ? [c.category] : [];
+  const finished = !!progress && progress.done >= progress.total;
   return (
     <Link
       to="/university/$slug"
@@ -40,9 +43,15 @@ export default function CourseCard({ c }: { c: DbCourse }) {
         </div>
       )}
       <div className="flex flex-1 flex-col p-6 sm:p-7">
-        <div className="flex items-center justify-between gap-3">
-          <span className="line-clamp-1 text-xs uppercase tracking-[0.14em] text-brand-muted">{c.categories.map((x) => x.name).join(" · ") || c.category}</span>
-          <AccessBadge access={c.access} price={c.price} />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            {cats.map((name) => (
+              <span key={name} className="rounded-md bg-brand-surface px-2 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-brand-muted">
+                {name}
+              </span>
+            ))}
+          </div>
+          <span className="shrink-0"><AccessBadge access={c.access} price={c.price} /></span>
         </div>
         <h3 className="mt-6 font-display text-xl font-semibold text-brand-ink">{c.title}</h3>
         <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>
@@ -54,7 +63,22 @@ export default function CourseCard({ c }: { c: DbCourse }) {
         <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-7 text-sm text-brand-muted">
           {!c.flatProgram && <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>}
           <span className="inline-flex items-center gap-1.5"><Icon name="PlayCircle" size={15} />{lessonsTotal(c)} уроков</span>
+          {minutes > 0 && <span className="inline-flex items-center gap-1.5"><Icon name="Clock" size={15} />{formatDuration(minutes)}</span>}
         </div>
+        {progress && (
+          <div className="mt-5 rounded-lg bg-brand-light px-4 py-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className={"inline-flex items-center gap-1.5 font-medium " + (finished ? "text-emerald-700" : "text-brand-ink")}>
+                <Icon name={finished ? "CheckCircle2" : "PlayCircle"} size={15} className={finished ? "" : "text-brand-blue"} />
+                {finished ? "Обучение пройдено" : "Обучение начато"}
+              </span>
+              <span className="tabular-nums text-brand-muted">{progress.done} из {progress.total} · {progress.percent}%</span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-surface">
+              <div className={"h-full rounded-full " + (finished ? "bg-emerald-500" : "bg-brand-blue")} style={{ width: `${progress.percent}%` }} />
+            </div>
+          </div>
+        )}
         <div className="mt-6 flex items-center justify-between border-t border-brand-ink/10 pt-5">
           <span className="text-sm text-brand-muted">{c.author?.name ?? "JETRA University"}</span>
           <Icon name="ArrowUpRight" size={18} className="text-brand-blue transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
