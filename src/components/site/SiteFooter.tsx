@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import Logo from "@/components/brand/Logo";
+import BrandLockup from "@/components/brand/BrandLockup";
 import ClubLink from "@/components/site/ClubLink";
 import BrandIcon from "@/components/site/BrandIcon";
 import Icon from "@/components/ui/icon";
@@ -13,7 +13,7 @@ export default function SiteFooter() {
       <div className="container-x py-14">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.3fr]">
           <div>
-            <Logo />
+            <BrandLockup size={34} />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-brand-muted">
               Только надежные инвестиции
             </p>
