@@ -3,10 +3,7 @@ export const COMPANY = {
   short: "ИП Степаненко Вениамин Евгеньевич",
   inn: "540141631953",
   ogrnip: "319547600083076",
-  address: "630010, г. Новосибирск, ул. Севастопольская, д. 57",
   email: "info.jetra@gmail.com",
-  phone: "+7 913 902-87-13",
-  phoneHref: "tel:+79139028713",
   site: "https://jetra.ru",
   support: "https://t.me/copymoney_support",
 };

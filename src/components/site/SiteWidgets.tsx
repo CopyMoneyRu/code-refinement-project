@@ -17,7 +17,7 @@ export default function SiteWidgets() {
     }
   }, []);
 
-  const accept = (value: "all" | "necessary") => {
+  const accept = (value: "all") => {
     try {
       localStorage.setItem(COOKIE_KEY, JSON.stringify({ value, version: DOC_VERSION, at: new Date().toISOString() }));
     } catch {
@@ -54,15 +54,9 @@ export default function SiteWidgets() {
           <div className="mt-4 flex gap-2">
             <button
               onClick={() => accept("all")}
-              className="flex-1 rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#3271B0]"
+              className="w-full rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#3271B0]"
             >
               Принять
-            </button>
-            <button
-              onClick={() => accept("necessary")}
-              className="flex-1 rounded-lg border border-brand-ink/15 px-4 py-2.5 text-sm font-medium text-brand-ink hover:bg-brand-light"
-            >
-              Только необходимые
             </button>
           </div>
         </div>

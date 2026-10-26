@@ -65,15 +65,9 @@ export default function LegalPage({ title, text, current }: { title: string; tex
                 <br />
                 ИНН: {COMPANY.inn} · ОГРНИП: {COMPANY.ogrnip}
                 <br />
-                Адрес регистрации: {COMPANY.address}
-                <br />
                 Email:{" "}
                 <a href={`mailto:${COMPANY.email}`} className="text-brand-blue hover:underline">
                   {COMPANY.email}
-                </a>{" "}
-                · Телефон:{" "}
-                <a href={COMPANY.phoneHref} className="text-brand-blue hover:underline">
-                  {COMPANY.phone}
                 </a>
               </div>
             </div>

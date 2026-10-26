@@ -59,11 +59,6 @@ export default function SiteFooter() {
                   <Icon name="Mail" size={16} className="text-brand-blue" /> {COMPANY.email}
                 </a>
               </li>
-              <li>
-                <a href={COMPANY.phoneHref} className="inline-flex items-center gap-2 hover:text-brand-ink">
-                  <Icon name="Phone" size={16} className="text-brand-blue" /> {COMPANY.phone}
-                </a>
-              </li>
             </ul>
             <a
               href={COMPANY.support}
@@ -81,8 +76,6 @@ export default function SiteFooter() {
             {COMPANY.short}
             <br />
             ИНН {COMPANY.inn} · ОГРНИП {COMPANY.ogrnip}
-            <br />
-            {COMPANY.address}
           </div>
           <div className="md:text-right">
             Материалы платформы носят информационный и образовательный характер и не являются индивидуальной инвестиционной рекомендацией.
