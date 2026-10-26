@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
+import AuthorAvatar from "@/components/university/AuthorAvatar";
 import { courseMinutes, formatDuration, formatPrice, lessonsTotal, type CourseProgress, type DbCourse } from "@/lib/courses";
 
 export function AccessBadge({ access, price }: { access: DbCourse["access"]; price?: number }) {
@@ -80,7 +81,17 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           </div>
         )}
         <div className="mt-6 flex items-center justify-between border-t border-brand-ink/10 pt-5">
-          <span className="text-sm text-brand-muted">{c.author?.name ?? "JETRA University"}</span>
+          {c.author ? (
+            <span className="flex min-w-0 items-center gap-3">
+              <AuthorAvatar name={c.author.name} photoUrl={c.author.photoUrl} className="h-9 w-9 shrink-0" textClassName="text-xs" />
+              <span className="min-w-0 text-sm leading-snug">
+                <span className="text-brand-muted">Автор: </span>
+                <span className="font-medium text-brand-ink">{c.author.name}</span>
+              </span>
+            </span>
+          ) : (
+            <span className="text-sm text-brand-muted">JETRA University</span>
+          )}
           <Icon name="ArrowUpRight" size={18} className="text-brand-blue transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </div>
       </div>
