@@ -14,9 +14,6 @@ export default function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.3fr]">
           <div>
             <BrandLockup size={34} />
-            <p className="mt-5 max-w-xs text-sm leading-relaxed text-brand-muted">
-              Только надежные инвестиции
-            </p>
             <div className="mt-6 flex gap-2.5">
               {SOCIALS.map((s) => (
                 <a
