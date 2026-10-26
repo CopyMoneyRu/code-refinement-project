@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import BrandLockup from "@/components/brand/BrandLockup";
 import BrandIcon from "@/components/site/BrandIcon";
+import ClubLink from "@/components/site/ClubLink";
 import Icon from "@/components/ui/icon";
 import { COMPANY, LEGAL_DOCS, SOCIALS } from "@/lib/company";
 
@@ -28,6 +29,9 @@ export default function SiteFooter() {
                 </a>
               ))}
             </div>
+            <ClubLink className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-blue hover:text-brand-ink">
+              <Icon name="Users" size={16} /> Клуб CAPITALIST <Icon name="ArrowUpRight" size={15} />
+            </ClubLink>
           </div>
 
           <div className="flex flex-col items-center">
