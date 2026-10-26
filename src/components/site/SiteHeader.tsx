@@ -25,7 +25,12 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
       <div className="container-x">
         <div className="relative flex h-[64px] items-center justify-between gap-2 border-b border-brand-ink/10 md:h-[88px]">
           <Logo withWordmark={false} size={34} className="shrink-0 md:hidden" />
-          <Logo className="hidden md:inline-flex" />
+          <div className="hidden flex-col items-start md:flex">
+            <Logo size={34} />
+            <span className="mt-1 pl-0.5 text-[11px] font-medium uppercase tracking-[0.22em] text-brand-muted">
+              Надежные инвестиции
+            </span>
+          </div>
 
           <nav className="flex min-w-0 items-center gap-1 md:hidden">
             {NAV.map((item) => (
