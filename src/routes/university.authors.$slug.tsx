@@ -1,8 +1,10 @@
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import CourseCard from "@/components/university/CourseCard";
 import Icon from "@/components/ui/icon";
+import { cn } from "@/lib/utils";
 import { authorBySlugFn, lessonsTotal, type AuthorLink } from "@/lib/courses";
 
 export const Route = createFileRoute("/university/authors/$slug")({
@@ -40,6 +42,18 @@ const linkIcon = (l: AuthorLink) => LINK_ICONS.find(([re]) => re.test(l.url))?.[
 function AuthorPage() {
   const { author, courses } = Route.useLoaderData();
   const lessons = courses.reduce((n, c) => n + lessonsTotal(c), 0);
+  const cats = useMemo(() => {
+    const map = new Map<string, { key: string; name: string; count: number }>();
+    for (const c of courses) {
+      const list = c.categories.length ? c.categories.map((x) => ({ key: String(x.id), name: x.name })) : c.category ? [{ key: c.category, name: c.category }] : [];
+      for (const x of list) map.set(x.key, { ...x, count: (map.get(x.key)?.count ?? 0) + 1 });
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "ru"));
+  }, [courses]);
+  const [cat, setCat] = useState<string | null>(null);
+  const shown = cat
+    ? courses.filter((c) => (c.categories.length ? c.categories.some((x) => String(x.id) === cat) : c.category === cat))
+    : courses;
   const paragraphs = (author.about || author.bio)
     .split(/\n\s*\n/)
     .map((p) => p.trim())
@@ -75,6 +89,28 @@ function AuthorPage() {
                     <div className="text-sm text-brand-muted">уроков</div>
                   </div>
                 </div>
+
+                {cats.length > 0 && (
+                  <div className="mt-6 border-t border-brand-ink/10 pt-6 text-left">
+                    <div className="text-sm font-medium text-brand-ink">Категории обучений</div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {cats.map((x) => (
+                        <button
+                          key={x.key}
+                          type="button"
+                          onClick={() => setCat(cat === x.key ? null : x.key)}
+                          className={cn(
+                            "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                            cat === x.key ? "bg-brand-blue text-white" : "bg-brand-surface text-brand-ink hover:bg-brand-blue/10",
+                          )}
+                        >
+                          {x.name}
+                          <span className={cn("text-xs", cat === x.key ? "text-white/75" : "text-brand-ink/45")}>{x.count}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {author.links.length > 0 && (
                   <div className="mt-6 space-y-2 border-t border-brand-ink/10 pt-6 text-left">
@@ -120,9 +156,18 @@ function AuthorPage() {
               )}
 
               <div className={author.facts.length > 0 || paragraphs.length > 0 ? "mt-14" : ""}>
-                <h2 className="font-display text-2xl font-semibold text-brand-ink">Обучения автора</h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="font-display text-2xl font-semibold text-brand-ink">
+                    Обучения автора{cat && <span className="text-brand-muted"> · {cats.find((x) => x.key === cat)?.name}</span>}
+                  </h2>
+                  {cat && (
+                    <button type="button" onClick={() => setCat(null)} className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-brand-ink">
+                      <Icon name="X" size={15} /> Показать все
+                    </button>
+                  )}
+                </div>
                 <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                  {courses.map((c) => (
+                  {shown.map((c) => (
                     <CourseCard key={c.id} c={c} />
                   ))}
                 </div>

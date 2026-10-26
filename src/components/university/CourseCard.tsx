@@ -97,7 +97,6 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           ) : (
             <span className="text-sm text-brand-muted">JETRA University</span>
           )}
-          <Icon name="ArrowUpRight" size={18} className="text-brand-blue transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </div>
       </div>
     </div>
