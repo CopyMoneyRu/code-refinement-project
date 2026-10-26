@@ -37,7 +37,11 @@ function UniversityPage() {
   );
   const [cat, setCat] = useState<number>(0);
   const [author, setAuthor] = useState<number | null>(null);
-  const selected = AUTHORS.find((a) => a.id === author) ?? null;
+  const visibleAuthors = useMemo(
+    () => (cat ? AUTHORS.filter((a) => COURSES.some((c) => c.author?.id === a.id && c.categories.some((x) => x.id === cat))) : AUTHORS),
+    [AUTHORS, COURSES, cat],
+  );
+  const selected = visibleAuthors.find((a) => a.id === author) ?? null;
 
   const list = useMemo(
     () =>
@@ -60,7 +64,10 @@ function UniversityPage() {
                 return (
                   <button
                     key={c.id}
-                    onClick={() => setCat(c.id)}
+                    onClick={() => {
+                      setCat(c.id);
+                      if (author && c.id && !COURSES.some((x) => x.author?.id === author && x.categories.some((y) => y.id === c.id))) setAuthor(null);
+                    }}
                     className={cn(
                       "inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm transition-colors",
                       active ? "bg-brand-blue text-white" : "bg-white text-brand-muted hover:text-brand-ink",
@@ -78,7 +85,7 @@ function UniversityPage() {
             <h2 className="font-display text-xl font-semibold text-brand-ink">Авторы</h2>
             <div className="-mx-1 mt-5 flex gap-3 overflow-x-auto px-1 pb-1">
                 <AuthorChip active={!author} onClick={() => setAuthor(null)} name="Все авторы" />
-                {AUTHORS.map((a) => (
+                {visibleAuthors.map((a) => (
                   <AuthorChip
                     key={a.id}
                     active={author === a.id}
