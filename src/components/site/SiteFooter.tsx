@@ -15,7 +15,7 @@ export default function SiteFooter() {
           <div>
             <Logo />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-brand-muted">
-              Технологическая платформа для инвестиций и управления капиталом.
+              Только надежные инвестиции
             </p>
             <div className="mt-6 flex gap-2.5">
               {SOCIALS.map((s) => (
