@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 
@@ -14,12 +15,12 @@ const R = 70;
 const C = 2 * Math.PI * R;
 const GAP = 3;
 
-function Donut() {
+function Donut({ shown }: { shown: boolean }) {
   let offset = 0;
   return (
     <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
       <circle cx="100" cy="100" r={R} fill="none" stroke="#EEF3F9" strokeWidth="24" />
-      {ITEMS.map((it) => {
+      {ITEMS.map((it, i) => {
         const len = (it.share / 100) * C;
         const el = (
           <circle
@@ -30,8 +31,10 @@ function Donut() {
             fill="none"
             stroke={it.color}
             strokeWidth="24"
-            strokeDasharray={`${Math.max(len - GAP, 0)} ${C}`}
+            strokeDasharray={`${shown ? Math.max(len - GAP, 0) : 0} ${C}`}
             strokeDashoffset={-offset}
+            className="motion-reduce:!transition-none"
+            style={{ transition: `stroke-dasharray 700ms cubic-bezier(0.4,0,0.2,1) ${i * 140}ms` }}
           />
         );
         offset += len;
@@ -44,7 +47,7 @@ function Donut() {
 const SERIES = [100, 103, 101, 106, 109, 107, 112, 111, 115, 113, 117, 116, 118.4];
 const MONTHS = ["ноя", "янв", "мар", "май", "июл", "сен"];
 
-function GrowthChart() {
+function GrowthChart({ shown }: { shown: boolean }) {
   const w = 600;
   const h = 150;
   const min = 98;
@@ -53,7 +56,13 @@ function GrowthChart() {
   const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
   return (
     <div>
-      <svg viewBox={`0 -8 ${w} ${h + 16}`} preserveAspectRatio="none" className="h-[120px] w-full sm:h-[140px]" aria-hidden>
+      <svg
+        viewBox={`0 -8 ${w} ${h + 16}`}
+        preserveAspectRatio="none"
+        className="h-[120px] w-full transition-[clip-path] duration-[1400ms] ease-out motion-reduce:transition-none sm:h-[140px]"
+        style={{ clipPath: shown ? "inset(0 0 0 0)" : "inset(0 100% 0 0)" }}
+        aria-hidden
+      >
         <defs>
           <linearGradient id="pf-area" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#397FC4" stopOpacity="0.28" />
@@ -78,8 +87,30 @@ function GrowthChart() {
 const pct = (v: number) => `${v > 0 ? "+" : ""}${v.toLocaleString("ru-RU", { minimumFractionDigits: 1 })}%`;
 
 export default function PortfolioShowcase() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) {
+      setShown(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setShown(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.3 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <div className="relative mx-auto mt-12 max-w-5xl">
+    <div ref={ref} className="relative mx-auto mt-12 max-w-5xl">
       <div aria-hidden className="absolute -inset-x-6 -inset-y-8 rounded-[48px] bg-gradient-to-br from-brand-blue/10 via-transparent to-[#8EC3F0]/20 blur-2xl" />
       <div className="relative overflow-hidden rounded-[28px] border border-brand-ink/[0.06] bg-white shadow-[0_30px_80px_-40px_rgba(23,38,60,0.4)]">
         <div className="flex items-center justify-between gap-3 border-b border-brand-ink/[0.06] px-4 py-3 sm:px-7 sm:py-4">
@@ -134,7 +165,7 @@ export default function PortfolioShowcase() {
                 ))}
               </span>
             </div>
-            <GrowthChart />
+            <GrowthChart shown={shown} />
           </div>
         </div>
 
@@ -145,7 +176,7 @@ export default function PortfolioShowcase() {
           </div>
           <div className="grid items-center gap-8 md:grid-cols-[200px_1fr] md:gap-10">
             <div className="relative mx-auto aspect-square w-[180px] md:w-full">
-              <Donut />
+              <Donut shown={shown} />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-xs text-brand-muted">Направлений</span>
                 <span className="font-display text-3xl font-semibold text-brand-ink">6</span>
