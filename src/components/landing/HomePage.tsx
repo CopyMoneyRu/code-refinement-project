@@ -264,7 +264,7 @@ function FinalCta() {
           <div aria-hidden className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#8EC3F0]/20 blur-3xl" />
           <img src="/brand/jetra-mark.png" alt="" className="relative mx-auto h-14 w-auto" />
           <h2 className="relative mx-auto mt-6 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-brand-ink md:text-[44px]">
-            Начните создавать капитал с&nbsp;JETRA
+            Начните создавать <span className="whitespace-nowrap">капитал с <img src="/brand/jetra-wordmark.png" alt="JETRA" width={866} height={155} className="inline-block h-[0.72em] w-auto align-baseline" /></span>
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-[17px] text-brand-muted">Знания, стратегии и инвестиционное сообщество — в одной экосистеме.</p>
           <StartLink className={cn(btnPrimary, "relative mt-9 px-7 py-4")}>
