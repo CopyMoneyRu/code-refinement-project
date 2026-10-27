@@ -134,8 +134,8 @@ function Steps() {
         />
         <StepsPath />
         <div className="mx-auto mt-12 flex max-w-sm flex-col gap-3 md:mt-14 lg:max-w-none lg:flex-row lg:justify-center">
-          <StartLink className={btnPrimary}>
-            Присоединиться к JETRA <Icon name="ArrowRight" size={18} />
+          <StartLink className={cn(btnPrimary, "cta-pulse")}>
+            Присоединиться к JETRA
           </StartLink>
           <Link to="/strategies" className={btnGhost}>
             <Icon name="LineChart" size={18} /> Посмотреть стратегии
