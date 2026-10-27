@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
 import AuthLayout, { FormAlert } from "@/components/auth/AuthLayout";
 import Icon from "@/components/ui/icon";
+import { afterAuthPath, takeRememberedRedirect } from "@/lib/requireAuth";
 import { oauthFinishFn } from "@/lib/oauth";
 
 export const Route = createFileRoute("/oauth/$provider")({
@@ -36,7 +37,7 @@ function OAuthCallback() {
     oauthFinishFn({ data: { provider: "google", code, state } }).then(async (r) => {
       if (!r.ok) return setMessage(r.message);
       await router.invalidate();
-      navigate({ to: r.role === "user" ? "/cabinet" : "/admin", replace: true });
+      navigate({ href: afterAuthPath(r.role, takeRememberedRedirect()), replace: true });
     });
   }, [provider, code, state, error, navigate, router]);
 

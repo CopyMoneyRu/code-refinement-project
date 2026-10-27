@@ -1,13 +1,14 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { FormAlert } from "@/components/auth/AuthLayout";
+import { rememberRedirect } from "@/lib/requireAuth";
 import { oauthStartFn, type Provider } from "@/lib/oauth";
 
 const META: Record<Provider, { label: string; badge: string; badgeClass: string }> = {
   google: { label: "Google", badge: "G", badgeClass: "bg-white text-[#4285F4] border border-brand-ink/10" },
 };
 
-export default function SocialLogin({ providers }: { providers: Provider[] }) {
+export default function SocialLogin({ providers, redirectTo }: { providers: Provider[]; redirectTo?: string }) {
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState("");
 
@@ -17,7 +18,10 @@ export default function SocialLogin({ providers }: { providers: Provider[] }) {
     setBusy(p);
     setError("");
     const r = await oauthStartFn({ data: { provider: p } });
-    if (r.ok) window.location.href = r.url;
+    if (r.ok) {
+      rememberRedirect(redirectTo);
+      window.location.href = r.url;
+    }
     else {
       setBusy(null);
       setError(r.message);

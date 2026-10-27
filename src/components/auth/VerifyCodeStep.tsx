@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import AuthLayout, { FormAlert, SubmitButton } from "@/components/auth/AuthLayout";
 import CodeInput from "@/components/auth/CodeInput";
+import { afterAuthPath } from "@/lib/requireAuth";
 import { resendFn, verifyEmailFn } from "@/lib/auth";
 
 const RESEND_SECONDS = 60;
 
-export default function VerifyCodeStep({ email, sent = true, onBack }: { email: string; sent?: boolean; onBack: () => void }) {
+export default function VerifyCodeStep({ email, sent = true, onBack, redirectTo }: { email: string; sent?: boolean; onBack: () => void; redirectTo?: string }) {
   const navigate = useNavigate();
   const router = useRouter();
   const [code, setCode] = useState("");
@@ -38,7 +39,7 @@ export default function VerifyCodeStep({ email, sent = true, onBack }: { email: 
       return;
     }
     await router.invalidate();
-    navigate({ to: r.role && r.role !== "user" ? "/admin" : "/cabinet" });
+    navigate({ href: afterAuthPath(r.role, redirectTo) });
   };
 
   const resend = async () => {

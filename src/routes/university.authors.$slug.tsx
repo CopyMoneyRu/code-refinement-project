@@ -1,3 +1,4 @@
+import { requireAuth } from "@/lib/requireAuth";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { authorBySlugFn, lessonsTotal, type AuthorLink } from "@/lib/courses";
 
 export const Route = createFileRoute("/university/authors/$slug")({
+  beforeLoad: requireAuth,
   loader: ({ params }) => authorBySlugFn({ data: { slug: params.slug } }),
   head: ({ loaderData }) => {
     const a = loaderData?.author;

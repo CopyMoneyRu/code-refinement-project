@@ -1,3 +1,4 @@
+import { requireAuth } from "@/lib/requireAuth";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
@@ -8,6 +9,7 @@ import { catalogFn } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/university/")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "JETRA University — обучение инвестициям" },

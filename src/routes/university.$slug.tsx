@@ -1,3 +1,4 @@
+import { requireAuth } from "@/lib/requireAuth";
 import { createFileRoute, getRouteApi, Link, notFound } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import { AccessBadge } from "@/components/university/CourseCard";
@@ -7,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { courseBySlugFn, formatPrice, lessonsTotal } from "@/lib/courses";
 
 export const Route = createFileRoute("/university/$slug")({
+  beforeLoad: requireAuth,
   loader: async ({ params }) => {
     const course = await courseBySlugFn({ data: { slug: params.slug } });
     if (!course) throw notFound();

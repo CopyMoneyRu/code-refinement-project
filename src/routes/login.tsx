@@ -4,13 +4,15 @@ import AuthLayout, { AuthField, FormAlert, SubmitButton } from "@/components/aut
 import SocialLogin from "@/components/auth/SocialLogin";
 import { oauthProvidersFn } from "@/lib/oauth";
 import VerifyCodeStep from "@/components/auth/VerifyCodeStep";
+import { afterAuthPath, authSearch } from "@/lib/requireAuth";
 import { getMe, loginFn, resendFn } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Вход — JETRA" }, { name: "description", content: "Вход в личный кабинет JETRA." }] }),
-  beforeLoad: async () => {
+  validateSearch: authSearch,
+  beforeLoad: async ({ search }) => {
     const user = await getMe();
-    if (user) throw redirect({ to: user.role !== "user" ? "/admin" : "/cabinet" });
+    if (user) throw redirect({ href: afterAuthPath(user.role, search.redirect) });
   },
   loader: () => oauthProvidersFn(),
   component: LoginPage,
@@ -20,6 +22,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function LoginPage() {
   const providers = Route.useLoaderData();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -47,7 +50,7 @@ function LoginPage() {
       return;
     }
     await router.invalidate();
-    navigate({ to: r.role && r.role !== "user" ? "/admin" : "/cabinet" });
+    navigate({ href: afterAuthPath(r.role, search.redirect) });
   };
 
   const resend = async () => {
@@ -58,11 +61,11 @@ function LoginPage() {
     setVerifyFor(email.trim());
   };
 
-  if (verifyFor) return <VerifyCodeStep email={verifyFor} onBack={() => setVerifyFor("")} />;
+  if (verifyFor) return <VerifyCodeStep email={verifyFor} redirectTo={search.redirect} onBack={() => setVerifyFor("")} />;
 
   return (
     <AuthLayout title="Вход" subtitle="Войдите в личный кабинет JETRA">
-      <SocialLogin providers={providers} />
+      <SocialLogin providers={providers} redirectTo={search.redirect} />
       <form onSubmit={submit} className="space-y-5" noValidate>
         <AuthField label="Email" type="email" autoComplete="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
         <AuthField label="Пароль" type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} />
@@ -86,7 +89,7 @@ function LoginPage() {
         <SubmitButton loading={loading}>Войти</SubmitButton>
       </form>
       <p className="mt-8 text-center text-sm text-brand-muted">
-        Нет аккаунта? <Link to="/register" className="font-medium text-brand-blue hover:underline">Зарегистрироваться</Link>
+        Нет аккаунта? <Link to="/register" search={search} className="font-medium text-brand-blue hover:underline">Зарегистрироваться</Link>
       </p>
     </AuthLayout>
   );

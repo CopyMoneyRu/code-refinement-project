@@ -4,13 +4,15 @@ import AuthLayout, { AuthField, FormAlert, SubmitButton } from "@/components/aut
 import SocialLogin from "@/components/auth/SocialLogin";
 import { oauthProvidersFn } from "@/lib/oauth";
 import VerifyCodeStep from "@/components/auth/VerifyCodeStep";
+import { afterAuthPath, authSearch } from "@/lib/requireAuth";
 import { getMe, registerFn } from "@/lib/auth";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Регистрация — JETRA" }, { name: "description", content: "Создайте аккаунт на платформе JETRA." }] }),
-  beforeLoad: async () => {
+  validateSearch: authSearch,
+  beforeLoad: async ({ search }) => {
     const user = await getMe();
-    if (user) throw redirect({ to: user.role !== "user" ? "/admin" : "/cabinet" });
+    if (user) throw redirect({ href: afterAuthPath(user.role, search.redirect) });
   },
   loader: () => oauthProvidersFn(),
   component: RegisterPage,
@@ -20,6 +22,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function RegisterPage() {
   const providers = Route.useLoaderData();
+  const search = Route.useSearch();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [consent, setConsent] = useState({ personalData: false, terms: false, marketing: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,11 +57,11 @@ function RegisterPage() {
     setDone({ email: form.email.trim(), sent: r.emailSent !== false });
   };
 
-  if (done) return <VerifyCodeStep email={done.email} sent={done.sent} onBack={() => setDone(null)} />;
+  if (done) return <VerifyCodeStep email={done.email} redirectTo={search.redirect} sent={done.sent} onBack={() => setDone(null)} />;
 
   return (
     <AuthLayout title="Регистрация" subtitle="Создайте аккаунт по email и паролю">
-      <SocialLogin providers={providers} />
+      <SocialLogin providers={providers} redirectTo={search.redirect} />
       <form onSubmit={submit} className="space-y-5" noValidate>
         <AuthField label="Имя" autoComplete="name" value={form.name} onChange={set("name")} error={errors.name} />
         <AuthField label="Email" type="email" autoComplete="email" placeholder="name@example.com" value={form.email} onChange={set("email")} error={errors.email} />
@@ -89,7 +92,7 @@ function RegisterPage() {
         {taken && (
           <FormAlert tone="error">
             Этот email уже зарегистрирован — код подтверждения больше не нужен.{" "}
-            <Link to="/login" className="font-medium underline">Войдите с паролем</Link>
+            <Link to="/login" search={search} className="font-medium underline">Войдите с паролем</Link>
             {" или "}
             <Link to="/forgot-password" className="font-medium underline">восстановите пароль</Link>.
           </FormAlert>
@@ -97,7 +100,7 @@ function RegisterPage() {
         <SubmitButton loading={loading}>Создать аккаунт</SubmitButton>
       </form>
       <p className="mt-8 text-center text-sm text-brand-muted">
-        Уже есть аккаунт? <Link to="/login" className="font-medium text-brand-blue hover:underline">Войти</Link>
+        Уже есть аккаунт? <Link to="/login" search={search} className="font-medium text-brand-blue hover:underline">Войти</Link>
       </p>
     </AuthLayout>
   );
