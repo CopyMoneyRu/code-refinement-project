@@ -32,7 +32,7 @@ function path(values: number[], w: number, h: number) {
 function Spark({ values, color = "#397FC4", className }: { values: number[]; color?: string; className?: string }) {
   return (
     <svg viewBox="0 0 100 30" preserveAspectRatio="none" className={cn("shrink-0", className)} aria-hidden>
-      <path d={path(values, 100, 30)} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      <path d={path(values, 100, 30)} fill="none" stroke={color} strokeWidth="1.25" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
@@ -46,11 +46,11 @@ function rng(seed: number) {
   };
 }
 
-function series(seed: number, n: number, total: number, dips: { from: number; to: number; depth: number }[]) {
+function series(seed: number, n: number, total: number, dips: { from: number; to: number; depth: number }[], vol = 1) {
   const r = rng(seed);
   const raw: number[] = [0];
   for (let i = 1; i < n; i++) {
-    let step = (r() - 0.5) * 0.02 + (r() < 0.04 ? (r() - 0.5) * 0.035 : 0);
+    let step = ((r() - 0.5) * 0.02 + (r() < 0.04 ? (r() - 0.5) * 0.035 : 0)) * vol;
     for (const d of dips) {
       const len = d.to - d.from;
       if (i > d.from && i <= d.to) step -= d.depth / len;
@@ -68,8 +68,8 @@ const MAIN = series(11, 180, 0.246, [
 ]);
 
 const STRATS = [
-  { name: "Технологии США", y: 21.3, v: [10, 12, 11, 15, 14, 18, 21] },
-  { name: "Облигационный доход", y: 11.8, v: [10, 11, 11.5, 12.2, 12.8, 13.4, 14] },
+  { name: "Технологии США", y: 21.3, v: series(37, 90, 0.213, [{ from: 30, to: 42, depth: 0.08 }]) },
+  { name: "Облигационный доход", y: 11.8, v: series(53, 90, 0.118, [{ from: 55, to: 60, depth: 0.012 }], 0.25) },
 ];
 
 function StrategiesMock() {
@@ -108,7 +108,7 @@ function StrategiesMock() {
       {STRATS.map((s) => (
         <div key={s.name} className="flex items-center gap-2.5 rounded-xl bg-white px-3 py-2 shadow-sm">
           <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-brand-ink">{s.name}</span>
-          <Spark values={s.v} color="#17263C80" className="hidden h-5 w-12 min-[400px]:block" />
+          <Spark values={s.v} color="#397FC4" className="hidden h-6 w-16 min-[400px]:block" />
           <span className="w-12 shrink-0 text-right text-xs font-semibold text-emerald-600">+{s.y.toLocaleString("ru-RU")}%</span>
         </div>
       ))}
