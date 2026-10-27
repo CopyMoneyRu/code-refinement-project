@@ -188,7 +188,7 @@ function Steps() {
   return (
     <section className="bg-white py-16 md:py-24">
       <div className="container-x">
-        <SectionHead center title="Три шага к вашему капиталу" />
+        <SectionHead center title="Начните создавать капитал с JETRA" />
         <div className="relative mt-12 grid gap-5 md:grid-cols-3">
           <div aria-hidden className="absolute left-[16%] right-[16%] top-8 hidden h-px bg-gradient-to-r from-brand-blue/0 via-brand-blue/40 to-brand-blue/0 md:block" />
           {STEPS.map((s, i) => (
