@@ -6,7 +6,8 @@ import Icon from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import CapitalCalculator from "./CapitalCalculator";
 import PortfolioShowcase from "./PortfolioShowcase";
-import { CommunityArt, EducationArt, HeroArt, PortfolioArt } from "./Illustrations";
+import { HeroArt } from "./Illustrations";
+import EcosystemShowcase from "./EcosystemShowcase";
 
 const rootApi = getRouteApi("__root__");
 
@@ -87,60 +88,12 @@ function Hero() {
   );
 }
 
-function EcoCard({ art: Art, title, text, cta, icon, wrap }: { art: (p: { className?: string }) => ReactNode; title: string; text: string; cta: string; icon: string; wrap: (cls: string, children: ReactNode) => ReactNode }) {
-  return (
-    <div className="group flex flex-col overflow-hidden rounded-[24px] border border-brand-ink/[0.06] bg-white transition-shadow hover:shadow-[0_30px_60px_-35px_rgba(23,38,60,0.4)]">
-      <div className="relative aspect-[16/10] overflow-hidden">
-        <Art className="h-full w-full transition-transform duration-500 group-hover:scale-105" />
-        <span className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-brand-blue shadow-sm backdrop-blur">
-          <Icon name={icon} size={20} />
-        </span>
-      </div>
-      <div className="flex flex-1 flex-col p-6">
-        <h3 className="font-display text-sm font-semibold uppercase tracking-[0.16em] text-brand-ink">{title}</h3>
-        <p className="mt-3 flex-1 text-[15px] leading-relaxed text-brand-muted">{text}</p>
-        {wrap(
-          "mt-6 inline-flex items-center gap-2 self-start text-[15px] font-medium text-brand-blue transition-colors hover:text-brand-ink",
-          <>
-            {cta} <Icon name="ArrowRight" size={17} className="transition-transform group-hover:translate-x-1" />
-          </>,
-        )}
-      </div>
-    </div>
-  );
-}
-
 function Ecosystem() {
   return (
     <section id="ecosystem" className="scroll-mt-24 py-16 md:py-24">
       <div className="container-x">
         <SectionHead wide title="Всё для капитала в одном месте." />
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          <EcoCard
-            art={PortfolioArt}
-            icon="PieChart"
-            title="Стратегии"
-            text="Изучайте различные подходы к инвестированию и выбирайте направления, соответствующие вашим целям."
-            cta="Смотреть стратегии"
-            wrap={(cls, ch) => <Link to="/strategies" className={cls}>{ch}</Link>}
-          />
-          <EcoCard
-            art={EducationArt}
-            icon="GraduationCap"
-            title="Университет"
-            text="Получайте знания от инвесторов, экспертов и авторов образовательных программ."
-            cta="Перейти к обучению"
-            wrap={(cls, ch) => <Link to="/university" className={cls}>{ch}</Link>}
-          />
-          <EcoCard
-            art={CommunityArt}
-            icon="Users"
-            title="Сообщество"
-            text="Общайтесь с единомышленниками, изучайте инвестиционные идеи и развивайте финансовое мышление."
-            cta="Подробнее"
-            wrap={(cls, ch) => <ClubLink className={cls}>{ch}</ClubLink>}
-          />
-        </div>
+        <EcosystemShowcase />
       </div>
     </section>
   );
