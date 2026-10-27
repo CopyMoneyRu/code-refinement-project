@@ -128,7 +128,7 @@ function Ecosystem() {
   return (
     <section id="ecosystem" className="scroll-mt-24 py-16 md:py-24">
       <div className="container-x">
-        <SectionHead wide title="Всё для капитала. В одном месте." />
+        <SectionHead wide title="Всё для капитала в одном месте." />
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           <EcoCard
             art={PortfolioArt}
