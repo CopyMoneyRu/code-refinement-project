@@ -5,19 +5,11 @@ import ClubLink from "@/components/site/ClubLink";
 import Icon from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import CapitalCalculator from "./CapitalCalculator";
+import PortfolioShowcase from "./PortfolioShowcase";
 import { CommunityArt, EducationArt, HeroArt, PortfolioArt } from "./Illustrations";
 
 const rootApi = getRouteApi("__root__");
 
-
-const MARKETS = [
-  { title: "Российский рынок", text: "Российские компании и финансовые инструменты", icon: "Building2" },
-  { title: "Рынок США", text: "Международные компании и американский фондовый рынок", icon: "Globe2" },
-  { title: "Акции", text: "Участие в капитале компаний", icon: "TrendingUp" },
-  { title: "Облигации", text: "Инструменты с установленными условиями процентных выплат", icon: "Landmark" },
-  { title: "Недвижимость", text: "Жилые и коммерческие объекты", icon: "Building" },
-  { title: "Криптовалюты", text: "Цифровые активы", icon: "Cpu" },
-];
 
 const STEPS = [
   { title: "Зарегистрируйтесь", text: "Создайте бесплатный личный кабинет JETRA.", icon: "UserPlus" },
@@ -173,21 +165,7 @@ function Markets() {
             </>
           }
           text="Исследуйте инвестиционные направления и находите подходящие решения для своего капитала." />
-        <div className="-mx-5 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-3 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
-          {MARKETS.map((m, i) => (
-            <div
-              key={m.title}
-              className="relative min-w-[78%] snap-start overflow-hidden rounded-[22px] bg-gradient-to-br from-brand-light to-brand-surface p-6 sm:min-w-0 md:p-7"
-            >
-              <Icon name={m.icon} size={150} strokeWidth={1} className="pointer-events-none absolute -bottom-8 -right-6 text-brand-blue/[0.09]" />
-              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${i % 2 ? "bg-brand-ink" : "bg-brand-blue"} text-white shadow-sm`}>
-                <Icon name={m.icon} size={22} />
-              </span>
-              <h3 className="mt-10 font-display text-xl font-semibold text-brand-ink">{m.title}</h3>
-              <p className="relative mt-2 text-[15px] leading-relaxed text-brand-muted">{m.text}</p>
-            </div>
-          ))}
-        </div>
+        <PortfolioShowcase />
       </div>
     </section>
   );
