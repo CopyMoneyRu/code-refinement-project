@@ -165,10 +165,8 @@ function CommunityMock() {
     <div className="space-y-2">
       <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm">
         <span className="flex -space-x-2">
-          {["И", "Д", "А", "М"].map((l, i) => (
-            <span key={l} className="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-2 ring-white" style={{ background: ["#397FC4", "#17263C", "#5C9BD8", "#2D4A72"][i] }}>
-              {l}
-            </span>
+          {[1, 2, 3, 4].map((n) => (
+            <img key={n} src={`/landing/member-${n}.jpg`} alt="" width={28} height={28} loading="lazy" className="h-7 w-7 rounded-full object-cover ring-2 ring-white" />
           ))}
         </span>
         <span className="text-right">
@@ -178,7 +176,7 @@ function CommunityMock() {
       </div>
       <div className="rounded-xl bg-white p-3 shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#397FC4] text-[10px] font-semibold text-white">И</span>
+          <img src="/landing/founder.jpg" alt="" width={24} height={24} loading="lazy" className="h-6 w-6 rounded-full object-cover" />
           <span className="text-[12px] font-semibold text-brand-ink">Идея недели</span>
           <span className="ml-auto rounded-md bg-brand-blue/10 px-1.5 py-0.5 text-[10px] font-medium text-brand-blue">Акции РФ</span>
         </div>
