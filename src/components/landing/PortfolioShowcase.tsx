@@ -44,38 +44,81 @@ function Donut({ shown }: { shown: boolean }) {
   );
 }
 
-const SERIES = [100, 103, 101, 106, 109, 107, 112, 111, 115, 113, 117, 116, 118.4];
+function rng(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const START = 2.099;
+const END = 2.4853;
+const N = 200;
+const DIPS = [
+  { from: 52, to: 70, depth: 0.06 },
+  { from: 132, to: 146, depth: 0.045 },
+];
+
+const SERIES = (() => {
+  const r = rng(23);
+  const raw: number[] = [0];
+  for (let i = 1; i < N; i++) {
+    let step = (r() - 0.5) * 0.016 + (r() < 0.04 ? (r() - 0.5) * 0.028 : 0);
+    for (const d of DIPS) {
+      const len = d.to - d.from;
+      if (i > d.from && i <= d.to) step -= d.depth / len;
+      if (i > d.to && i <= d.to + len * 1.4) step += (d.depth * 0.6) / (len * 1.4);
+    }
+    raw.push(raw[i - 1] + step);
+  }
+  const drift = (Math.log(END / START) - raw[N - 1]) / (N - 1);
+  return raw.map((v, i) => START * Math.exp(v + drift * i));
+})();
+
+const MIN = 1.95;
+const MAX = 2.6;
+const TICKS = [2, 2.2, 2.4, 2.6];
 const MONTHS = ["ноя", "янв", "мар", "май", "июл", "сен"];
 
 function GrowthChart({ shown }: { shown: boolean }) {
   const w = 600;
   const h = 150;
-  const min = 98;
-  const max = 120;
-  const pts = SERIES.map((v, i) => [(i / (SERIES.length - 1)) * w, h - ((v - min) / (max - min)) * h] as const);
-  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const yy = (v: number) => h - ((v - MIN) / (MAX - MIN)) * h;
+  const line = SERIES.map((v, i) => `${i ? "L" : "M"}${((i / (N - 1)) * w).toFixed(1)} ${yy(v).toFixed(1)}`).join(" ");
   return (
     <div>
-      <svg
-        viewBox={`0 -8 ${w} ${h + 16}`}
-        preserveAspectRatio="none"
-        className="h-[120px] w-full transition-[clip-path] duration-[1400ms] ease-out motion-reduce:transition-none sm:h-[140px]"
-        style={{ clipPath: shown ? "inset(0 0 0 0)" : "inset(0 100% 0 0)" }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient id="pf-area" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#397FC4" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#397FC4" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[0.25, 0.5, 0.75].map((k) => (
-          <line key={k} x1="0" x2={w} y1={h * k} y2={h * k} stroke="#17263C" strokeOpacity="0.06" vectorEffect="non-scaling-stroke" />
-        ))}
-        <path d={`${line} L${w} ${h} L0 ${h} Z`} fill="url(#pf-area)" />
-        <path d={line} fill="none" stroke="#397FC4" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-      </svg>
-      <div className="mt-1 flex justify-between text-[11px] text-brand-muted/80">
+      <div className="relative pr-9">
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 text-right text-[10px] text-brand-muted/80">
+          {TICKS.map((t) => (
+            <span key={t} className="absolute right-0 -translate-y-1/2" style={{ top: `${(yy(t) / h) * 100}%` }}>
+              {t.toLocaleString("ru-RU")}M
+            </span>
+          ))}
+        </div>
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          preserveAspectRatio="none"
+          className="h-[120px] w-full overflow-visible transition-[clip-path] duration-[1400ms] ease-out motion-reduce:transition-none sm:h-[140px]"
+          style={{ clipPath: shown ? "inset(0 0 0 0)" : "inset(0 100% 0 0)" }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient id="pf-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#397FC4" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="#397FC4" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {TICKS.map((t) => (
+            <line key={t} x1="0" x2={w} y1={yy(t)} y2={yy(t)} stroke="#17263C" strokeOpacity="0.06" vectorEffect="non-scaling-stroke" />
+          ))}
+          <path d={`${line} L${w} ${h} L0 ${h} Z`} fill="url(#pf-area)" />
+          <path d={line} fill="none" stroke="#397FC4" strokeWidth="1.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <line x1="0" x2={w} y1={yy(END)} y2={yy(END)} stroke="#397FC4" strokeOpacity="0.4" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />
+        </svg>
+      </div>
+      <div className="mt-1 flex justify-between pr-9 text-[11px] text-brand-muted/80">
         {MONTHS.map((m) => (
           <span key={m}>{m}</span>
         ))}
