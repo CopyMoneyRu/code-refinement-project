@@ -133,15 +133,15 @@ function Steps() {
           }
         />
         <StepsPath />
-        <div className="mx-auto mt-12 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center md:mt-14">
+        <div className="mx-auto mt-12 flex max-w-sm flex-col gap-3 md:mt-14 lg:max-w-none lg:flex-row lg:justify-center">
           <StartLink className={btnPrimary}>
             Присоединиться к JETRA <Icon name="ArrowRight" size={18} />
           </StartLink>
           <Link to="/strategies" className={btnGhost}>
-            <Icon name="LineChart" size={18} /> Стратегии
+            <Icon name="LineChart" size={18} /> Посмотреть стратегии
           </Link>
           <Link to="/university" className={btnGhost}>
-            <Icon name="GraduationCap" size={18} /> Университет
+            <Icon name="GraduationCap" size={18} /> Начать обучение
           </Link>
         </div>
       </div>
