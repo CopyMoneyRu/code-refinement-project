@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Logo from "@/components/brand/Logo";
+import BrandLockup from "@/components/brand/BrandLockup";
 import Icon from "@/components/ui/icon";
 
 export function AuthField({
@@ -62,7 +62,7 @@ export default function AuthLayout({ title, subtitle, children }: { title: strin
   return (
     <div className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
       <aside className="relative hidden flex-col justify-between bg-brand-surface p-12 text-brand-ink lg:flex">
-        <Logo />
+        <BrandLockup size={38} className="self-start" />
         <div>
           <h2 className="max-w-md font-display text-[44px] font-light leading-[1.1]">
             Инструменты для <span className="font-bold">создания</span> и управления капиталом
@@ -73,7 +73,7 @@ export default function AuthLayout({ title, subtitle, children }: { title: strin
       </aside>
       <main className="flex flex-col bg-brand-light px-5 py-8 sm:px-10">
         <div className="lg:hidden">
-          <Logo tone="light" />
+          <BrandLockup size={32} />
         </div>
         <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center py-12">
           <h1 className="font-display text-3xl font-bold text-brand-ink">{title}</h1>
