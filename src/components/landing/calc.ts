@@ -52,8 +52,8 @@ export const rub = (v: number) => `${Math.round(v).toLocaleString("ru-RU")} ₽`
 
 export const rubShort = (v: number) => {
   const a = Math.abs(v);
-  if (a >= 1e9) return `${(v / 1e9).toLocaleString("ru-RU", { maximumFractionDigits: 1 })} млрд`;
-  if (a >= 1e6) return `${(v / 1e6).toLocaleString("ru-RU", { maximumFractionDigits: 1 })} млн`;
-  if (a >= 1e3) return `${(v / 1e3).toLocaleString("ru-RU", { maximumFractionDigits: 0 })} тыс`;
+  if (a >= 1e9) return `${(v / 1e9).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}\u00a0млрд`;
+  if (a >= 1e6) return `${(v / 1e6).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}\u00a0млн`;
+  if (a >= 1e3) return `${(v / 1e3).toLocaleString("ru-RU", { maximumFractionDigits: 0 })}\u00a0тыс`;
   return `${Math.round(v)}`;
 };
