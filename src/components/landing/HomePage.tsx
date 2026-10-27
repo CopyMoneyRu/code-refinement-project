@@ -124,7 +124,7 @@ function Steps() {
           center
           wide
           title={
-            <span className="md:whitespace-nowrap">
+            <span className="lg:whitespace-nowrap">
               Развивайте свой капитал{" "}
               <span className="whitespace-nowrap">
                 вместе с <img src="/brand/jetra-wordmark.png" alt="JETRA" width={866} height={155} className="inline-block h-[0.72em] w-auto align-baseline" />
