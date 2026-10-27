@@ -17,12 +17,6 @@ const STEPS = [
   { title: "Начните формировать капитал", text: "Используйте доступные инструменты платформы и следите за появлением новых возможностей.", icon: "Sprout" },
 ];
 
-const TRUST = [
-  { title: "Контроль", text: "Вы самостоятельно принимаете решения о своём капитале.", icon: "SlidersHorizontal" },
-  { title: "Прозрачность", text: "Изучайте условия, особенности и риски инвестиционных направлений.", icon: "Eye" },
-  { title: "Знания", text: "Принимайте решения на основе финансовой грамотности и доступной информации.", icon: "BookOpen" },
-];
-
 const btnPrimary =
   "inline-flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-6 py-3.5 text-[16px] font-medium text-white shadow-[0_12px_30px_-12px_rgba(57,127,196,0.8)] transition-colors hover:bg-[#3271B0]";
 const btnGhost =
@@ -212,48 +206,6 @@ function Steps() {
   );
 }
 
-function Trust() {
-  return (
-    <section className="py-16 md:py-24">
-      <div className="container-x">
-        <SectionHead center title="Капитал требует осознанного подхода" />
-        <div className="mx-auto mt-12 grid max-w-5xl gap-4 sm:grid-cols-3">
-          {TRUST.map((t) => (
-            <div key={t.title} className="rounded-[20px] border border-brand-ink/[0.07] bg-white p-6">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue">
-                <Icon name={t.icon} size={21} />
-              </span>
-              <h3 className="mt-5 font-display text-lg font-semibold text-brand-ink">{t.title}</h3>
-              <p className="mt-1.5 text-[15px] leading-relaxed text-brand-muted">{t.text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FinalCta() {
-  return (
-    <section className="pb-20 md:pb-28">
-      <div className="container-x">
-        <div className="relative overflow-hidden rounded-[32px] border border-brand-ink/[0.06] bg-white px-6 py-14 text-center shadow-[0_30px_80px_-40px_rgba(23,38,60,0.35)] sm:px-12 md:py-20">
-          <div aria-hidden className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-blue/10 blur-3xl" />
-          <div aria-hidden className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#8EC3F0]/20 blur-3xl" />
-          <img src="/brand/jetra-mark.png" alt="" className="relative mx-auto h-14 w-auto" />
-          <h2 className="relative mx-auto mt-6 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-brand-ink md:text-[44px]">
-            Начните создавать <span className="whitespace-nowrap">капитал с <img src="/brand/jetra-wordmark.png" alt="JETRA" width={866} height={155} className="inline-block h-[0.72em] w-auto align-baseline" /></span>
-          </h2>
-          <p className="relative mx-auto mt-4 max-w-xl text-[17px] text-brand-muted">Знания, стратегии и инвестиционное сообщество — в одной экосистеме.</p>
-          <StartLink className={cn(btnPrimary, "relative mt-9 px-7 py-4")}>
-            Присоединиться к JETRA <Icon name="ArrowRight" size={18} />
-          </StartLink>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function HomePage() {
   return (
     <PublicLayout>
@@ -262,8 +214,6 @@ export default function HomePage() {
       <Markets />
       <Calculator />
       <Steps />
-      <Trust />
-      <FinalCta />
     </PublicLayout>
   );
 }
