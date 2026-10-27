@@ -73,7 +73,7 @@ export default function CapitalCalculator() {
     { label: p.reinvest ? "Итоговый капитал" : "Итоговый капитал (вложенная сумма)", value: r.capital, accent: true },
     { label: "Сумма вложений", value: r.invested },
     { label: p.reinvest ? "Расчётный доход" : "Расчётный доход (условно выведен)", value: r.income },
-    { label: "Потенциальный пассивный доход в месяц", value: r.passive, wide: true },
+    { label: "Условный доход в месяц", value: r.passive, wide: true },
   ];
 
   return (

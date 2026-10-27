@@ -3,12 +3,12 @@ import Icon from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
-  { title: "Российский рынок", icon: "Building2", share: 25, yield: 14.2, color: "#17263C" },
-  { title: "Рынок США", icon: "Globe2", share: 20, yield: 21.6, color: "#2D4A72" },
-  { title: "Акции", icon: "TrendingUp", share: 18, yield: 17.9, color: "#397FC4" },
-  { title: "Облигации", icon: "Landmark", share: 15, yield: 11.3, color: "#5C9BD8" },
-  { title: "Недвижимость", icon: "Building", share: 12, yield: 9.8, color: "#8EC3F0" },
-  { title: "Криптовалюты", icon: "Coins", share: 10, yield: -4.2, color: "#C3DDF5" },
+  { title: "Российский рынок", icon: "Building2", share: 25, color: "#17263C" },
+  { title: "Рынок США", icon: "Globe2", share: 20, color: "#2D4A72" },
+  { title: "Акции", icon: "TrendingUp", share: 18, color: "#397FC4" },
+  { title: "Облигации", icon: "Landmark", share: 15, color: "#5C9BD8" },
+  { title: "Недвижимость", icon: "Building", share: 12, color: "#8EC3F0" },
+  { title: "Криптовалюты", icon: "Coins", share: 10, color: "#C3DDF5" },
 ];
 
 const R = 70;
@@ -127,8 +127,6 @@ function GrowthChart({ shown }: { shown: boolean }) {
   );
 }
 
-const pct = (v: number) => `${v > 0 ? "+" : ""}${v.toLocaleString("ru-RU", { minimumFractionDigits: 1 })}%`;
-
 export default function PortfolioShowcase() {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
@@ -215,7 +213,7 @@ export default function PortfolioShowcase() {
         <div className="p-5 sm:p-7 lg:px-9">
           <div className="mb-5 flex items-center justify-between">
             <span className="text-sm font-medium text-brand-ink">Состав портфеля</span>
-            <span className="text-xs text-brand-muted">Доля · Доходность</span>
+            <span className="text-xs text-brand-muted">Доля</span>
           </div>
           <div className="grid items-center gap-8 md:grid-cols-[200px_1fr] md:gap-10">
             <div className="relative mx-auto aspect-square w-[180px] md:w-full">
@@ -241,7 +239,6 @@ export default function PortfolioShowcase() {
                       <span className="block h-1.5 flex-1 overflow-hidden rounded-full bg-brand-light">
                         <span className="block h-full rounded-full" style={{ width: `${it.share * 4}%`, background: it.color }} />
                       </span>
-                      <span className={cn("w-12 shrink-0 text-right text-xs font-semibold", it.yield >= 0 ? "text-emerald-600" : "text-rose-500")}>{pct(it.yield)}</span>
                     </span>
                   </span>
                 </li>

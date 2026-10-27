@@ -135,7 +135,7 @@ function Steps() {
         <StepsPath />
         <div className="mt-12 flex justify-center md:mt-14">
           <StartLink className={btnPrimary}>
-            Создать аккаунт <Icon name="ArrowRight" size={18} />
+            Присоединиться к JETRA <Icon name="ArrowRight" size={18} />
           </StartLink>
         </div>
       </div>
