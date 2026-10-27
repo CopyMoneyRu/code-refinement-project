@@ -65,9 +65,9 @@ export default function AuthLayout({ title, subtitle, children }: { title: strin
         <Logo />
         <div>
           <h2 className="max-w-md font-display text-[44px] font-light leading-[1.1]">
-            Капитал под <span className="font-bold">управлением</span> технологий
+            Инструменты для <span className="font-bold">создания</span> и управления капиталом
           </h2>
-          <p className="mt-5 max-w-sm text-brand-muted">Инвестиционные стратегии и обучение JETRA University на одной платформе.</p>
+          <p className="mt-5 max-w-sm text-brand-muted">Инвестиционные стратегии и обучение на одной платформе.</p>
         </div>
         <div className="text-xs text-brand-ink/50">© JETRA, 2026</div>
       </aside>
