@@ -71,17 +71,7 @@ function Hero() {
         </div>
         <div className="relative mx-auto w-full max-w-[560px]">
           <div className="absolute inset-6 rounded-[40px] bg-gradient-to-br from-brand-blue/25 to-transparent blur-2xl" />
-          <HeroArt className="relative aspect-square w-full rounded-[32px] shadow-[0_40px_90px_-40px_rgba(23,38,60,0.45)]" />
-          <div className="absolute -bottom-5 left-5 flex items-center gap-3 rounded-2xl bg-white/95 px-4 py-3 shadow-xl backdrop-blur sm:left-[-24px]">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue">
-              <Icon name="Layers" size={20} />
-            </span>
-            <span className="text-sm font-medium leading-tight text-brand-ink">
-              Стратегии · Обучение
-              <br />
-              <span className="text-brand-muted">Сообщество</span>
-            </span>
-          </div>
+          <HeroArt className="relative aspect-[4/5] w-full sm:aspect-square rounded-[32px] shadow-[0_40px_90px_-40px_rgba(23,38,60,0.45)]" />
         </div>
       </div>
     </section>
