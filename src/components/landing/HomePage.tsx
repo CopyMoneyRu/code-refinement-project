@@ -3,6 +3,7 @@ import { getRouteApi, Link } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import ClubLink from "@/components/site/ClubLink";
 import Icon from "@/components/ui/icon";
+import { cn } from "@/lib/utils";
 import CapitalCalculator from "./CapitalCalculator";
 import { CommunityArt, EducationArt, HeroArt, PortfolioArt } from "./Illustrations";
 
@@ -44,9 +45,9 @@ function StartLink({ className, children }: { className: string; children: React
   );
 }
 
-function SectionHead({ title, text, center }: { title: string; text?: string; center?: boolean }) {
+function SectionHead({ title, text, center, wide }: { title: ReactNode; text?: string; center?: boolean; wide?: boolean }) {
   return (
-    <div className={center ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
+    <div className={cn(center ? "mx-auto max-w-2xl text-center" : "max-w-2xl", wide && "max-w-none")}>
       <h2 className="font-display text-3xl font-semibold leading-[1.12] tracking-[-0.02em] text-brand-ink md:text-[44px]">{title}</h2>
       {text && <p className="mt-4 text-[17px] leading-relaxed text-brand-muted">{text}</p>}
     </div>
@@ -59,9 +60,8 @@ function Hero() {
       <div aria-hidden className="pointer-events-none absolute -right-40 -top-40 h-[560px] w-[560px] rounded-full bg-brand-blue/10 blur-3xl" />
       <div className="container-x relative grid items-center gap-10 pb-16 pt-10 md:pb-24 md:pt-16 lg:grid-cols-[1.05fr_1fr]">
         <div>
-          <div className="eyebrow">Smart Capital</div>
-          <h1 className="mt-5 font-display text-[40px] font-semibold leading-[1.05] tracking-[-0.025em] text-brand-ink sm:text-5xl lg:text-[64px]">
-            JETRA — экосистема для создания и&nbsp;роста капитала
+          <h1 className="font-display text-[40px] font-semibold leading-[1.05] tracking-[-0.025em] text-brand-ink sm:text-5xl lg:text-[64px]">
+            <img src="/brand/jetra-wordmark.png" alt="JETRA" width={866} height={155} className="inline-block h-[0.72em] w-auto align-baseline" /> — экосистема для создания и&nbsp;роста капитала
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-brand-muted">
             Инвестиционные стратегии, финансовое образование и сообщество инвесторов — в одной платформе.
@@ -128,10 +128,7 @@ function Ecosystem() {
   return (
     <section id="ecosystem" className="scroll-mt-24 py-16 md:py-24">
       <div className="container-x">
-        <SectionHead
-          title="Всё для капитала. В одном месте."
-          text="Больше не нужно искать обучение, инвестиционные возможности и единомышленников на разных площадках. JETRA объединяет всё необходимое в единой экосистеме."
-        />
+        <SectionHead wide title="Всё для капитала. В одном месте." />
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           <EcoCard
             art={PortfolioArt}
@@ -167,7 +164,15 @@ function Markets() {
   return (
     <section className="bg-white py-16 md:py-24">
       <div className="container-x">
-        <SectionHead title="Разные рынки. Разные возможности." text="Исследуйте инвестиционные направления и находите подходящие решения для своего капитала." />
+        <SectionHead
+          title={
+            <>
+              Разные рынки.
+              <br />
+              Разные возможности.
+            </>
+          }
+          text="Исследуйте инвестиционные направления и находите подходящие решения для своего капитала." />
         <div className="-mx-5 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-3 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {MARKETS.map((m, i) => (
             <div
@@ -254,15 +259,15 @@ function FinalCta() {
   return (
     <section className="pb-20 md:pb-28">
       <div className="container-x">
-        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-brand-ink via-[#1B3456] to-brand-navy px-6 py-14 text-center text-white sm:px-12 md:py-20">
-          <div aria-hidden className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-blue/40 blur-3xl" />
-          <div aria-hidden className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#5AA6E8]/25 blur-3xl" />
-          <img src="/brand/jetra-mark.png" alt="" className="relative mx-auto h-14 w-auto opacity-95" />
-          <h2 className="relative mx-auto mt-6 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.02em] md:text-[44px]">
-            Начните создавать капитал с JETRA
+        <div className="relative overflow-hidden rounded-[32px] border border-brand-ink/[0.06] bg-white px-6 py-14 text-center shadow-[0_30px_80px_-40px_rgba(23,38,60,0.35)] sm:px-12 md:py-20">
+          <div aria-hidden className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-blue/10 blur-3xl" />
+          <div aria-hidden className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#8EC3F0]/20 blur-3xl" />
+          <img src="/brand/jetra-mark.png" alt="" className="relative mx-auto h-14 w-auto" />
+          <h2 className="relative mx-auto mt-6 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-brand-ink md:text-[44px]">
+            Начните создавать капитал с&nbsp;JETRA
           </h2>
-          <p className="relative mx-auto mt-4 max-w-xl text-[17px] text-white/70">Знания, стратегии и инвестиционное сообщество — в одной экосистеме.</p>
-          <StartLink className="relative mt-9 inline-flex items-center justify-center gap-2 rounded-xl bg-white px-7 py-4 text-[16px] font-semibold text-brand-ink transition-colors hover:bg-brand-surface">
+          <p className="relative mx-auto mt-4 max-w-xl text-[17px] text-brand-muted">Знания, стратегии и инвестиционное сообщество — в одной экосистеме.</p>
+          <StartLink className={cn(btnPrimary, "relative mt-9 px-7 py-4")}>
             Присоединиться к JETRA <Icon name="ArrowRight" size={18} />
           </StartLink>
         </div>

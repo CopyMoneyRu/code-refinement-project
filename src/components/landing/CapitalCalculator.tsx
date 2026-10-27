@@ -73,7 +73,7 @@ export default function CapitalCalculator() {
     { label: p.reinvest ? "Итоговый капитал" : "Итоговый капитал (вложенная сумма)", value: r.capital, accent: true },
     { label: "Сумма вложений", value: r.invested },
     { label: p.reinvest ? "Расчётный доход" : "Расчётный доход (условно выведен)", value: r.income },
-    { label: "Потенциальный пассивный доход в месяц", value: r.passive, note: "модельный ориентир", wide: true },
+    { label: "Потенциальный пассивный доход в месяц", value: r.passive, wide: true },
   ];
 
   return (
@@ -96,7 +96,7 @@ export default function CapitalCalculator() {
             </div>
           </MoneyField>
           <RangeField label="Срок инвестирования" value={p.years} min={1} max={30} suffix={yearsLabel(p.years)} onChange={(v) => set("years", v)} />
-          <RangeField label="Модельная доходность, годовых" value={p.rate} min={0} max={50} suffix="%" onChange={(v) => set("rate", v)} />
+          <RangeField label="Годовая доходность" value={p.rate} min={0} max={50} suffix="%" onChange={(v) => set("rate", v)} />
           <div className="flex items-center justify-between rounded-xl bg-brand-light px-4 py-3.5">
             <div>
               <div className="text-sm font-medium text-brand-ink">Реинвестирование дохода</div>
@@ -114,7 +114,6 @@ export default function CapitalCalculator() {
                 <div className={cn("mt-1.5 break-words font-display font-semibold tracking-tight", s.accent ? "text-3xl sm:text-4xl" : "text-lg sm:text-xl text-brand-ink")}>
                   {rub(s.value)}
                 </div>
-                {s.note && <div className="mt-1 text-[11px] uppercase tracking-wider text-brand-blue">{s.note}</div>}
               </div>
             ))}
             {!p.reinvest && (
@@ -167,7 +166,9 @@ export default function CapitalCalculator() {
       </div>
 
       <p className="mt-8 rounded-xl bg-brand-light px-4 py-3.5 text-sm leading-relaxed text-brand-muted">
-        Расчёт носит исключительно иллюстративный характер. Указанная доходность является пользовательским сценарием, не прогнозом и не гарантией.
+        Расчёт носит исключительно иллюстративный характер.
+        <br />
+        Указанная доходность является пользовательским сценарием, не прогнозом и не гарантией.
       </p>
     </div>
   );
