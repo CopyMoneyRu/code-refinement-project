@@ -1,10 +1,10 @@
-import { getRouteApi, Link, useRouterState } from "@tanstack/react-router";
-import Logo from "@/components/brand/Logo";
+import { getRouteApi, Link } from "@tanstack/react-router";
 import BrandLockup from "@/components/brand/BrandLockup";
 import ClubLink from "@/components/site/ClubLink";
 import Icon from "@/components/ui/icon";
 
 const NAV = [
+  { to: "/", label: "Главная", icon: "Home" },
   { to: "/strategies", label: "Стратегии", icon: "LineChart" },
   { to: "/university", label: "Университет", icon: "GraduationCap" },
 ] as const;
@@ -18,25 +18,26 @@ const navLink = "text-[17px] font-medium text-brand-muted transition-colors hove
 
 export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
   const user = rootApi.useLoaderData();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isHome = pathname === "/";
 
   return (
     <header className="sticky top-0 z-40 bg-brand-light/95 backdrop-blur supports-[backdrop-filter]:bg-brand-light/85">
       <div className="container-x">
         <div className="relative flex h-[64px] items-center justify-between gap-2 border-b border-brand-ink/10 md:h-[88px]">
-          <Logo withWordmark={false} size={34} className="shrink-0 md:hidden" />
+          <BrandLockup size={24} className="shrink-0 md:hidden" />
           <BrandLockup size={34} className="hidden md:inline-flex" />
 
-          <nav className="flex min-w-0 items-center gap-1 md:hidden">
+          <nav className="ml-auto flex items-center md:hidden">
             {NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-[15px] font-medium text-brand-muted transition-colors hover:text-brand-ink ${isHome && item.to === "/strategies" ? "!text-brand-blue" : ""}`}
-                activeProps={{ className: "!text-brand-blue" }}
+                aria-label={item.label}
+                title={item.label}
+                activeOptions={{ exact: item.to === "/" }}
+                className="flex h-10 w-9 items-center justify-center rounded-lg text-brand-muted min-[380px]:w-10 transition-colors hover:text-brand-ink"
+                activeProps={{ className: "!text-brand-blue bg-brand-blue/10" }}
               >
-                {item.label}
+                <Icon name={item.icon} size={20} />
               </Link>
             ))}
           </nav>
@@ -53,18 +54,19 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
             )}
           </Link>
 
-          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-4 md:flex lg:gap-6">
+          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex lg:gap-4">
             {NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`${navLink} inline-flex items-center gap-2 px-4 py-2 ${isHome && item.to === "/strategies" ? "!text-brand-blue" : ""}`}
+                activeOptions={{ exact: item.to === "/" }}
+                className={`${navLink} inline-flex items-center gap-2 px-3 py-2 lg:px-4`}
                 activeProps={{ className: "!text-brand-blue" }}
               >
                 {item.label}
               </Link>
             ))}
-            <ClubLink className={`${navLink} px-4 py-2`}>Клуб</ClubLink>
+            <ClubLink className={`${navLink} px-3 py-2 lg:px-4`}>Клуб</ClubLink>
           </nav>
 
           {user ? (

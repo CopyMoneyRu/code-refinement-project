@@ -39,7 +39,7 @@ const SECTIONS = [
 
 function SectionMark() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const path = pathname === "/" ? "/strategies" : pathname;
+  const path = pathname;
   const section = SECTIONS.find((s) => path === s.prefix || path.startsWith(`${s.prefix}/`));
   if (!section) return null;
   return (
