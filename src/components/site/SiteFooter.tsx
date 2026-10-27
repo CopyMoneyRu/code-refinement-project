@@ -11,7 +11,7 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-brand-ink/10 bg-brand-light text-brand-ink">
       <div className="container-x py-14">
-        <div className="grid items-start gap-10 text-center md:grid-cols-[1fr_2fr_1fr] md:gap-8">
+        <div className="grid items-start gap-10 text-center md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] md:gap-8">
           <div className="flex flex-col items-center md:items-start md:text-left">
             <BrandLockup size={34} />
             <div className="mt-6 flex gap-2.5">
@@ -29,16 +29,16 @@ export default function SiteFooter() {
                 </a>
               ))}
             </div>
-            <ClubLink className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-blue hover:text-brand-ink">
+            <ClubLink className="mt-5 inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium text-brand-blue hover:text-brand-ink">
               <Icon name="Users" size={16} /> Клуб CAPITALIST <Icon name="ArrowUpRight" size={15} />
             </ClubLink>
           </div>
 
           <div className="flex flex-col items-center">
             <div className="text-sm font-semibold">Документы</div>
-            <ul className="mt-4 grid gap-3 text-sm text-brand-muted lg:grid-cols-[auto_auto] lg:gap-x-12">
+            <ul className="mt-4 grid gap-3 text-sm text-brand-muted xl:grid-cols-[auto_auto] xl:gap-x-12">
               {LEGAL_DOCS.map((d) => (
-                <li key={d.to} className="lg:whitespace-nowrap"><Link to={d.to} className="hover:text-brand-ink">{d.label}</Link></li>
+                <li key={d.to} className="xl:whitespace-nowrap"><Link to={d.to} className="hover:text-brand-ink">{d.label}</Link></li>
               ))}
             </ul>
           </div>
