@@ -1,7 +1,12 @@
+import { getRouteApi, Link, useRouterState } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import type { Strategy } from "@/data/catalog";
 
+const rootApi = getRouteApi("__root__");
+
 export default function StrategyCard({ s, index }: { s: Strategy; index: number }) {
+  const user = rootApi.useLoaderData();
+  const href = useRouterState({ select: (st) => st.location.href });
   return (
     <article className="group relative flex h-full flex-col rounded-xl border border-brand-ink/10 bg-white p-6 transition-colors hover:border-brand-blue/40 sm:p-7">
       <div className="flex items-start justify-between">
@@ -10,7 +15,15 @@ export default function StrategyCard({ s, index }: { s: Strategy; index: number 
         </div>
         <span className="font-display text-sm tabular-nums text-brand-ink/50">{String(index + 1).padStart(2, "0")}</span>
       </div>
-      <h3 className="mt-6 font-display text-xl font-semibold text-brand-ink">{s.name}</h3>
+      <h3 className="mt-6 font-display text-xl font-semibold text-brand-ink">
+        {user ? (
+          s.name
+        ) : (
+          <Link to="/login" search={{ redirect: href }} className="after:absolute after:inset-0 after:content-['']">
+            {s.name}
+          </Link>
+        )}
+      </h3>
       <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{s.description}</p>
       <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-brand-ink/10 pt-5 text-sm">
         <div>

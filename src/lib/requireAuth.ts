@@ -27,6 +27,6 @@ export const takeRememberedRedirect = () => {
 
 export async function requireAuth({ location }: { location: { href: string } }) {
   const user = await getMe();
-  if (!user) throw redirect({ to: "/register", search: { redirect: location.href } });
+  if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
   return { user };
 }

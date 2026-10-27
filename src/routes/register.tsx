@@ -24,7 +24,7 @@ function RegisterPage() {
   const providers = Route.useLoaderData();
   const search = Route.useSearch();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
-  const [consent, setConsent] = useState({ personalData: false, terms: false, marketing: false });
+  const [consent, setConsent] = useState({ personalData: true, terms: true, marketing: true });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
   const [taken, setTaken] = useState(false);
