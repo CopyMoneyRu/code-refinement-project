@@ -49,8 +49,8 @@ function Hero() {
             Инвестиционные стратегии, финансовое образование и сообщество инвесторов — в одной платформе.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <StartLink className={btnPrimary}>
-              Начать <Icon name="ArrowRight" size={18} />
+            <StartLink className={cn(btnPrimary, "cta-pulse")}>
+              Начать
             </StartLink>
             <a
               href="#ecosystem"
