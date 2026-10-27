@@ -37,7 +37,35 @@ function Spark({ values, color = "#397FC4", className }: { values: number[]; col
   );
 }
 
-const MAIN = [100, 102, 101, 105, 104, 108, 111, 109, 114, 117, 116, 121, 124.6];
+function rng(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function series(seed: number, n: number, total: number, dips: { from: number; to: number; depth: number }[]) {
+  const r = rng(seed);
+  const raw: number[] = [0];
+  for (let i = 1; i < n; i++) {
+    let step = (r() - 0.5) * 0.02 + (r() < 0.04 ? (r() - 0.5) * 0.035 : 0);
+    for (const d of dips) {
+      const len = d.to - d.from;
+      if (i > d.from && i <= d.to) step -= d.depth / len;
+      if (i > d.to && i <= d.to + len * 1.4) step += (d.depth * 0.6) / (len * 1.4);
+    }
+    raw.push(raw[i - 1] + step);
+  }
+  const drift = (Math.log(1 + total) - raw[n - 1]) / (n - 1);
+  return raw.map((v, i) => 100 * Math.exp(v + drift * i));
+}
+
+const MAIN = series(11, 180, 0.246, [
+  { from: 48, to: 64, depth: 0.07 },
+  { from: 120, to: 130, depth: 0.04 },
+]);
 
 const STRATS = [
   { name: "Технологии США", y: 21.3, v: [10, 12, 11, 15, 14, 18, 21] },
@@ -56,19 +84,25 @@ function StrategiesMock() {
           </div>
           <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-xs font-semibold text-emerald-600">+24,6%</span>
         </div>
-        <svg viewBox="0 -4 300 72" preserveAspectRatio="none" className="mt-2 h-14 w-full" aria-hidden>
+        <svg viewBox="0 -4 300 72" preserveAspectRatio="none" className="mt-2 h-16 w-full" aria-hidden>
           <defs>
             <linearGradient id="eco-area" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#397FC4" stopOpacity="0.25" />
               <stop offset="100%" stopColor="#397FC4" stopOpacity="0" />
             </linearGradient>
           </defs>
+          {[0, 21, 42, 64].map((gy) => (
+            <line key={gy} x1="0" x2="300" y1={gy} y2={gy} stroke="#17263C" strokeOpacity="0.06" vectorEffect="non-scaling-stroke" />
+          ))}
           <path d={`${d} L300 64 L0 64 Z`} fill="url(#eco-area)" />
-          <path d={d} fill="none" stroke="#397FC4" strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <path d={d} fill="none" stroke="#397FC4" strokeWidth="1.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         </svg>
         <div className="mt-1 flex justify-between text-[10px] text-brand-muted/80">
-          <span>12 мес.</span>
-          <span>Мин. сумма 50 000 ₽</span>
+          <span>ноя 25</span>
+          <span>фев</span>
+          <span>май</span>
+          <span>авг</span>
+          <span>окт 26</span>
         </div>
       </div>
       {STRATS.map((s) => (
