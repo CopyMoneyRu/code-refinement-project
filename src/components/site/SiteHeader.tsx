@@ -1,5 +1,6 @@
 import { getRouteApi, Link } from "@tanstack/react-router";
 import BrandLockup from "@/components/brand/BrandLockup";
+import Logo from "@/components/brand/Logo";
 import ClubLink from "@/components/site/ClubLink";
 import Icon from "@/components/ui/icon";
 
@@ -23,10 +24,10 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
     <header className="sticky top-0 z-40 bg-brand-light/95 backdrop-blur supports-[backdrop-filter]:bg-brand-light/85">
       <div className="container-x">
         <div className="relative flex h-[64px] items-center justify-between gap-2 border-b border-brand-ink/10 md:h-[88px]">
-          <BrandLockup size={24} className="shrink-0 md:hidden" />
+          <Logo withWordmark={false} size={34} className="shrink-0 md:hidden" />
           <BrandLockup size={34} className="hidden md:inline-flex" />
 
-          <nav className="ml-auto flex items-center md:hidden">
+          <nav className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1 md:hidden">
             {NAV.map((item) => (
               <Link
                 key={item.to}
@@ -34,7 +35,7 @@ export default function SiteHeader(_props: { tone?: "light" | "dark" }) {
                 aria-label={item.label}
                 title={item.label}
                 activeOptions={{ exact: item.to === "/" }}
-                className="flex h-10 w-9 items-center justify-center rounded-lg text-brand-muted min-[380px]:w-10 transition-colors hover:text-brand-ink"
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-brand-muted transition-colors hover:text-brand-ink"
                 activeProps={{ className: "!text-brand-blue bg-brand-blue/10" }}
               >
                 <Icon name={item.icon} size={20} />
