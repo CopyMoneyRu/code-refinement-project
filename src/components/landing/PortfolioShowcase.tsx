@@ -207,7 +207,6 @@ export default function PortfolioShowcase() {
           </div>
         </div>
       </div>
-      <p className="relative mt-4 text-center text-xs text-brand-muted/80">Демонстрационный пример интерфейса. Цифры условные и не являются прогнозом доходности.</p>
     </div>
   );
 }
