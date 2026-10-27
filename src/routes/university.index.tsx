@@ -6,17 +6,26 @@ import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
 import { catalogFn } from "@/lib/courses";
 import { cn } from "@/lib/utils";
+import { getSiteOrigin } from "@/lib/site-origin";
 
 export const Route = createFileRoute("/university/")({
-  head: () => ({
-    meta: [
-      { title: "JETRA University — обучение инвестициям" },
-      { name: "description", content: "Бесплатное и платное обучение JETRA University: модули, видеоуроки и материалы." },
-      { property: "og:title", content: "JETRA University" },
-      { property: "og:description", content: "Обучение инвестициям и управлению капиталом." },
-    ],
-  }),
-  loader: () => catalogFn(),
+  head: ({ loaderData }) => {
+    const image = `${loaderData?.origin ?? ""}/og-university.jpg`;
+    return {
+      meta: [
+        { title: "JETRA University — обучение инвестициям" },
+        { name: "description", content: "Бесплатное и платное обучение JETRA University: модули, видеоуроки и материалы." },
+        { property: "og:title", content: "JETRA University" },
+        { property: "og:description", content: "Обучение инвестициям и управлению капиталом." },
+        { property: "og:image", content: image },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: image },
+      ],
+    };
+  },
+  loader: async () => ({ ...(await catalogFn()), origin: getSiteOrigin() }),
   component: UniversityPage,
 });
 
