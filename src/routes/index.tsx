@@ -7,7 +7,7 @@ const DESC = "Инвестиционные стратегии, финансов�
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: TITLE },
+      { title: "JETRA — экосистема капитала" },
       { name: "description", content: DESC },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
