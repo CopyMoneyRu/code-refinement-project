@@ -112,7 +112,7 @@ function Calculator() {
   return (
     <section id="calculator" className="py-16 md:py-24">
       <div className="container-x">
-        <SectionHead center title="Рассчитайте потенциал вашего капитала" />
+        <SectionHead center wide title={<span className="lg:whitespace-nowrap">Рассчитайте потенциал вашего капитала</span>} />
         <div className="mt-10 md:mt-12">
           <CapitalCalculator />
         </div>
