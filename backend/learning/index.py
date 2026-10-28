@@ -138,6 +138,14 @@ def load_program(cur, course_id: int, with_content: bool, public: bool = False):
         )
         for m in cur.fetchall():
             materials.setdefault(m['lesson_id'], []).append(m)
+    videos = {}
+    if lessons:
+        cur.execute(
+            f"SELECT * FROM {t('lesson_videos')} WHERE lesson_id IN %s ORDER BY position, id",
+            (tuple(l['id'] for l in lessons),),
+        )
+        for v in cur.fetchall():
+            videos.setdefault(v['lesson_id'], []).append(v)
     by_module = {}
     for l in lessons:
         mats = materials.get(l['id'], [])
@@ -151,6 +159,7 @@ def load_program(cur, course_id: int, with_content: bool, public: bool = False):
         if with_content:
             item.update({
                 'description': l['description'], 'body': l.get('body') or '', 'videoType': l['video_type'], 'videoUrl': l['video_url'],
+                'videos': [{'id': v['id'], 'title': v['title'], 'kind': v['kind'], 'url': v['url']} for v in videos.get(l['id'], [])],
                 'materials': [
                     {'id': m['id'], 'title': m['title'], 'kind': m['kind'], 'url': m['url'], 'fileSize': m['file_size']}
                     for m in mats
@@ -556,6 +565,7 @@ def delete_lessons(cur, where: str, params: tuple):
         cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE lesson_id IN %s", (ids,))
         cur.execute(f"DELETE FROM {t('lesson_notifications')} WHERE lesson_id IN %s", (ids,))
         cur.execute(f"DELETE FROM {t('lesson_materials')} WHERE lesson_id IN %s", (ids,))
+        cur.execute(f"DELETE FROM {t('lesson_videos')} WHERE lesson_id IN %s", (ids,))
         cur.execute(f"DELETE FROM {t('lessons')} WHERE id IN %s", (ids,))
     return len(ids)
 
@@ -626,23 +636,46 @@ def clean_materials(raw):
     return out, None
 
 
+def clean_videos(body):
+    raw = body.get('videos')
+    if raw is None:
+        vtype = body.get('videoType', 'none')
+        vurl = str(body.get('videoUrl', '')).strip()
+        raw = [{'kind': vtype, 'url': vurl}] if vtype in ('link', 'file') else []
+    if not isinstance(raw, list):
+        return None, 'Некорректный список видео'
+    out = []
+    prefix = cdn_prefix()
+    for v in raw[:20]:
+        if not isinstance(v, dict):
+            return None, 'Некорректный список видео'
+        kind = v.get('kind')
+        url = str(v.get('url', '')).strip()[:1000]
+        title = str(v.get('title', '')).strip()[:200]
+        if kind not in ('link', 'file'):
+            return None, 'Некорректный тип видео'
+        if not url:
+            continue
+        if kind == 'link' and not is_https(url):
+            return None, 'Ссылка на видео должна начинаться с https://'
+        if kind == 'file' and not url.startswith(prefix):
+            return None, 'Видеофайл нужно загрузить заново'
+        out.append({'title': title, 'kind': kind, 'url': url})
+    return out, None
+
+
 def a_lesson_save(cur, body, user):
     title = str(body.get('title', '')).strip()[:200]
     description = str(body.get('description', '')).strip()[:50000]
     text = str(body.get('body', '')).strip()[:100000]
     duration = str(body.get('duration', '')).strip()[:30]
-    vtype = body.get('videoType', 'none')
-    vurl = str(body.get('videoUrl', '')).strip()[:1000]
     if len(title) < 2:
         return err(400, 'invalid_title', 'Укажите название урока')
-    if vtype not in ('none', 'link', 'file'):
-        return err(400, 'invalid_video', 'Некорректный тип видео')
-    if vtype == 'none':
-        vurl = ''
-    elif vtype == 'link' and not is_https(vurl):
-        return err(400, 'invalid_video', 'Ссылка на видео должна начинаться с https://')
-    elif vtype == 'file' and not vurl.startswith(cdn_prefix()):
-        return err(400, 'invalid_video', 'Видеофайл нужно загрузить заново')
+    videos, vproblem = clean_videos(body)
+    if vproblem:
+        return err(400, 'invalid_video', vproblem)
+    vtype = videos[0]['kind'] if videos else 'none'
+    vurl = videos[0]['url'] if videos else ''
     materials, problem = clean_materials(body.get('materials', []))
     if problem:
         return err(400, 'invalid_materials', problem)
@@ -660,6 +693,7 @@ def a_lesson_save(cur, body, user):
             return err(404, 'not_found', 'Урок не найден')
         mid = row['module_id']
         cur.execute(f"DELETE FROM {t('lesson_materials')} WHERE lesson_id = %s", (lid,))
+        cur.execute(f"DELETE FROM {t('lesson_videos')} WHERE lesson_id = %s", (lid,))
     else:
         mid = to_int(body.get('moduleId'))
         if not mid or not course_of_module(cur, mid):
@@ -676,6 +710,11 @@ def a_lesson_save(cur, body, user):
             f"""INSERT INTO {t('lesson_materials')} (lesson_id, title, kind, url, file_size, position)
                 VALUES (%s, %s, %s, %s, %s, %s)""",
             (lid, m['title'], m['kind'], m['url'], m['size'], i),
+        )
+    for i, v in enumerate(videos, start=1):
+        cur.execute(
+            f"INSERT INTO {t('lesson_videos')} (lesson_id, title, kind, url, position) VALUES (%s, %s, %s, %s, %s)",
+            (lid, v['title'], v['kind'], v['url'], i),
         )
     cid = course_of_module(cur, mid)
     return resp(200, {'ok': True, 'lessonId': lid, 'modules': load_program(cur, cid, with_content=True)})

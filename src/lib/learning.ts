@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 export type UnlockMode = "all" | "sequential";
 export type VideoType = "none" | "link" | "file";
+export type LessonVideo = { id?: number; title: string; kind: "link" | "file"; url: string };
 export type Material = { id?: number; title: string; kind: "file" | "link"; url: string; fileSize: number };
 
 export type LessonBrief = {
@@ -21,6 +22,7 @@ export type LessonFull = LessonBrief & {
   body: string;
   videoType: VideoType;
   videoUrl: string;
+  videos?: LessonVideo[];
   materials: Material[];
 };
 export type ModuleBrief = {
@@ -163,6 +165,7 @@ export type LessonInput = {
   duration: string;
   videoType: VideoType;
   videoUrl: string;
+  videos: LessonVideo[];
   isFree: boolean;
   materials: Material[];
 };
@@ -180,6 +183,10 @@ export const lessonSaveFn = createServerFn({ method: "POST" })
       duration: str(o.duration, 30),
       videoType: vt,
       videoUrl: str(o.videoUrl, 1000),
+      videos: (Array.isArray(o.videos) ? o.videos : []).slice(0, 20).map((v) => {
+        const vo = obj(v);
+        return { title: str(vo.title, 200), kind: vo.kind === "file" ? "file" : "link", url: str(vo.url, 1000) };
+      }),
       isFree: o.isFree === true,
       materials: (Array.isArray(o.materials) ? o.materials : []).slice(0, 30).map((m) => {
         const mo = obj(m);

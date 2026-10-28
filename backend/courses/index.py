@@ -561,6 +561,7 @@ def purge_course(cur, cid: int):
     cur.execute(f"DELETE FROM {t('lesson_progress')} WHERE lesson_id IN ({lessons_sub})", (cid,))
     cur.execute(f"DELETE FROM {t('lesson_notifications')} WHERE lesson_id IN ({lessons_sub})", (cid,))
     cur.execute(f"DELETE FROM {t('lesson_materials')} WHERE lesson_id IN ({lessons_sub})", (cid,))
+    cur.execute(f"DELETE FROM {t('lesson_videos')} WHERE lesson_id IN ({lessons_sub})", (cid,))
     cur.execute(f"DELETE FROM {t('lessons')} WHERE module_id IN (SELECT id FROM {t('course_modules')} WHERE course_id = %s)", (cid,))
     cur.execute(f"DELETE FROM {t('course_modules')} WHERE course_id = %s", (cid,))
     cur.execute(f"DELETE FROM {t('course_access')} WHERE course_id = %s", (cid,))

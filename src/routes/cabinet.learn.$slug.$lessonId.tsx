@@ -61,6 +61,11 @@ function LessonPage() {
   const paragraphs = split(lesson.body ?? "");
   const files = lesson.materials.filter((m) => m.kind === "file");
   const links = lesson.materials.filter((m) => m.kind === "link");
+  const videos = lesson.videos?.length
+    ? lesson.videos
+    : lesson.videoType !== "none" && lesson.videoUrl
+      ? [{ title: "", kind: lesson.videoType, url: lesson.videoUrl }]
+      : [];
   const nextPaid = !!next?.paidLocked;
   const isLast = !next || (trial && nextPaid);
 
@@ -167,11 +172,19 @@ function LessonPage() {
           </div>
         )}
 
-        {lesson.videoType !== "none" && lesson.videoUrl && (
-          <div className="mt-6">
-            <VideoPlayer type={lesson.videoType} url={lesson.videoUrl} title={lesson.title} />
+        {videos.map((v, i) => (
+          <div key={i} className="mt-6">
+            {(videos.length > 1 || v.title) && (
+              <div className="mb-2.5 flex items-center gap-2 font-semibold">
+                {videos.length > 1 && (
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blue/10 text-xs text-brand-blue">{i + 1}</span>
+                )}
+                <span>{v.title || `Видео ${i + 1}`}</span>
+              </div>
+            )}
+            <VideoPlayer type={v.kind} url={v.url} title={v.title || lesson.title} />
           </div>
-        )}
+        ))}
 
         {paragraphs.length > 0 && (
           <WsCard className="mt-6">
@@ -189,7 +202,7 @@ function LessonPage() {
         {files.length > 0 && <MaterialList title="Файлы к уроку" icon="Paperclip" items={files} />}
         {links.length > 0 && <MaterialList title="Полезные ссылки" icon="Link" items={links} />}
 
-        {lesson.videoType === "none" && intro.length === 0 && paragraphs.length === 0 && lesson.materials.length === 0 && (
+        {videos.length === 0 && intro.length === 0 && paragraphs.length === 0 && lesson.materials.length === 0 && (
           <WsCard className="mt-6">
             <p className="text-brand-muted">Содержимое этого урока скоро появится.</p>
           </WsCard>
