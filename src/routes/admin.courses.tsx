@@ -6,16 +6,32 @@ import ConfirmDelete from "@/components/workspace/ConfirmDelete";
 import PublishToggle from "@/components/workspace/PublishToggle";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { requirePermission } from "@/lib/adminGuard";
-import { adminCoursesFn, deleteCourseFn, formatPrice, lessonsTotal, setCoursePublishedFn, type CourseCategory, type DbCourse } from "@/lib/courses";
+import { cn } from "@/lib/utils";
+import { adminCoursesFn, archiveActionFn, archiveListFn, deleteCourseFn, formatPrice, lessonsTotal, setCoursePublishedFn, type ArchiveItem, type CourseCategory, type DbCourse } from "@/lib/courses";
 
 export const Route = createFileRoute("/admin/courses")({
   beforeLoad: ({ context }) => requirePermission(context, "courses"),
-  loader: () => adminCoursesFn(),
+  loader: async () => {
+    const [data, archive] = await Promise.all([adminCoursesFn(), archiveListFn()]);
+    return { ...data, archived: archive.filter((i) => i.kind === "course") };
+  },
   component: CoursesAdmin,
 });
 
+type Tab = "live" | "draft" | "archive";
+
+const TABS: { id: Tab; label: string; icon: string; hint: string }[] = [
+  { id: "live", label: "На платформе", icon: "Globe", hint: "Обучения, которые сейчас видят пользователи в каталоге JETRA University." },
+  { id: "draft", label: "Готовятся", icon: "Hammer", hint: "Обучения в работе: скрыты с сайта, пока вы наполняете их уроками. Включите «На сайте», когда всё готово." },
+  { id: "archive", label: "Архив", icon: "Archive", hint: "Удалённые обучения. Их можно восстановить или удалить навсегда." },
+];
+
+const fmtDate = (d: string) => new Date(d).toLocaleString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+
 function CoursesAdmin() {
-  const { courses, authors, categories: loadedCategories } = Route.useLoaderData();
+  const { courses, authors, categories: loadedCategories, archived } = Route.useLoaderData();
+  const [tab, setTab] = useState<Tab>("live");
+  const [toPurge, setToPurge] = useState<ArchiveItem | null>(null);
   const [extraCategories, setExtraCategories] = useState<CourseCategory[]>([]);
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -33,7 +49,11 @@ function CoursesAdmin() {
     const r = await setCoursePublishedFn({ data: { id: c.id, published } });
     setBusy(null);
     if (!r.ok) return setError(r.message);
-    setNotice(published ? `Обучение «${c.title}» показано на сайте` : `Обучение «${c.title}» скрыто с сайта и хранится в админке`);
+    setNotice(
+      published
+        ? `Обучение «${c.title}» опубликовано и перенесено в раздел «На платформе»`
+        : `Обучение «${c.title}» скрыто с сайта и перенесено в раздел «Готовятся»`,
+    );
     router.invalidate();
   };
 
@@ -47,7 +67,19 @@ function CoursesAdmin() {
     setBusy(null);
     setToDelete(null);
     if (!r.ok) return setError(r.message);
-    setNotice(`Обучение «${c.title}» перемещено в архив`);
+    setNotice(`Обучение «${c.title}» перемещено в раздел «Архив»`);
+    router.invalidate();
+  };
+
+  const archiveAct = async (item: ArchiveItem, purge: boolean) => {
+    setBusy(item.id);
+    setError("");
+    setNotice("");
+    const r = await archiveActionFn({ data: { kind: "course", id: item.id, purge } });
+    setBusy(null);
+    setToPurge(null);
+    if (!r.ok) return setError(r.message);
+    setNotice(purge ? `Обучение «${item.title}» удалено навсегда` : `Обучение «${item.title}» восстановлено из архива`);
     router.invalidate();
   };
 
@@ -57,8 +89,18 @@ function CoursesAdmin() {
   }, [loadedCategories, extraCategories]);
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return s ? courses.filter((c) => c.title.toLowerCase().includes(s) || c.categories.some((x) => x.name.toLowerCase().includes(s))) : courses;
-  }, [courses, q]);
+    const inTab = courses.filter((c) => (tab === "live" ? c.published : !c.published));
+    return s ? inTab.filter((c) => c.title.toLowerCase().includes(s) || c.categories.some((x) => x.name.toLowerCase().includes(s))) : inTab;
+  }, [courses, q, tab]);
+  const archivedList = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return s ? archived.filter((a) => a.title.toLowerCase().includes(s)) : archived;
+  }, [archived, q]);
+  const counts: Record<Tab, number> = {
+    live: courses.filter((c) => c.published).length,
+    draft: courses.filter((c) => !c.published).length,
+    archive: archived.length,
+  };
 
   const openForm = (c: DbCourse | null) => {
     setEditing(c);
@@ -79,6 +121,28 @@ function CoursesAdmin() {
       />
       {notice && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      <div className="mb-4 flex flex-wrap gap-1 rounded-xl border border-brand-ink/10 bg-white p-1 sm:inline-flex">
+        {TABS.map((tb) => (
+          <button
+            key={tb.id}
+            onClick={() => {
+              setTab(tb.id);
+              setNotice("");
+              setError("");
+            }}
+            className={cn(
+              "inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:flex-none",
+              tab === tb.id ? "bg-brand-blue text-white" : "text-brand-muted hover:bg-brand-light hover:text-brand-ink",
+            )}
+          >
+            <Icon name={tb.icon} size={15} /> {tb.label}
+            <span className={cn("rounded-full px-2 py-0.5 text-xs tabular-nums", tab === tb.id ? "bg-white/20 text-white" : "bg-brand-surface text-brand-muted")}>
+              {counts[tb.id]}
+            </span>
+          </button>
+        ))}
+      </div>
+      <p className="mb-4 text-sm text-brand-muted">{TABS.find((x) => x.id === tab)?.hint}</p>
       <WsCard className="p-0">
         <div className="flex flex-col gap-3 border-b border-brand-ink/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between">
           <label className="relative flex-1">
@@ -90,9 +154,49 @@ function CoursesAdmin() {
               className="h-10 w-full rounded-lg border border-brand-ink/15 pl-9 pr-3 text-sm focus:border-brand-blue focus:outline-none sm:max-w-xs"
             />
           </label>
-          <span className="text-sm text-brand-muted">Всего: {courses.length}</span>
+          <span className="text-sm text-brand-muted">Всего: {counts[tab]}</span>
         </div>
-        {list.length ? (
+        {tab === "archive" ? (
+          archivedList.length ? (
+            <ul className="divide-y divide-brand-ink/[0.06]">
+              {archivedList.map((item) => (
+                <li key={item.id} className="flex flex-col gap-3 px-5 py-4 text-sm sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-surface text-brand-blue">
+                      <Icon name="GraduationCap" size={16} />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{item.title}</div>
+                      <div className="text-xs text-brand-muted">в архиве с {fmtDate(item.archivedAt)}</div>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      disabled={busy === item.id}
+                      onClick={() => archiveAct(item, false)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-brand-ink/15 px-3 py-1.5 text-xs font-medium hover:bg-brand-surface disabled:opacity-50"
+                    >
+                      <Icon name="RotateCcw" size={14} /> Восстановить
+                    </button>
+                    <button
+                      disabled={busy === item.id}
+                      onClick={() => setToPurge(item)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      <Icon name="Trash2" size={14} /> Удалить навсегда
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState
+              icon="Archive"
+              title={archived.length ? "Ничего не найдено" : "В архиве пусто"}
+              text={archived.length ? "Измените условия поиска." : "Сюда попадают удалённые обучения. Их можно восстановить или удалить навсегда."}
+            />
+          )
+        ) : list.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[940px] text-left text-sm">
               <thead className="border-b border-brand-ink/[0.08] bg-brand-light/60 text-brand-muted">
@@ -167,8 +271,14 @@ function CoursesAdmin() {
         ) : (
           <EmptyState
             icon="GraduationCap"
-            title={courses.length ? "Ничего не найдено" : "Обучений пока нет"}
-            text={courses.length ? "Измените условия поиска." : "Нажмите «Добавить обучение», чтобы создать первое обучение."}
+            title={counts[tab] ? "Ничего не найдено" : tab === "live" ? "На платформе пока нет обучений" : "Нет обучений в подготовке"}
+            text={
+              counts[tab]
+                ? "Измените условия поиска."
+                : tab === "live"
+                  ? "Включите переключатель «На сайте» у готового обучения во вкладке «Готовятся»."
+                  : "Нажмите «Добавить обучение» — новое обучение можно наполнять, пока оно скрыто с сайта."
+            }
           />
         )}
       </WsCard>
@@ -181,9 +291,23 @@ function CoursesAdmin() {
         onConfirm={confirmDelete}
       >
         <p>
-          Обучение <span className="font-medium text-brand-ink">«{toDelete?.title}»</span> будет перемещено в архив вместе с программой и пропадёт с сайта. Восстановить или удалить навсегда можно в разделе «Архив».
+          Обучение <span className="font-medium text-brand-ink">«{toDelete?.title}»</span> будет перемещено в архив вместе с программой и пропадёт с сайта. Восстановить или удалить навсегда можно во вкладке «Архив».
         </p>
         <p>Если нужно просто убрать обучение с сайта — отмените и выключите переключатель «На сайте».</p>
+      </ConfirmDelete>
+
+      <ConfirmDelete
+        open={!!toPurge}
+        title="Удалить навсегда?"
+        busy={busy !== null}
+        confirmLabel="Удалить навсегда"
+        onCancel={() => setToPurge(null)}
+        onConfirm={() => toPurge && archiveAct(toPurge, true)}
+      >
+        <p>
+          Обучение <span className="font-medium text-brand-ink">«{toPurge?.title}»</span> будет удалено без возможности восстановления.
+        </p>
+        <p>Вместе с обучением удалятся программа, уроки, прогресс учеников и выданные доступы.</p>
       </ConfirmDelete>
 
       <CourseForm
@@ -195,11 +319,12 @@ function CoursesAdmin() {
         onClose={() => setFormOpen(false)}
         onSaved={(c, created) => {
           setFormOpen(false);
+          setTab(c.published ? "live" : "draft");
           setNotice(
             created
               ? c.published
                 ? `Обучение «${c.title}» создано и опубликовано в каталоге`
-                : `Обучение «${c.title}» создано (скрыто из каталога)`
+                : `Обучение «${c.title}» создано и лежит в разделе «Готовятся»`
               : `Обучение «${c.title}» сохранено`,
           );
           router.invalidate();
