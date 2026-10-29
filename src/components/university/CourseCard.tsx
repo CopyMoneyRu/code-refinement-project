@@ -28,6 +28,39 @@ export function freeLabel(c: DbCourse) {
   return "";
 }
 
+const PROGRESS_TONES = {
+  todo: {
+    label: "Не начато",
+    icon: "CircleDashed",
+    box: "border-rose-200/70 bg-rose-50/70",
+    text: "text-rose-700/90",
+    iconCls: "text-rose-400",
+    meta: "text-rose-700/60",
+    track: "bg-rose-100",
+    bar: "bg-rose-300",
+  },
+  active: {
+    label: "Обучение начато",
+    icon: "PlayCircle",
+    box: "border-amber-200/80 bg-amber-50/80",
+    text: "text-amber-800",
+    iconCls: "text-amber-500",
+    meta: "text-amber-800/60",
+    track: "bg-amber-100",
+    bar: "bg-amber-400",
+  },
+  done: {
+    label: "Обучение пройдено",
+    icon: "CheckCircle2",
+    box: "border-emerald-200/80 bg-emerald-50/80",
+    text: "text-emerald-700",
+    iconCls: "text-emerald-500",
+    meta: "text-emerald-700/60",
+    track: "bg-emerald-100",
+    bar: "bg-emerald-500",
+  },
+} as const;
+
 export default function CourseCard({ c, progress }: { c: DbCourse; progress?: CourseProgress }) {
   const free = freeLabel(c);
   const minutes = courseMinutes(c);
@@ -62,20 +95,23 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           {minutes > 0 && <span className="inline-flex items-center gap-1.5"><Icon name="Clock" size={15} />{formatDuration(minutes)}</span>}
         </div>
         <CategoryChips names={cats} className="mt-4" />
-        {progress && (
-          <div className="mt-5 rounded-lg bg-brand-light px-4 py-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className={"inline-flex items-center gap-1.5 font-medium " + (finished ? "text-emerald-700" : notStarted ? "text-brand-muted" : "text-brand-ink")}>
-                <Icon name={finished ? "CheckCircle2" : notStarted ? "Circle" : "PlayCircle"} size={15} className={finished ? "" : notStarted ? "" : "text-brand-blue"} />
-                {finished ? "Обучение пройдено" : notStarted ? "Не начато" : "Обучение начато"}
-              </span>
-              <span className="tabular-nums text-brand-muted">{progress.done} из {progress.total} · {progress.percent}%</span>
+        {progress && (() => {
+          const tone = finished ? PROGRESS_TONES.done : notStarted ? PROGRESS_TONES.todo : PROGRESS_TONES.active;
+          return (
+            <div className={"mt-5 rounded-lg border px-4 py-3 " + tone.box}>
+              <div className="flex items-center justify-between text-sm">
+                <span className={"inline-flex items-center gap-1.5 font-medium " + tone.text}>
+                  <Icon name={tone.icon} size={15} className={tone.iconCls} />
+                  {tone.label}
+                </span>
+                <span className={"tabular-nums " + tone.meta}>{progress.done} из {progress.total} · {progress.percent}%</span>
+              </div>
+              <div className={"mt-2 h-1.5 overflow-hidden rounded-full " + tone.track}>
+                <div className={"h-full rounded-full " + tone.bar} style={{ width: `${progress.percent}%` }} />
+              </div>
             </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-surface">
-              <div className={"h-full rounded-full " + (finished ? "bg-emerald-500" : "bg-brand-blue")} style={{ width: `${progress.percent}%` }} />
-            </div>
-          </div>
-        )}
+          );
+        })()}
         <div className="mt-6 flex items-center justify-between border-t border-brand-ink/10 pt-5">
           {c.author?.slug ? (
             <Link
