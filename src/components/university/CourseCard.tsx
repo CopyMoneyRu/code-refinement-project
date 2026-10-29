@@ -32,7 +32,8 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
   const free = freeLabel(c);
   const minutes = courseMinutes(c);
   const cats = c.categories.length ? c.categories.map((x) => x.name) : c.category ? [c.category] : [];
-  const finished = !!progress && progress.done >= progress.total;
+  const finished = !!progress && progress.total > 0 && progress.done >= progress.total;
+  const notStarted = !!progress && progress.done === 0;
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-brand-ink/10 bg-white transition-colors hover:border-brand-blue/40">
       {c.coverUrl && (
@@ -64,9 +65,9 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
         {progress && (
           <div className="mt-5 rounded-lg bg-brand-light px-4 py-3">
             <div className="flex items-center justify-between text-sm">
-              <span className={"inline-flex items-center gap-1.5 font-medium " + (finished ? "text-emerald-700" : "text-brand-ink")}>
-                <Icon name={finished ? "CheckCircle2" : "PlayCircle"} size={15} className={finished ? "" : "text-brand-blue"} />
-                {finished ? "Обучение пройдено" : "Обучение начато"}
+              <span className={"inline-flex items-center gap-1.5 font-medium " + (finished ? "text-emerald-700" : notStarted ? "text-brand-muted" : "text-brand-ink")}>
+                <Icon name={finished ? "CheckCircle2" : notStarted ? "Circle" : "PlayCircle"} size={15} className={finished ? "" : notStarted ? "" : "text-brand-blue"} />
+                {finished ? "Обучение пройдено" : notStarted ? "Не начато" : "Обучение начато"}
               </span>
               <span className="tabular-nums text-brand-muted">{progress.done} из {progress.total} · {progress.percent}%</span>
             </div>

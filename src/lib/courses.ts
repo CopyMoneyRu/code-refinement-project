@@ -98,9 +98,10 @@ export const catalogFn = createServerFn({ method: "GET" }).handler(async () => {
     hasSession() ? callLearning<{ progress: CourseProgress[] }>("my_progress") : Promise.resolve(null),
   ]);
   const progress = p && p.ok ? p.progress : ([] as CourseProgress[]);
+  const loggedIn = !!p && p.ok;
   return r.ok
-    ? { courses: r.courses, authors: r.authors, categories: r.categories, progress }
-    : { courses: [] as DbCourse[], authors: [] as DbAuthor[], categories: [] as AdminCategory[], progress };
+    ? { courses: r.courses, authors: r.authors, categories: r.categories, progress, loggedIn }
+    : { courses: [] as DbCourse[], authors: [] as DbAuthor[], categories: [] as AdminCategory[], progress, loggedIn };
 });
 
 export const courseBySlugFn = createServerFn({ method: "GET" })

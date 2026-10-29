@@ -4,7 +4,7 @@ import PublicLayout from "@/components/site/PublicLayout";
 import CourseCard from "@/components/university/CourseCard";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
-import { catalogFn } from "@/lib/courses";
+import { catalogFn, lessonsTotal } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 import { getSiteOrigin } from "@/lib/site-origin";
 
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/university/")({
 });
 
 function UniversityPage() {
-  const { courses: COURSES, authors, categories, progress } = Route.useLoaderData();
+  const { courses: COURSES, authors, categories, progress, loggedIn } = Route.useLoaderData();
   const AUTHORS = useMemo(
     () => authors.filter((a) => COURSES.some((c) => c.author?.id === a.id)),
     [authors, COURSES],
@@ -128,7 +128,11 @@ function UniversityPage() {
           {list.length ? (
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((c) => (
-                <CourseCard key={c.id} c={c} progress={progress.find((p) => p.courseId === c.id)} />
+                <CourseCard
+                  key={c.id}
+                  c={c}
+                  progress={progress.find((p) => p.courseId === c.id) ?? (loggedIn ? { courseId: c.id, done: 0, total: lessonsTotal(c), percent: 0 } : undefined)}
+                />
               ))}
             </div>
           ) : (
