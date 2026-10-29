@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/requireAuth";
 import { createFileRoute, getRouteApi, Link, notFound } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import { AccessBadge } from "@/components/university/CourseCard";
+import CategoryChips from "@/components/university/CategoryChips";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -47,14 +48,15 @@ function CoursePage() {
           </Link>
           <div className="mt-8 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
             <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-xs uppercase tracking-[0.14em] text-brand-muted">{course.categories.map((x) => x.name).join(" · ") || course.category}</span>
-                <AccessBadge access={course.access} price={course.price} />
-              </div>
+              <AccessBadge access={course.access} price={course.price} />
               <h1 className="mt-5 font-display text-4xl font-light leading-[1.1] text-brand-ink md:text-[52px]">
                 {course.title}
               </h1>
               <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-brand-muted">{course.short}</p>
+              <CategoryChips
+                names={course.categories.length ? course.categories.map((x) => x.name) : course.category ? [course.category] : []}
+                className="mt-5"
+              />
 
               {course.coverUrl && (
                 <div className="mt-8 aspect-[16/9] overflow-hidden rounded-2xl bg-brand-surface">

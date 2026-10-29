@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
+import CategoryChips from "@/components/university/CategoryChips";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import { courseMinutes, formatDuration, formatPrice, lessonsTotal, type CourseProgress, type DbCourse } from "@/lib/courses";
 
@@ -41,20 +42,13 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
       )}
       <div className="flex flex-1 flex-col p-6 sm:p-7">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap gap-1.5">
-            {cats.map((name) => (
-              <span key={name} className="rounded-md bg-brand-surface px-2 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-brand-muted">
-                {name}
-              </span>
-            ))}
-          </div>
-          <span className="shrink-0"><AccessBadge access={c.access} price={c.price} /></span>
+          <h3 className="min-w-0 font-display text-xl font-semibold leading-snug text-brand-ink">
+            <Link to="/university/$slug" params={{ slug: c.slug }} className="after:absolute after:inset-0 after:content-['']">
+              {c.title}
+            </Link>
+          </h3>
+          <span className="mt-0.5 shrink-0"><AccessBadge access={c.access} price={c.price} /></span>
         </div>
-        <h3 className="mt-6 font-display text-xl font-semibold text-brand-ink">
-          <Link to="/university/$slug" params={{ slug: c.slug }} className="after:absolute after:inset-0 after:content-['']">
-            {c.title}
-          </Link>
-        </h3>
         <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>
         {free && (
           <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">
@@ -66,6 +60,7 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           <span className="inline-flex items-center gap-1.5"><Icon name="PlayCircle" size={15} />{lessonsTotal(c)} уроков</span>
           {minutes > 0 && <span className="inline-flex items-center gap-1.5"><Icon name="Clock" size={15} />{formatDuration(minutes)}</span>}
         </div>
+        <CategoryChips names={cats} className="mt-4" />
         {progress && (
           <div className="mt-5 rounded-lg bg-brand-light px-4 py-3">
             <div className="flex items-center justify-between text-sm">
