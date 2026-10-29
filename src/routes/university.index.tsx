@@ -4,8 +4,9 @@ import PublicLayout from "@/components/site/PublicLayout";
 import CourseCard from "@/components/university/CourseCard";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
-import { catalogFn, lessonsTotal } from "@/lib/courses";
+import { catalogFn, lessonsTotal, type CourseProgress } from "@/lib/courses";
 import { cn } from "@/lib/utils";
+import { PROGRESS_TONES, progressState, type ProgressState } from "@/lib/progressTone";
 import { getSiteOrigin } from "@/lib/site-origin";
 
 export const Route = createFileRoute("/university/")({
@@ -29,6 +30,12 @@ export const Route = createFileRoute("/university/")({
   component: UniversityPage,
 });
 
+const STAGES: [ProgressState, string][] = [
+  ["todo", "Не начатые"],
+  ["active", "В процессе"],
+  ["done", "Пройденные"],
+];
+
 function UniversityPage() {
   const { courses: COURSES, authors, categories, progress, loggedIn } = Route.useLoaderData();
   const AUTHORS = useMemo(
@@ -46,6 +53,15 @@ function UniversityPage() {
   );
   const [cat, setCat] = useState<number>(0);
   const [author, setAuthor] = useState<number | null>(null);
+  const [stage, setStage] = useState<ProgressState | null>(null);
+  const progressOf = useMemo(() => {
+    const map = new Map<number, CourseProgress>();
+    if (!loggedIn) return map;
+    for (const c of COURSES) {
+      map.set(c.id, progress.find((p) => p.courseId === c.id) ?? { courseId: c.id, done: 0, total: lessonsTotal(c), percent: 0 });
+    }
+    return map;
+  }, [COURSES, progress, loggedIn]);
   const visibleAuthors = useMemo(
     () => (cat ? AUTHORS.filter((a) => COURSES.some((c) => c.author?.id === a.id && c.categories.some((x) => x.id === cat))) : AUTHORS),
     [AUTHORS, COURSES, cat],
@@ -57,10 +73,20 @@ function UniversityPage() {
       COURSES.filter(
         (c) =>
           (!author || c.author?.id === author) &&
-          (!cat || c.categories.some((x) => x.id === cat)) ,
+          (!cat || c.categories.some((x) => x.id === cat)) &&
+          (!stage || (progressOf.has(c.id) && progressState(progressOf.get(c.id)!) === stage)),
       ),
-    [COURSES, cat, author],
+    [COURSES, cat, author, stage, progressOf],
   );
+  const stageCounts = useMemo(() => {
+    const base = COURSES.filter((c) => (!author || c.author?.id === author) && (!cat || c.categories.some((x) => x.id === cat)));
+    const out: Record<ProgressState, number> = { todo: 0, active: 0, done: 0 };
+    for (const c of base) {
+      const p = progressOf.get(c.id);
+      if (p) out[progressState(p)] += 1;
+    }
+    return out;
+  }, [COURSES, author, cat, progressOf]);
 
   return (
     <PublicLayout>
@@ -88,6 +114,30 @@ function UniversityPage() {
                 );
               })}
             </div>
+            {loggedIn && (
+              <div className="-mx-1 flex shrink-0 gap-2 overflow-x-auto px-1 pb-1">
+                {STAGES.map(([id, label]) => {
+                  const tone = PROGRESS_TONES[id];
+                  const active = stage === id;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => setStage(active ? null : id)}
+                      aria-pressed={active}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors",
+                        active ? cn(tone.box, tone.text, "shadow-sm") : "border-transparent bg-white text-brand-muted hover:text-brand-ink",
+                      )}
+                    >
+                      <Icon name={tone.icon} size={15} className={tone.iconCls} />
+                      {label}
+                      <span className={cn("text-xs tabular-nums", active ? tone.meta : "text-brand-ink/40")}>{stageCounts[id]}</span>
+                      {active && <Icon name="X" size={13} className="-mr-0.5 opacity-60" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="mt-8 border-b border-brand-ink/10 pb-8">
@@ -131,12 +181,25 @@ function UniversityPage() {
                 <CourseCard
                   key={c.id}
                   c={c}
-                  progress={progress.find((p) => p.courseId === c.id) ?? (loggedIn ? { courseId: c.id, done: 0, total: lessonsTotal(c), percent: 0 } : undefined)}
+                  progress={progressOf.get(c.id)}
                 />
               ))}
             </div>
           ) : (
-            <div className="mt-16 text-center text-brand-muted">По выбранным условиям обучений не найдено.</div>
+            <div className="mt-16 text-center text-brand-muted">
+              {stage === "active"
+                ? "Сейчас нет обучений в процессе — начните любое из каталога."
+                : stage === "done"
+                  ? "Пройденных обучений пока нет."
+                  : stage === "todo"
+                    ? "Все обучения по этим условиям вы уже начали."
+                    : "По выбранным условиям обучений не найдено."}
+              {stage && (
+                <div className="mt-3">
+                  <button onClick={() => setStage(null)} className="text-sm font-medium text-brand-blue hover:underline">Показать все обучения</button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </section>

@@ -33,8 +33,14 @@ export const PROGRESS_TONES = {
 
 export type ProgressTone = (typeof PROGRESS_TONES)[keyof typeof PROGRESS_TONES];
 
+export type ProgressState = keyof typeof PROGRESS_TONES;
+
+export function progressState(p: { done: number; total: number }): ProgressState {
+  if (p.total > 0 && p.done >= p.total) return "done";
+  if (p.done === 0) return "todo";
+  return "active";
+}
+
 export function progressTone(p: { done: number; total: number }): ProgressTone {
-  if (p.total > 0 && p.done >= p.total) return PROGRESS_TONES.done;
-  if (p.done === 0) return PROGRESS_TONES.todo;
-  return PROGRESS_TONES.active;
+  return PROGRESS_TONES[progressState(p)];
 }
