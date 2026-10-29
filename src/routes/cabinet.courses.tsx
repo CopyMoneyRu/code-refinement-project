@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
+import { progressTone } from "@/lib/progressTone";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { myCoursesFn } from "@/lib/learning";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,7 @@ function MyCourses() {
         <div className="grid gap-4 md:grid-cols-2">
           {list.map((c) => {
             const finished = c.progress.total > 0 && c.progress.done === c.progress.total;
+            const tone = progressTone(c.progress);
             return (
               <Link key={c.id} to="/cabinet/learn/$slug" params={{ slug: c.slug }} className="group">
                 <WsCard className="flex h-full gap-4 transition-colors group-hover:border-brand-blue/40">
@@ -51,12 +53,16 @@ function MyCourses() {
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold group-hover:text-brand-blue">{c.title}</div>
                     {c.author && <div className="mt-0.5 text-sm text-brand-muted">{c.author.name}</div>}
-                    <div className="mt-4 flex items-center justify-between text-xs text-brand-muted">
-                      <span>{finished ? "Пройден" : `${c.progress.done} из ${c.progress.total} уроков`}</span>
-                      <span className="tabular-nums">{c.progress.percent}%</span>
+                    <div className="mt-4 flex items-center justify-between gap-2 text-xs">
+                      <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium", tone.box, tone.text)}>
+                        <Icon name={tone.icon} size={12} className={tone.iconCls} /> {tone.label}
+                      </span>
+                      <span className={cn("tabular-nums", tone.meta)}>
+                        {finished ? "" : `${c.progress.done} из ${c.progress.total} · `}{c.progress.percent}%
+                      </span>
                     </div>
-                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-brand-surface">
-                      <div className={cn("h-full rounded-full", finished ? "bg-emerald-500" : "bg-brand-blue")} style={{ width: `${c.progress.percent}%` }} />
+                    <div className={cn("mt-2 h-1.5 overflow-hidden rounded-full", tone.track)}>
+                      <div className={cn("h-full rounded-full", tone.bar)} style={{ width: `${c.progress.percent}%` }} />
                     </div>
                   </div>
                 </WsCard>

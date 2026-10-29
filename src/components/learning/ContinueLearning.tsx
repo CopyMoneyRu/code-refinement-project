@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
+import { progressTone } from "@/lib/progressTone";
 import type { MyCourse } from "@/lib/learning";
 
 export default function ContinueLearning({ course }: { course: MyCourse }) {
   const { progress } = course;
   const finished = progress.total > 0 && progress.done === progress.total;
+  const tone = progressTone(progress);
   return (
     <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
       <div className="flex aspect-[16/10] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-surface sm:w-40">
@@ -19,11 +21,14 @@ export default function ContinueLearning({ course }: { course: MyCourse }) {
         {course.nextLessonTitle && !finished && (
           <div className="mt-1 truncate text-sm text-brand-muted">Следующий урок: {course.nextLessonTitle}</div>
         )}
-        <div className="mt-4 flex items-center gap-3">
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-brand-surface">
-            <div className="h-full rounded-full bg-brand-blue transition-all" style={{ width: `${progress.percent}%` }} />
+        <span className={"mt-3 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium " + tone.box + " " + tone.text}>
+          <Icon name={tone.icon} size={12} className={tone.iconCls} /> {tone.label}
+        </span>
+        <div className="mt-3 flex items-center gap-3">
+          <div className={"h-2 flex-1 overflow-hidden rounded-full " + tone.track}>
+            <div className={"h-full rounded-full transition-all " + tone.bar} style={{ width: `${progress.percent}%` }} />
           </div>
-          <span className="shrink-0 text-sm tabular-nums text-brand-muted">
+          <span className={"shrink-0 text-sm tabular-nums " + tone.meta}>
             {progress.done}/{progress.total} · {progress.percent}%
           </span>
         </div>

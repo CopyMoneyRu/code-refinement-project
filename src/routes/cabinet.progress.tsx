@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
+import { progressTone } from "@/lib/progressTone";
 import { EmptyState, WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
 import { formatMinutes, myCoursesFn, type MyCourse } from "@/lib/learning";
 
@@ -49,24 +50,24 @@ function ProgressPage() {
         <div className="border-b border-brand-ink/[0.08] px-6 py-4 font-semibold">По обучениям</div>
         {courses.length ? (
           <ul className="divide-y divide-brand-ink/[0.06]">
-            {courses.map((c) => (
+            {courses.map((c) => {
+              const tone = progressTone(c.progress);
+              return (
               <li key={c.id} className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:gap-6">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <Link to="/cabinet/learn/$slug" params={{ slug: c.slug }} className="truncate font-medium hover:text-brand-blue">
                       {c.title}
                     </Link>
-                    {isDone(c) && (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                        <Icon name="CheckCircle2" size={12} /> Завершено
-                      </span>
-                    )}
+                    <span className={"inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium " + tone.box + " " + tone.text}>
+                      <Icon name={tone.icon} size={12} className={tone.iconCls} /> {isDone(c) ? "Завершено" : tone.label}
+                    </span>
                   </div>
                   <div className="mt-3 flex items-center gap-3">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-brand-surface">
-                      <div className="h-full rounded-full bg-brand-blue" style={{ width: `${c.progress.percent}%` }} />
+                    <div className={"h-2 flex-1 overflow-hidden rounded-full " + tone.track}>
+                      <div className={"h-full rounded-full " + tone.bar} style={{ width: `${c.progress.percent}%` }} />
                     </div>
-                    <span className="w-12 shrink-0 text-right text-sm font-medium tabular-nums">{c.progress.percent}%</span>
+                    <span className={"w-12 shrink-0 text-right text-sm font-medium tabular-nums " + tone.text}>{c.progress.percent}%</span>
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-6 text-sm text-brand-muted sm:w-64 sm:justify-end">
@@ -78,7 +79,8 @@ function ProgressPage() {
                   </span>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         ) : (
           <EmptyState
