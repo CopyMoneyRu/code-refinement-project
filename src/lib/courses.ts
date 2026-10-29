@@ -220,9 +220,14 @@ export const authorBySlugFn = createServerFn({ method: "GET" })
   .validator((input: unknown) => ({ slug: typeof input === "object" && input && typeof (input as { slug?: unknown }).slug === "string" ? (input as { slug: string }).slug.slice(0, 60) : "" }))
   .handler(async ({ data }) => {
     const { callCourses } = await import("./courses.server");
-    const r = await callCourses<{ author: DbAuthor; courses: DbCourse[] }>("author", { slug: data.slug });
+    const { callLearning, hasSession } = await import("./learning.server");
+    const [r, p] = await Promise.all([
+      callCourses<{ author: DbAuthor; courses: DbCourse[] }>("author", { slug: data.slug }),
+      hasSession() ? callLearning<{ progress: CourseProgress[] }>("my_progress") : Promise.resolve(null),
+    ]);
     if (!r.ok) throw notFound();
-    return { author: r.author, courses: r.courses };
+    const loggedIn = !!p && p.ok;
+    return { author: r.author, courses: r.courses, progress: p && p.ok ? p.progress : ([] as CourseProgress[]), loggedIn };
   });
 
 const idPayload = (input: unknown) => {

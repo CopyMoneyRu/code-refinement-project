@@ -42,7 +42,7 @@ const LINK_ICONS: [RegExp, string][] = [
 const linkIcon = (l: AuthorLink) => LINK_ICONS.find(([re]) => re.test(l.url))?.[1] ?? "Globe";
 
 function AuthorPage() {
-  const { author, courses } = Route.useLoaderData();
+  const { author, courses, progress, loggedIn } = Route.useLoaderData();
   const lessons = courses.reduce((n, c) => n + lessonsTotal(c), 0);
   const cats = useMemo(() => {
     const map = new Map<string, { key: string; name: string; count: number }>();
@@ -170,7 +170,11 @@ function AuthorPage() {
                 </div>
                 <div className="mt-6 grid gap-5 sm:grid-cols-2">
                   {shown.map((c) => (
-                    <CourseCard key={c.id} c={c} />
+                    <CourseCard
+                      key={c.id}
+                      c={c}
+                      progress={progress.find((p) => p.courseId === c.id) ?? (loggedIn ? { courseId: c.id, done: 0, total: lessonsTotal(c), percent: 0 } : undefined)}
+                    />
                   ))}
                 </div>
               </div>
