@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import CourseCard from "@/components/university/CourseCard";
-import AuthorAvatar from "@/components/university/AuthorAvatar";
+import AuthorAvatar, { authorInitials } from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
 import { catalogFn, hasFreeContent, lessonsTotal, type CourseProgress } from "@/lib/courses";
 import { cn } from "@/lib/utils";
@@ -134,7 +134,7 @@ function UniversityPage() {
 
           <div className="mt-8 border-b border-brand-ink/10 pb-8">
             <h2 className="font-display text-xl font-semibold text-brand-ink">Авторы</h2>
-            <div className="-mx-1 mt-5 flex gap-3 overflow-x-auto px-1 pb-1">
+            <div className="-mx-1 mt-5 flex snap-x gap-3 overflow-x-auto px-1 pb-3 pt-1 [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden">
                 <AuthorChip active={!author} onClick={() => setAuthor(null)} name="Все авторы" />
                 {visibleAuthors.map((a) => (
                   <AuthorChip
@@ -210,30 +210,44 @@ function AuthorChip({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "flex w-[150px] shrink-0 flex-col items-center rounded-xl border bg-white px-3 py-4 text-center transition-colors",
-        active ? "border-brand-blue ring-1 ring-brand-blue" : "border-brand-ink/10 hover:border-brand-blue/40",
+        "group/author relative aspect-[3/4] w-[132px] shrink-0 snap-start overflow-hidden rounded-2xl text-left transition-all duration-300 sm:w-[164px]",
+        active
+          ? "ring-2 ring-brand-blue ring-offset-2 ring-offset-brand-light"
+          : "ring-1 ring-brand-ink/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-ink/10",
       )}
     >
       {isAll ? (
-        <span
-          className={cn(
-            "flex h-14 w-14 items-center justify-center rounded-full font-display text-base font-semibold",
-            active ? "bg-brand-blue text-white" : "bg-brand-surface text-brand-ink",
-          )}
-        >
-          Все
+        <span className="absolute inset-0 bg-gradient-to-br from-brand-blue to-[#1E3A5F]">
+          <span className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10" />
+          <span className="absolute -bottom-10 -left-8 h-28 w-28 rounded-full bg-white/[0.06]" />
+          <span className="absolute left-1/2 top-[38%] flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white">
+            <Icon name="Users" size={24} />
+          </span>
         </span>
-      ) : (
-        <AuthorAvatar
-          name={name}
-          photoUrl={photoUrl}
-          className={cn("h-14 w-14", active && !photoUrl && "bg-brand-blue text-white", active && photoUrl && "ring-2 ring-brand-blue ring-offset-2")}
-          textClassName="font-display text-base"
+      ) : photoUrl ? (
+        <img
+          src={photoUrl}
+          alt={name}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover/author:scale-[1.04]"
         />
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-surface to-white pb-10">
+          <span className="font-display text-4xl font-semibold text-brand-ink/25">{authorInitials(name)}</span>
+        </span>
       )}
-      <span className="mt-3 text-sm font-medium leading-snug text-brand-ink">{name}</span>
-      {role && <span className="mt-1 text-xs leading-snug text-brand-muted">{role}</span>}
+      {!isAll && <span className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[#0E1A2B]/90 via-[#0E1A2B]/40 to-transparent" />}
+      <span className="absolute inset-x-0 bottom-0 p-3 sm:p-3.5">
+        <span className="block font-display text-[13px] font-semibold leading-tight text-white sm:text-sm">{name}</span>
+        {role && <span className="mt-1 line-clamp-2 block text-[11px] leading-snug text-white/70 sm:text-xs">{role}</span>}
+      </span>
+      {active && (
+        <span className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand-blue text-white shadow-md ring-2 ring-white">
+          <Icon name="Check" size={14} />
+        </span>
+      )}
     </button>
   );
 }
