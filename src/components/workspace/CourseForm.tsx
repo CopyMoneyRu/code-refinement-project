@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import Icon from "@/components/ui/icon";
 import CategoryPicker from "@/components/workspace/CategoryPicker";
+import CoursePricing from "@/components/workspace/CoursePricing";
 import { saveCourseFn, uploadCoverFn, type CourseCategory, type CourseInput, type DbAuthor, type DbCourse } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,9 @@ const EMPTY: CourseInput = {
   description: "",
   access: "free",
   price: 0,
+  oldPrice: 0,
+  tariffs: [],
+  clubMonths: 0,
   authorId: null,
   coverUrl: "",
   published: true,
@@ -27,6 +31,9 @@ const fromCourse = (c: DbCourse): CourseInput => ({
   description: c.description,
   access: c.access,
   price: c.price,
+  oldPrice: c.oldPrice ?? 0,
+  tariffs: c.tariffs ?? [],
+  clubMonths: c.clubMonths ?? 0,
   authorId: c.author?.id ?? null,
   coverUrl: c.coverUrl,
   published: c.published,
@@ -103,9 +110,28 @@ export default function CourseForm({
     setError("");
     if (form.title.trim().length < 3) return setError("Укажите название обучения (не короче 3 символов)");
     if (!form.categoryIds.length) return setError("Выберите хотя бы одну категорию");
-    if (form.access === "paid" && form.price < 1) return setError("Укажите цену платного обучения");
+    if (form.access === "paid") {
+      if (form.tariffs.length) {
+        const bad = form.tariffs.findIndex((t) => !t.name.trim() || t.price < 1);
+        if (bad >= 0) return setError(`Заполните название и цену тарифа №${bad + 1}`);
+        const badOld = form.tariffs.find((t) => t.oldPrice > 0 && t.oldPrice <= t.price);
+        if (badOld) return setError(`Старая цена тарифа «${badOld.name}» должна быть больше новой`);
+      } else {
+        if (form.price < 1) return setError("Укажите цену платного обучения");
+        if (form.oldPrice > 0 && form.oldPrice <= form.price) return setError("Старая цена должна быть больше новой");
+      }
+    }
     setSaving(true);
-    const r = await saveCourseFn({ data: { ...form, price: form.access === "free" ? 0 : form.price } });
+    const paid = form.access === "paid";
+    const r = await saveCourseFn({
+      data: {
+        ...form,
+        price: paid ? (form.tariffs.length ? Math.min(...form.tariffs.map((t) => t.price)) : form.price) : 0,
+        oldPrice: paid && !form.tariffs.length ? form.oldPrice : 0,
+        tariffs: paid ? form.tariffs : [],
+        clubMonths: paid ? form.clubMonths : 0,
+      },
+    });
     setSaving(false);
     if (!r.ok) return setError(r.message);
     onSaved(r.course, !form.id);
@@ -184,38 +210,7 @@ export default function CourseForm({
 
             <div>
               <Label>Доступ и цена</Label>
-              <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
-                <div className="flex rounded-lg border border-brand-ink/15 bg-white p-1 text-sm">
-                  {([
-                    ["free", "Бесплатный"],
-                    ["paid", "Платный"],
-                  ] as const).map(([v, l]) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => set("access", v)}
-                      className={cn("rounded-md px-4 py-1.5 font-medium transition-colors", form.access === v ? "bg-brand-blue text-white" : "text-brand-muted hover:text-brand-ink")}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
-                {form.access === "paid" && (
-                  <label className="relative">
-                    <input
-                      className={cn(inputCls, "pr-10")}
-                      type="number"
-                      min={1}
-                      step={1}
-                      inputMode="numeric"
-                      value={form.price || ""}
-                      onChange={(e) => set("price", Math.max(0, Math.round(Number(e.target.value) || 0)))}
-                      placeholder="Цена"
-                    />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted">₽</span>
-                  </label>
-                )}
-              </div>
+              <CoursePricing form={form} onChange={(patch) => setForm((f) => ({ ...f, ...patch }))} />
             </div>
 
             <div>

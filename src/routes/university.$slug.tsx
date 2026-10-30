@@ -1,12 +1,12 @@
 import { requireAuth } from "@/lib/requireAuth";
 import { createFileRoute, getRouteApi, Link, notFound } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
-import { AccessBadge } from "@/components/university/CourseCard";
+import { AccessBadge, ClubPerk } from "@/components/university/CourseCard";
 import CategoryChips from "@/components/university/CategoryChips";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { courseBySlugFn, formatPrice, lessonsTotal } from "@/lib/courses";
+import { courseBySlugFn, coursePricing, formatPrice, lessonsTotal, monthsLabel } from "@/lib/courses";
 
 export const Route = createFileRoute("/university/$slug")({
   beforeLoad: requireAuth,
@@ -37,6 +37,7 @@ function CoursePage() {
   const user = rootApi.useLoaderData();
   const { course } = Route.useLoaderData();
   const total = lessonsTotal(course);
+  const pricing = coursePricing(course);
   const freeCount = course.modules.reduce((n, m) => n + m.lessons.filter((l) => l.isFree).length, 0);
 
   return (
@@ -48,7 +49,7 @@ function CoursePage() {
           </Link>
           <div className="mt-8 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
             <div>
-              <AccessBadge access={course.access} price={course.price} />
+              <div className="flex flex-wrap items-center gap-2"><AccessBadge access={course.access} price={course.price} oldPrice={course.oldPrice} tariffs={course.tariffs} /><ClubPerk months={course.clubMonths ?? 0} /></div>
               <h1 className="mt-5 font-display text-4xl font-light leading-[1.1] text-brand-ink md:text-[52px]">
                 {course.title}
               </h1>
@@ -148,9 +149,43 @@ function CoursePage() {
             <aside className="lg:sticky lg:top-8 lg:self-start">
               <div className="rounded-2xl border border-brand-ink/10 bg-white p-7">
                 <div className="text-sm text-brand-muted">Доступ к обучению</div>
-                <div className="mt-2 font-display text-2xl font-semibold text-brand-ink">
-                  {course.access === "free" ? "Бесплатно" : course.price ? formatPrice(course.price) : "Платный доступ"}
+                <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="font-display text-2xl font-semibold text-brand-ink">
+                    {course.access === "free" ? "Бесплатно" : pricing.price ? `${pricing.from ? "от " : ""}${formatPrice(pricing.price)}` : "Платный доступ"}
+                  </span>
+                  {pricing.oldPrice > 0 && (
+                    <>
+                      <s className="text-base text-brand-muted">{formatPrice(pricing.oldPrice)}</s>
+                      <span className="rounded-md bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+                        −{Math.round(((pricing.oldPrice - pricing.price) * 100) / pricing.oldPrice)}%
+                      </span>
+                    </>
+                  )}
                 </div>
+                {course.access === "paid" && (course.tariffs?.length ?? 0) > 1 && (
+                  <ul className="mt-4 space-y-2.5">
+                    {course.tariffs.map((t, i) => (
+                      <li key={i} className="rounded-lg border border-brand-ink/10 bg-brand-light/60 px-4 py-3">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="font-medium text-brand-ink">{t.name}</span>
+                          <span className="shrink-0 text-right">
+                            {t.oldPrice > t.price && <s className="mr-1.5 text-xs text-brand-muted">{formatPrice(t.oldPrice)}</s>}
+                            <span className="font-semibold text-brand-ink">{formatPrice(t.price)}</span>
+                          </span>
+                        </div>
+                        {t.description && <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-brand-muted">{t.description}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {course.access === "paid" && (course.clubMonths ?? 0) > 0 && (
+                  <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-200/80 bg-amber-50 px-4 py-3">
+                    <Icon name="Gift" size={18} className="mt-0.5 shrink-0 text-amber-500" />
+                    <div className="text-sm leading-relaxed text-amber-900">
+                      <span className="font-medium">Подарок при покупке:</span> подписка на клуб «Капиталист» на {monthsLabel(course.clubMonths)}
+                    </div>
+                  </div>
+                )}
                 <p className="mt-3 text-sm leading-relaxed text-brand-muted">
                   {course.access === "free"
                     ? user

@@ -101,6 +101,9 @@ def course_out(r: dict, public: bool = False) -> dict:
         'categories': r.get('categories') or [],
         'access': r['access'],
         'price': r['price'],
+        'oldPrice': r.get('old_price') or 0,
+        'tariffs': r.get('tariffs') or [],
+        'clubMonths': r.get('club_months') or 0,
         'coverUrl': r['cover_url'],
         'published': r['published'],
         'modules': r['modules'] or [],
@@ -258,8 +261,51 @@ def validate(cur, body):
         return None, err(400, 'invalid_price', 'Цена должна быть целым числом в рублях')
     if access == 'free':
         price = 0
-    elif price < 1 or price > 10_000_000:
+    elif not body.get('tariffs') and (price < 1 or price > 10_000_000):
         return None, err(400, 'invalid_price', 'Укажите цену платного обучения в рублях')
+    tariffs = []
+    old_price = 0
+    if access == 'paid':
+        raw_tariffs = body.get('tariffs') if isinstance(body.get('tariffs'), list) else []
+        for i, tr in enumerate(raw_tariffs[:6]):
+            if not isinstance(tr, dict):
+                continue
+            name = str(tr.get('name', '')).strip()[:80]
+            try:
+                tp = int(tr.get('price') or 0)
+                top = int(tr.get('oldPrice') or 0)
+            except (TypeError, ValueError):
+                return None, err(400, 'invalid_tariff', 'Цены тарифов должны быть целыми числами')
+            if not name:
+                return None, err(400, 'invalid_tariff', f'Укажите название тарифа №{i + 1}')
+            if tp < 1 or tp > 10_000_000:
+                return None, err(400, 'invalid_tariff', f'Укажите цену тарифа «{name}»')
+            if top and top <= tp:
+                return None, err(400, 'invalid_tariff', f'Старая цена тарифа «{name}» должна быть больше новой')
+            tariffs.append({'name': name, 'price': tp, 'oldPrice': top if top > tp else 0,
+                            'description': str(tr.get('description', '')).strip()[:500]})
+        if len(tariffs) == 1:
+            return None, err(400, 'invalid_tariff', 'Добавьте минимум два тарифа или выберите один тариф')
+        if tariffs:
+            cheapest = min(tariffs, key=lambda x: x['price'])
+            price, old_price = cheapest['price'], cheapest['oldPrice']
+        else:
+            try:
+                old_price = int(body.get('oldPrice') or 0)
+            except (TypeError, ValueError):
+                return None, err(400, 'invalid_price', 'Старая цена должна быть целым числом в рублях')
+            if price < 1 or price > 10_000_000:
+                return None, err(400, 'invalid_price', 'Укажите цену платного обучения в рублях')
+            if old_price and old_price <= price:
+                return None, err(400, 'invalid_price', 'Старая цена должна быть больше новой')
+    try:
+        club_months = int(body.get('clubMonths') or 0)
+    except (TypeError, ValueError):
+        club_months = 0
+    if club_months < 0 or club_months > 36:
+        return None, err(400, 'invalid_club', 'Срок клуба — от 1 до 36 месяцев')
+    if access == 'free':
+        club_months = 0
     author_id = body.get('authorId')
     if author_id in (None, '', 0):
         author_id = None
@@ -276,7 +322,8 @@ def validate(cur, body):
         return None, err(400, 'invalid_cover', 'Некорректная ссылка на обложку')
     return {
         'title': title, 'category': category, 'short': short, 'description': description, 'category_ids': cat_ids,
-        'access': access, 'price': price, 'author_id': author_id, 'cover_url': cover,
+        'access': access, 'price': price, 'old_price': old_price, 'tariffs': json.dumps(tariffs, ensure_ascii=False),
+        'club_months': club_months, 'author_id': author_id, 'cover_url': cover,
         'published': bool(body.get('published', True)),
     }, None
 
@@ -370,7 +417,8 @@ def a_save(cur, body, user):
     if problem:
         return problem
     cid = body.get('id')
-    fields = ('title', 'category', 'short', 'description', 'access', 'price', 'author_id', 'cover_url', 'published')
+    fields = ('title', 'category', 'short', 'description', 'access', 'price', 'old_price', 'tariffs', 'club_months',
+              'author_id', 'cover_url', 'published')
     values = [data[f] for f in fields]
     if cid:
         try:

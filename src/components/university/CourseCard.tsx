@@ -3,14 +3,38 @@ import Icon from "@/components/ui/icon";
 import CategoryChips from "@/components/university/CategoryChips";
 import { PROGRESS_TONES } from "@/lib/progressTone";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
-import { courseMinutes, formatDuration, formatPrice, lessonsTotal, type CourseProgress, type DbCourse } from "@/lib/courses";
+import { courseMinutes, coursePricing, formatDuration, formatPrice, monthsLabel, lessonsTotal, type CourseProgress, type DbCourse } from "@/lib/courses";
 
-export function AccessBadge({ access, price }: { access: DbCourse["access"]; price?: number }) {
-  return access === "free" ? (
-    <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">Бесплатно</span>
-  ) : (
-    <span className="rounded-md bg-brand-blue/15 px-2.5 py-1 text-xs font-medium text-brand-blue">
-      {price ? formatPrice(price) : "Платное обучение"}
+export function AccessBadge({
+  access,
+  price,
+  oldPrice,
+  tariffs,
+}: {
+  access: DbCourse["access"];
+  price?: number;
+  oldPrice?: number;
+  tariffs?: DbCourse["tariffs"];
+}) {
+  if (access === "free") return <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">Бесплатно</span>;
+  const p = coursePricing({ access, price: price ?? 0, oldPrice, tariffs });
+  return (
+    <span className="inline-flex flex-col items-end gap-0.5">
+      {p.oldPrice > 0 && (
+        <span className="text-xs text-brand-muted line-through decoration-brand-muted/70">{formatPrice(p.oldPrice)}</span>
+      )}
+      <span className="whitespace-nowrap rounded-md bg-brand-blue/15 px-2.5 py-1 text-xs font-medium text-brand-blue">
+        {p.price ? `${p.from ? "от " : ""}${formatPrice(p.price)}` : "Платное обучение"}
+      </span>
+    </span>
+  );
+}
+
+export function ClubPerk({ months, className = "" }: { months: number; className?: string }) {
+  if (!months) return null;
+  return (
+    <span className={"inline-flex w-fit items-center gap-1.5 rounded-md border border-amber-200/80 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 " + className}>
+      <Icon name="Gift" size={13} className="text-amber-500" /> Клуб «Капиталист» на {monthsLabel(months)} в подарок
     </span>
   );
 }
@@ -39,7 +63,12 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-brand-ink/10 bg-white transition-colors hover:border-brand-blue/40">
       {c.coverUrl && (
-        <div className="aspect-[16/9] overflow-hidden bg-brand-surface">
+        <div className="relative aspect-[16/9] overflow-hidden bg-brand-surface">
+          {(c.clubMonths ?? 0) > 0 && (
+            <span className="absolute left-3 top-3 z-[1] inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium text-amber-800 shadow-sm">
+              <Icon name="Crown" size={13} className="text-amber-500" /> + клуб в подарок
+            </span>
+          )}
           <img src={c.coverUrl} alt={c.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
         </div>
       )}
@@ -50,13 +79,18 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
               {c.title}
             </Link>
           </h3>
-          <span className="mt-0.5 shrink-0"><AccessBadge access={c.access} price={c.price} /></span>
+          <span className="mt-0.5 shrink-0"><AccessBadge access={c.access} price={c.price} oldPrice={c.oldPrice} tariffs={c.tariffs} /></span>
         </div>
         <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>
-        {free && (
-          <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">
-            <Icon name="Gift" size={13} /> {free}
-          </span>
+        {((c.clubMonths ?? 0) > 0 || free) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {(c.clubMonths ?? 0) > 0 && <ClubPerk months={c.clubMonths} />}
+            {free && (
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                <Icon name="Gift" size={13} /> {free}
+              </span>
+            )}
+          </div>
         )}
         <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-7 text-sm text-brand-muted">
           {!c.flatProgram && <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>}

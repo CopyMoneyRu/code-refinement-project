@@ -220,7 +220,15 @@ function CoursesAdmin() {
                     <td className="px-5 py-3.5 text-brand-muted">{c.categories.map((x) => x.name).join(", ") || "—"}</td>
                     <td className="px-5 py-3.5 text-brand-muted">{c.author?.name ?? "—"}</td>
                     <td className="whitespace-nowrap px-5 py-3.5">
-                      {c.access === "free" ? <span className="text-emerald-700">Бесплатно</span> : formatPrice(c.price)}
+                      {c.access === "free" ? (
+                        <span className="text-emerald-700">Бесплатно</span>
+                      ) : (
+                        <>
+                          {(c.tariffs?.length ?? 0) > 1 ? "от " : ""}{formatPrice(c.price)}
+                          {c.oldPrice > c.price && <s className="ml-1.5 text-xs text-brand-muted">{formatPrice(c.oldPrice)}</s>}
+                          {(c.clubMonths ?? 0) > 0 && <Icon name="Gift" size={13} className="ml-1.5 inline text-amber-500" />}
+                        </>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-5 py-3.5 text-brand-muted">
                       {c.flatProgram ? "" : `${c.modules.length} мод. · `}{lessonsTotal(c)} ур.

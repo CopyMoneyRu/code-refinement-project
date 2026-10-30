@@ -43,6 +43,7 @@ export type CourseHead = {
   coverUrl: string;
   access: "free" | "paid";
   price: number;
+  priceFrom?: boolean;
   category: string;
   published: boolean;
   flat?: boolean;

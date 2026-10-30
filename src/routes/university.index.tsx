@@ -4,9 +4,8 @@ import PublicLayout from "@/components/site/PublicLayout";
 import CourseCard from "@/components/university/CourseCard";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
-import { catalogFn, lessonsTotal, type CourseProgress } from "@/lib/courses";
+import { catalogFn, hasFreeContent, lessonsTotal, type CourseProgress } from "@/lib/courses";
 import { cn } from "@/lib/utils";
-import { PROGRESS_TONES, progressState, type ProgressState } from "@/lib/progressTone";
 import { getSiteOrigin } from "@/lib/site-origin";
 
 export const Route = createFileRoute("/university/")({
@@ -30,11 +29,14 @@ export const Route = createFileRoute("/university/")({
   component: UniversityPage,
 });
 
-const STAGES: [ProgressState, string][] = [
-  ["todo", "Не начатые"],
-  ["active", "В процессе"],
-  ["done", "Пройденные"],
+type Kind = "all" | "free" | "paid";
+const KINDS: [Kind, string, string][] = [
+  ["all", "Все обучения", "LayoutGrid"],
+  ["free", "Бесплатные", "Gift"],
+  ["paid", "Платные", "Wallet"],
 ];
+const matchKind = (c: Parameters<typeof hasFreeContent>[0], k: Kind) =>
+  k === "all" || (k === "paid" ? c.access === "paid" : hasFreeContent(c));
 
 function UniversityPage() {
   const { courses: COURSES, authors, categories, progress, loggedIn } = Route.useLoaderData();
@@ -53,7 +55,7 @@ function UniversityPage() {
   );
   const [cat, setCat] = useState<number>(0);
   const [author, setAuthor] = useState<number | null>(null);
-  const [stage, setStage] = useState<ProgressState | null>(null);
+  const [kind, setKind] = useState<Kind>("all");
   const progressOf = useMemo(() => {
     const map = new Map<number, CourseProgress>();
     if (!loggedIn) return map;
@@ -74,24 +76,36 @@ function UniversityPage() {
         (c) =>
           (!author || c.author?.id === author) &&
           (!cat || c.categories.some((x) => x.id === cat)) &&
-          (!stage || (progressOf.has(c.id) && progressState(progressOf.get(c.id)!) === stage)),
+          matchKind(c, kind),
       ),
-    [COURSES, cat, author, stage, progressOf],
+    [COURSES, cat, author, kind],
   );
-  const stageCounts = useMemo(() => {
-    const base = COURSES.filter((c) => (!author || c.author?.id === author) && (!cat || c.categories.some((x) => x.id === cat)));
-    const out: Record<ProgressState, number> = { todo: 0, active: 0, done: 0 };
-    for (const c of base) {
-      const p = progressOf.get(c.id);
-      if (p) out[progressState(p)] += 1;
-    }
-    return out;
-  }, [COURSES, author, cat, progressOf]);
 
   return (
     <PublicLayout>
       <section className="pb-24 pt-10 md:pt-14">
         <div className="container-x">
+          <div className="mb-6 flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl border border-brand-ink/10 bg-white p-1">
+            {KINDS.map(([id, label, icon]) => {
+              const active = kind === id;
+              const count = COURSES.filter((c) => matchKind(c, id)).length;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setKind(id)}
+                  aria-pressed={active}
+                  className={cn(
+                    "inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                    active ? "bg-brand-ink text-white" : "text-brand-muted hover:text-brand-ink",
+                  )}
+                >
+                  <Icon name={icon} size={15} />
+                  {label}
+                  <span className={cn("text-xs tabular-nums", active ? "text-white/70" : "text-brand-ink/40")}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
               {CATEGORIES.map((c) => {
@@ -114,30 +128,6 @@ function UniversityPage() {
                 );
               })}
             </div>
-            {loggedIn && (
-              <div className="-mx-1 flex shrink-0 gap-2 overflow-x-auto px-1 pb-1">
-                {STAGES.map(([id, label]) => {
-                  const tone = PROGRESS_TONES[id];
-                  const active = stage === id;
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => setStage(active ? null : id)}
-                      aria-pressed={active}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors",
-                        active ? cn(tone.box, tone.text, "shadow-sm") : "border-transparent bg-white text-brand-muted hover:text-brand-ink",
-                      )}
-                    >
-                      <Icon name={tone.icon} size={15} className={tone.iconCls} />
-                      {label}
-                      <span className={cn("text-xs tabular-nums", active ? tone.meta : "text-brand-ink/40")}>{stageCounts[id]}</span>
-                      {active && <Icon name="X" size={13} className="-mr-0.5 opacity-60" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
           <div className="mt-8 border-b border-brand-ink/10 pb-8">
@@ -187,16 +177,10 @@ function UniversityPage() {
             </div>
           ) : (
             <div className="mt-16 text-center text-brand-muted">
-              {stage === "active"
-                ? "Сейчас нет обучений в процессе — начните любое из каталога."
-                : stage === "done"
-                  ? "Пройденных обучений пока нет."
-                  : stage === "todo"
-                    ? "Все обучения по этим условиям вы уже начали."
-                    : "По выбранным условиям обучений не найдено."}
-              {stage && (
+              По выбранным условиям обучений не найдено.
+              {kind !== "all" && (
                 <div className="mt-3">
-                  <button onClick={() => setStage(null)} className="text-sm font-medium text-brand-blue hover:underline">Показать все обучения</button>
+                  <button onClick={() => setKind("all")} className="text-sm font-medium text-brand-blue hover:underline">Показать все обучения</button>
                 </div>
               )}
             </div>

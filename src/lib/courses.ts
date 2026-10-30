@@ -33,6 +33,8 @@ export type AuthorInput = {
   published: boolean;
 };
 
+export type CourseTariff = { name: string; price: number; oldPrice: number; description: string };
+
 export type DbCourse = {
   id: number;
   slug: string;
@@ -43,6 +45,9 @@ export type DbCourse = {
   categories: CourseCategory[];
   access: "free" | "paid";
   price: number;
+  oldPrice: number;
+  tariffs: CourseTariff[];
+  clubMonths: number;
   coverUrl: string;
   published: boolean;
   modules: DbModule[];
@@ -59,6 +64,9 @@ export type CourseInput = {
   description: string;
   access: "free" | "paid";
   price: number;
+  oldPrice: number;
+  tariffs: CourseTariff[];
+  clubMonths: number;
   authorId: number | null;
   coverUrl: string;
   published: boolean;
@@ -89,6 +97,25 @@ export const formatDuration = (min: number) => {
 export type CourseProgress = { courseId: number; done: number; total: number; percent: number };
 
 export const formatPrice = (rub: number) => `${rub.toLocaleString("ru-RU")} ₽`;
+
+export const monthsLabel = (n: number) => {
+  const m10 = n % 10, m100 = n % 100;
+  return `${n} ${m10 === 1 && m100 !== 11 ? "месяц" : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? "месяца" : "месяцев"}`;
+};
+
+export const coursePricing = (c: { access: "free" | "paid"; price: number; oldPrice?: number; tariffs?: CourseTariff[] }) => {
+  if (c.access === "free") return { free: true, from: false, price: 0, oldPrice: 0 };
+  const tariffs = c.tariffs ?? [];
+  if (tariffs.length > 1) {
+    const min = tariffs.reduce((a, b) => (b.price < a.price ? b : a));
+    return { free: false, from: true, price: min.price, oldPrice: min.oldPrice > min.price ? min.oldPrice : 0 };
+  }
+  const old = c.oldPrice ?? 0;
+  return { free: false, from: false, price: c.price, oldPrice: old > c.price ? old : 0 };
+};
+
+export const hasFreeContent = (c: { access: "free" | "paid"; modules: DbModule[] }) =>
+  c.access === "free" || c.modules.some((m) => m.lessons.some((l) => l.isFree));
 
 export const catalogFn = createServerFn({ method: "GET" }).handler(async () => {
   const { callCourses } = await import("./courses.server");
@@ -149,6 +176,17 @@ export const saveCourseFn = createServerFn({ method: "POST" })
       description: str(o.description, 20000),
       access: o.access === "paid" ? "paid" : "free",
       price: Math.max(0, Math.round(Number(o.price) || 0)),
+      oldPrice: Math.max(0, Math.round(Number(o.oldPrice) || 0)),
+      tariffs: (Array.isArray(o.tariffs) ? o.tariffs : []).slice(0, 6).map((t) => {
+        const to = (t && typeof t === "object" ? t : {}) as Record<string, unknown>;
+        return {
+          name: str(to.name, 80),
+          price: Math.max(0, Math.round(Number(to.price) || 0)),
+          oldPrice: Math.max(0, Math.round(Number(to.oldPrice) || 0)),
+          description: str(to.description, 500),
+        };
+      }),
+      clubMonths: Math.min(36, Math.max(0, Math.round(Number(o.clubMonths) || 0))),
       authorId: Number(o.authorId) || null,
       coverUrl: str(o.coverUrl, 500),
       published: o.published !== false,
