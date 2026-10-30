@@ -140,15 +140,15 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           </span>
         </div>
         {c.short && <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>}
+        <CategoryChips names={cats} className="mt-3" />
         <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-6 text-sm text-brand-muted">
           {!c.flatProgram && <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>}
           <span className="inline-flex items-center gap-1.5"><Icon name="PlayCircle" size={15} />{lessonsTotal(c)} уроков</span>
           {minutes > 0 && <span className="inline-flex items-center gap-1.5"><Icon name="Clock" size={15} />{formatDuration(minutes)}</span>}
           {free && <span className="inline-flex items-center gap-1.5 text-emerald-700"><Icon name="Unlock" size={15} />{free}</span>}
         </div>
-        <CategoryChips names={cats} className="mt-4" />
         {progress && tone && (
-          <div className="mt-5">
+          <div className="mt-3">
             <div className="flex items-center justify-between text-[13px]">
               <span className={"inline-flex items-center gap-1.5 font-medium " + tone.text}>
                 <Icon name={tone.icon} size={14} className={tone.iconCls} />
