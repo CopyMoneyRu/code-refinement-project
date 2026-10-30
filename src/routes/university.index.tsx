@@ -96,23 +96,14 @@ function UniversityPage() {
                   role="tab"
                   aria-selected={active}
                   className={cn(
-                    "flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2 text-[13px] font-medium transition-colors sm:flex-row sm:gap-2 sm:px-4 sm:text-sm",
+                    "flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-1.5 py-2 text-[13px] font-medium transition-colors sm:gap-2 sm:px-4 sm:text-sm",
                     active ? "bg-brand-blue text-white shadow-sm" : "text-brand-muted hover:bg-brand-light hover:text-brand-ink",
                   )}
                 >
-                  <span className="flex items-center gap-1.5">
-                    <Icon name={icon} size={15} className="shrink-0" />
-                    <span className="truncate sm:hidden">{short}</span>
-                    <span className="hidden whitespace-nowrap sm:inline">{label}</span>
-                  </span>
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 text-[11px] leading-4 tabular-nums sm:px-0 sm:text-xs",
-                      active ? "bg-white/20 text-white sm:bg-transparent sm:text-white/75" : "bg-brand-light text-brand-ink/50 sm:bg-transparent sm:text-brand-ink/40",
-                    )}
-                  >
-                    {count}
-                  </span>
+                  <Icon name={icon} size={15} className="hidden shrink-0 sm:block" />
+                  <span className="truncate sm:hidden">{short}</span>
+                  <span className="hidden whitespace-nowrap sm:inline">{label}</span>
+                  <span className={cn("shrink-0 text-xs tabular-nums", active ? "text-white/75" : "text-brand-ink/40")}>{count}</span>
                 </button>
               );
             })}
