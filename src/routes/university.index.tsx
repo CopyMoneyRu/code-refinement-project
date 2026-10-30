@@ -30,10 +30,10 @@ export const Route = createFileRoute("/university/")({
 });
 
 type Kind = "all" | "free" | "paid";
-const KINDS: [Kind, string, string][] = [
-  ["all", "Все обучения", "LayoutGrid"],
-  ["free", "Бесплатные", "Gift"],
-  ["paid", "Платные", "Wallet"],
+const KINDS: [Kind, string, string, string][] = [
+  ["all", "Все обучения", "Все", "LayoutGrid"],
+  ["free", "Бесплатные", "Бесплатные", "Gift"],
+  ["paid", "Платные", "Платные", "Wallet"],
 ];
 const matchKind = (c: Parameters<typeof hasFreeContent>[0], k: Kind) =>
   k === "all" || (k === "paid" ? c.access === "paid" : hasFreeContent(c));
@@ -85,23 +85,34 @@ function UniversityPage() {
     <PublicLayout>
       <section className="pb-24 pt-10 md:pt-14">
         <div className="container-x">
-          <div className="mb-6 flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl border border-brand-ink/10 bg-white p-1">
-            {KINDS.map(([id, label, icon]) => {
+          <div role="tablist" aria-label="Тип обучений" className="mb-6 grid w-full grid-cols-3 gap-1 rounded-xl border border-brand-ink/10 bg-white p-1 sm:inline-grid sm:w-auto sm:auto-cols-max sm:grid-flow-col sm:grid-cols-none">
+            {KINDS.map(([id, label, short, icon]) => {
               const active = kind === id;
               const count = COURSES.filter((c) => matchKind(c, id)).length;
               return (
                 <button
                   key={id}
                   onClick={() => setKind(id)}
-                  aria-pressed={active}
+                  role="tab"
+                  aria-selected={active}
                   className={cn(
-                    "inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                    active ? "bg-brand-blue text-white" : "text-brand-muted hover:text-brand-ink",
+                    "flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2 text-[13px] font-medium transition-colors sm:flex-row sm:gap-2 sm:px-4 sm:text-sm",
+                    active ? "bg-brand-blue text-white shadow-sm" : "text-brand-muted hover:bg-brand-light hover:text-brand-ink",
                   )}
                 >
-                  <Icon name={icon} size={15} />
-                  {label}
-                  <span className={cn("text-xs tabular-nums", active ? "text-white/75" : "text-brand-ink/40")}>{count}</span>
+                  <span className="flex items-center gap-1.5">
+                    <Icon name={icon} size={15} className="shrink-0" />
+                    <span className="truncate sm:hidden">{short}</span>
+                    <span className="hidden whitespace-nowrap sm:inline">{label}</span>
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 text-[11px] leading-4 tabular-nums sm:px-0 sm:text-xs",
+                      active ? "bg-white/20 text-white sm:bg-transparent sm:text-white/75" : "bg-brand-light text-brand-ink/50 sm:bg-transparent sm:text-brand-ink/40",
+                    )}
+                  >
+                    {count}
+                  </span>
                 </button>
               );
             })}
