@@ -121,7 +121,7 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           <img src={c.coverUrl} alt={c.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
         </div>
       )}
-      <div className="flex flex-1 flex-col p-6 sm:p-7">
+      <div className="flex flex-1 flex-col px-6 pb-4 pt-6 sm:px-7 sm:pb-5 sm:pt-7">
         {!c.coverUrl && (discountPercent(c) > 0 || (c.access === "paid" && (c.clubMonths ?? 0) > 0)) && (
           <div className="mb-3 flex items-center justify-between gap-2">
             <ClubBadge c={c} />
@@ -141,7 +141,7 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
         </div>
         {c.short && <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>}
         <CategoryChips names={cats} className="mt-3" />
-        <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-6 text-sm text-brand-muted">
+        <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-5 text-sm text-brand-muted">
           {!c.flatProgram && <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>}
           <span className="inline-flex items-center gap-1.5"><Icon name="PlayCircle" size={15} />{lessonsTotal(c)} уроков</span>
           {minutes > 0 && <span className="inline-flex items-center gap-1.5"><Icon name="Clock" size={15} />{formatDuration(minutes)}</span>}
@@ -161,7 +161,7 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
             </div>
           </div>
         )}
-        <div className="mt-5 flex justify-center">
+        <div className="mt-4 flex justify-center border-t border-brand-ink/[0.07] pt-3">
           {c.author?.slug ? (
             <Link
               to="/university/authors/$slug"
