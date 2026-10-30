@@ -135,7 +135,12 @@ function UniversityPage() {
           <div className="mt-8 border-b border-brand-ink/10 pb-8">
             <h2 className="font-display text-xl font-semibold text-brand-ink">Авторы</h2>
             <div className="-mx-1 mt-5 flex snap-x gap-3 overflow-x-auto px-1 pb-3 pt-1 [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden">
-                <AuthorChip active={!author} onClick={() => setAuthor(null)} name="Все авторы" />
+                <AuthorChip
+                  active={!author}
+                  onClick={() => setAuthor(null)}
+                  name="Все авторы"
+                  team={visibleAuthors.map((a) => ({ id: a.id, name: a.name, photoUrl: a.photoUrl }))}
+                />
                 {visibleAuthors.map((a) => (
                   <AuthorChip
                     key={a.id}
@@ -199,14 +204,16 @@ function AuthorChip({
   name,
   role,
   photoUrl,
+  team,
 }: {
   active: boolean;
   onClick: () => void;
   name: string;
   role?: string;
   photoUrl?: string;
+  team?: { id: number; name: string; photoUrl?: string }[];
 }) {
-  const isAll = !role && !photoUrl && name === "Все авторы";
+  const isAll = !!team;
   return (
     <button
       onClick={onClick}
@@ -219,11 +226,11 @@ function AuthorChip({
       )}
     >
       {isAll ? (
-        <span className="absolute inset-0 bg-gradient-to-br from-brand-blue to-[#1E3A5F]">
-          <span className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10" />
-          <span className="absolute -bottom-10 -left-8 h-28 w-28 rounded-full bg-white/[0.06]" />
-          <span className="absolute left-1/2 top-[38%] flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white">
-            <Icon name="Users" size={24} />
+        <span className="absolute inset-0 overflow-hidden bg-gradient-to-br from-[#2B5C93] via-[#1F4372] to-[#0E1A2B]">
+          <span className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand-blue/40 blur-2xl" />
+          <span className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-sky-300/15 blur-2xl" />
+          <span className="absolute inset-x-0 top-[40%] -translate-y-1/2 px-3">
+            <TeamStack team={team} />
           </span>
         </span>
       ) : photoUrl ? (
@@ -242,6 +249,7 @@ function AuthorChip({
       <span className="absolute inset-x-0 bottom-0 p-3 sm:p-3.5">
         <span className="block font-display text-[13px] font-semibold leading-tight text-white sm:text-sm">{name}</span>
         {role && <span className="mt-1 line-clamp-2 block text-[11px] leading-snug text-white/70 sm:text-xs">{role}</span>}
+        {team && team.length > 0 && <span className="mt-1 block text-[11px] leading-snug text-white/70 sm:text-xs">{authorsLabel(team.length)}</span>}
       </span>
       {active && (
         <span className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand-blue text-white shadow-md ring-2 ring-white">
@@ -249,5 +257,55 @@ function AuthorChip({
         </span>
       )}
     </button>
+  );
+}
+
+const authorsLabel = (n: number) => {
+  const m10 = n % 10, m100 = n % 100;
+  return `${n} ${m10 === 1 && m100 !== 11 ? "автор" : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? "автора" : "авторов"}`;
+};
+
+function TeamStack({ team }: { team: { id: number; name: string; photoUrl?: string }[] }) {
+  if (!team.length) {
+    return (
+      <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-white">
+        <Icon name="Users" size={24} />
+      </span>
+    );
+  }
+  const MAX = 6;
+  const shown = team.length > MAX ? team.slice(0, MAX - 1) : team;
+  const rest = team.length - shown.length;
+  const items: ({ kind: "a"; a: (typeof team)[number] } | { kind: "more"; n: number })[] = [
+    ...shown.map((a) => ({ kind: "a" as const, a })),
+    ...(rest > 0 ? [{ kind: "more" as const, n: rest }] : []),
+  ];
+  const big = items.length === 1 ? "h-16 w-16 sm:h-20 sm:w-20" : items.length === 2 ? "h-12 w-12 sm:h-14 sm:w-14" : "h-10 w-10 sm:h-12 sm:w-12";
+  const rows = items.length <= 3 ? [items] : [items.slice(0, Math.ceil(items.length / 2)), items.slice(Math.ceil(items.length / 2))];
+  return (
+    <span className="flex flex-col items-center">
+      {rows.map((row, r) => (
+        <span key={r} className={cn("flex justify-center -space-x-3", r > 0 && "-mt-2.5")}>
+          {row.map((it, k) =>
+            it.kind === "a" ? (
+              <AuthorAvatar
+                key={it.a.id}
+                name={it.a.name}
+                photoUrl={it.a.photoUrl}
+                className={cn(big, "relative bg-white/90 shadow-lg shadow-black/25 ring-2 ring-white/90 transition-transform duration-300 group-hover/author:-translate-y-0.5")}
+                textClassName="text-xs"
+              />
+            ) : (
+              <span
+                key={`more-${k}`}
+                className={cn(big, "relative flex shrink-0 items-center justify-center rounded-full bg-brand-blue text-xs font-semibold text-white shadow-lg shadow-black/25 ring-2 ring-white/90")}
+              >
+                +{it.n}
+              </span>
+            ),
+          )}
+        </span>
+      ))}
+    </span>
   );
 }
