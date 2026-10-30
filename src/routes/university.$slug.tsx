@@ -7,7 +7,7 @@ import CategoryChips from "@/components/university/CategoryChips";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { courseBySlugFn, coursePricing, formatPrice, lessonsTotal, monthsLabel } from "@/lib/courses";
+import { courseBySlugFn, coursePricing, formatPrice, lessonsTotal, clubLabel } from "@/lib/courses";
 
 export const Route = createFileRoute("/university/$slug")({
   beforeLoad: requireAuth,
@@ -50,7 +50,7 @@ function CoursePage() {
           </Link>
           <div className="mt-8 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
             <div>
-              <div className="flex flex-wrap items-center gap-2"><AccessBadge access={course.access} price={course.price} oldPrice={course.oldPrice} tariffs={course.tariffs} /><ClubPerk months={course.clubMonths ?? 0} /></div>
+              <div className="flex flex-wrap items-center gap-2"><AccessBadge access={course.access} price={course.price} oldPrice={course.oldPrice} tariffs={course.tariffs} /><ClubPerk months={course.clubMonths ?? 0} unit={course.clubUnit} /></div>
               <h1 className="mt-5 font-display text-4xl font-light leading-[1.1] text-brand-ink md:text-[52px]">
                 {course.title}
               </h1>
@@ -184,7 +184,7 @@ function CoursePage() {
                   <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-200/80 bg-amber-50 px-4 py-3">
                     <Icon name="Gift" size={18} className="mt-0.5 shrink-0 text-amber-500" />
                     <div className="text-sm leading-relaxed text-amber-900">
-                      <span className="font-medium">Подарок при покупке:</span> подписка на клуб «CAPITALIST» на {monthsLabel(course.clubMonths)}
+                      <span className="font-medium">Подарок при покупке:</span> подписка на клуб «CAPITALIST» на {clubLabel(course.clubMonths, course.clubUnit)}
                     </div>
                   </div>
                 )}

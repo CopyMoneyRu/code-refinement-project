@@ -4,7 +4,7 @@ import CategoryChips from "@/components/university/CategoryChips";
 import { PROGRESS_TONES } from "@/lib/progressTone";
 import DiscountTimer from "@/components/university/DiscountTimer";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
-import { courseMinutes, coursePricing, formatDuration, formatPrice, monthsLabel, lessonsTotal, type CourseProgress, type DbCourse } from "@/lib/courses";
+import { courseMinutes, coursePricing, formatDuration, formatPrice, clubLabel, lessonsTotal, type CourseProgress, type DbCourse } from "@/lib/courses";
 
 export function AccessBadge({
   access,
@@ -36,11 +36,11 @@ export function AccessBadge({
   );
 }
 
-export function ClubPerk({ months, className = "" }: { months: number; className?: string }) {
+export function ClubPerk({ months, unit, className = "" }: { months: number; unit?: DbCourse["clubUnit"]; className?: string }) {
   if (!months) return null;
   return (
     <span className={"inline-flex w-fit items-center gap-1.5 rounded-md border border-amber-200/80 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 " + className}>
-      <Icon name="Gift" size={13} className="text-amber-500" /> Клуб «CAPITALIST» на {monthsLabel(months)} в подарок
+      <Icon name="Gift" size={13} className="text-amber-500" /> Клуб «CAPITALIST» на {clubLabel(months, unit)} в подарок
     </span>
   );
 }
@@ -91,7 +91,7 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
         {((c.clubMonths ?? 0) > 0 || free || c.discountUntil) && (
           <div className="mt-4 flex flex-wrap gap-2">
             {c.discountUntil && <DiscountTimer until={c.discountUntil} />}
-            {(c.clubMonths ?? 0) > 0 && <ClubPerk months={c.clubMonths} />}
+            {(c.clubMonths ?? 0) > 0 && <ClubPerk months={c.clubMonths} unit={c.clubUnit} />}
             {free && (
               <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">
                 <Icon name="Gift" size={13} /> {free}

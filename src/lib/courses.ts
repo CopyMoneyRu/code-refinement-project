@@ -48,6 +48,7 @@ export type DbCourse = {
   oldPrice: number;
   tariffs: CourseTariff[];
   clubMonths: number;
+  clubUnit?: ClubUnit;
   discountUntil: string | null;
   coverUrl: string;
   published: boolean;
@@ -68,6 +69,7 @@ export type CourseInput = {
   oldPrice: number;
   tariffs: CourseTariff[];
   clubMonths: number;
+  clubUnit: ClubUnit;
   discountUntil: string;
   authorId: number | null;
   coverUrl: string;
@@ -104,6 +106,15 @@ export const monthsLabel = (n: number) => {
   const m10 = n % 10, m100 = n % 100;
   return `${n} ${m10 === 1 && m100 !== 11 ? "месяц" : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? "месяца" : "месяцев"}`;
 };
+
+export type ClubUnit = "day" | "month";
+
+export const daysLabel = (n: number) => {
+  const m10 = n % 10, m100 = n % 100;
+  return `${n} ${m10 === 1 && m100 !== 11 ? "день" : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? "дня" : "дней"}`;
+};
+
+export const clubLabel = (n: number, unit?: ClubUnit) => (unit === "day" ? daysLabel(n) : monthsLabel(n));
 
 export const coursePricing = (c: { access: "free" | "paid"; price: number; oldPrice?: number; tariffs?: CourseTariff[] }) => {
   if (c.access === "free") return { free: true, from: false, price: 0, oldPrice: 0 };
@@ -188,7 +199,8 @@ export const saveCourseFn = createServerFn({ method: "POST" })
           description: str(to.description, 500),
         };
       }),
-      clubMonths: Math.min(36, Math.max(0, Math.round(Number(o.clubMonths) || 0))),
+      clubUnit: o.clubUnit === "day" ? "day" : "month",
+      clubMonths: Math.min(o.clubUnit === "day" ? 365 : 36, Math.max(0, Math.round(Number(o.clubMonths) || 0))),
       discountUntil: /^\d{4}-\d{2}-\d{2}$/.test(String(o.discountUntil ?? "")) ? String(o.discountUntil) : "",
       authorId: Number(o.authorId) || null,
       coverUrl: str(o.coverUrl, 500),

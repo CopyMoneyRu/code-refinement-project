@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
-import { formatPrice, monthsLabel, type CourseInput, type CourseTariff } from "@/lib/courses";
+import { clubLabel, formatPrice, type CourseInput, type CourseTariff } from "@/lib/courses";
 import { cn } from "@/lib/utils";
 
 const inputCls =
@@ -339,16 +339,58 @@ export default function CoursePricing({ form, onChange }: { form: CourseInput; o
               </span>
             </label>
             {form.clubMonths > 0 && (
-              <div className="mt-3 flex items-center gap-3 pl-7">
-                <input
-                  className={cn(inputCls, "h-10 w-24")}
-                  type="number"
-                  min={1}
-                  max={36}
-                  value={form.clubMonths}
-                  onChange={(e) => onChange({ clubMonths: Math.min(36, Math.max(1, toInt(e.target.value))) })}
-                />
-                <span className="text-sm text-brand-muted">{monthsLabel(form.clubMonths).replace(/^\d+\s/, "")} клуба в подарок</span>
+              <div className="mt-3 pl-7">
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    className={cn(inputCls, "h-10 w-24")}
+                    type="number"
+                    min={1}
+                    max={form.clubUnit === "day" ? 365 : 36}
+                    value={form.clubMonths}
+                    onChange={(e) => onChange({ clubMonths: Math.min(form.clubUnit === "day" ? 365 : 36, Math.max(1, toInt(e.target.value))) })}
+                  />
+                  <div className="inline-flex rounded-lg border border-brand-ink/15 bg-white p-1 text-sm">
+                    {([
+                      ["day", "Дней"],
+                      ["month", "Месяцев"],
+                    ] as const).map(([v, l]) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => onChange({ clubUnit: v, clubMonths: v === "month" ? Math.min(36, form.clubMonths) : form.clubMonths })}
+                        className={cn("rounded-md px-3 py-1 font-medium transition-colors", form.clubUnit === v ? "bg-brand-blue text-white" : "text-brand-muted hover:text-brand-ink")}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {([
+                    [7, "day"],
+                    [14, "day"],
+                    [1, "month"],
+                    [3, "month"],
+                    [6, "month"],
+                    [12, "month"],
+                  ] as const).map(([n, u]) => {
+                    const on = form.clubMonths === n && form.clubUnit === u;
+                    return (
+                      <button
+                        key={`${n}${u}`}
+                        type="button"
+                        onClick={() => onChange({ clubMonths: n, clubUnit: u })}
+                        className={cn(
+                          "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                          on ? "border-amber-300 bg-amber-50 text-amber-800" : "border-brand-ink/10 bg-white text-brand-muted hover:text-brand-ink",
+                        )}
+                      >
+                        {clubLabel(n, u)}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 text-xs text-brand-muted">В карточке: «Клуб «CAPITALIST» на {clubLabel(form.clubMonths, form.clubUnit)} в подарок»</div>
               </div>
             )}
           </div>

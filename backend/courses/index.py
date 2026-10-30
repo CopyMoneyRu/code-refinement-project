@@ -128,6 +128,7 @@ def course_out(r: dict, public: bool = False) -> dict:
         'tariffs': tariffs,
         'discountUntil': until.astimezone(MSK).isoformat() if until and (has_discount or not public) else None,
         'clubMonths': r.get('club_months') or 0,
+        'clubUnit': 'day' if r.get('club_unit') == 'day' else 'month',
         'coverUrl': r['cover_url'],
         'published': r['published'],
         'modules': r['modules'] or [],
@@ -326,8 +327,11 @@ def validate(cur, body):
         club_months = int(body.get('clubMonths') or 0)
     except (TypeError, ValueError):
         club_months = 0
-    if club_months < 0 or club_months > 36:
+    club_unit = 'day' if body.get('clubUnit') == 'day' else 'month'
+    if club_unit == 'month' and (club_months < 0 or club_months > 36):
         return None, err(400, 'invalid_club', 'Срок клуба — от 1 до 36 месяцев')
+    if club_unit == 'day' and (club_months < 0 or club_months > 365):
+        return None, err(400, 'invalid_club', 'Срок клуба — от 1 до 365 дней')
     if access == 'free':
         club_months = 0
     discount_until = None
@@ -356,7 +360,7 @@ def validate(cur, body):
     return {
         'title': title, 'category': category, 'short': short, 'description': description, 'category_ids': cat_ids,
         'access': access, 'price': price, 'old_price': old_price, 'tariffs': json.dumps(tariffs, ensure_ascii=False),
-        'club_months': club_months, 'discount_until': discount_until, 'author_id': author_id, 'cover_url': cover,
+        'club_months': club_months, 'club_unit': club_unit, 'discount_until': discount_until, 'author_id': author_id, 'cover_url': cover,
         'published': bool(body.get('published', True)),
     }, None
 
@@ -450,7 +454,7 @@ def a_save(cur, body, user):
     if problem:
         return problem
     cid = body.get('id')
-    fields = ('title', 'category', 'short', 'description', 'access', 'price', 'old_price', 'tariffs', 'club_months', 'discount_until',
+    fields = ('title', 'category', 'short', 'description', 'access', 'price', 'old_price', 'tariffs', 'club_months', 'club_unit', 'discount_until',
               'author_id', 'cover_url', 'published')
     values = [data[f] for f in fields]
     if cid:

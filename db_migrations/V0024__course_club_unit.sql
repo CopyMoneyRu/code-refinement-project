@@ -1,0 +1,1 @@
+ALTER TABLE courses ADD COLUMN club_unit VARCHAR(5) NOT NULL DEFAULT 'month';
