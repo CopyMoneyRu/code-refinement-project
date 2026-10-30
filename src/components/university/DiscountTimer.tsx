@@ -33,6 +33,38 @@ const daysWord = (n: number) => {
   return m10 === 1 && m100 !== 11 ? "день" : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? "дня" : "дней";
 };
 
+const hoursWord = (n: number) => {
+  const m10 = n % 10, m100 = n % 100;
+  return m10 === 1 && m100 !== 11 ? "час" : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? "часа" : "часов";
+};
+
+export function DiscountHint({ until, className }: { until: string; className?: string }) {
+  const [left, setLeft] = useState<number | null>(null);
+  useEffect(() => {
+    const end = new Date(until).getTime();
+    const tick = () => setLeft(Math.max(0, end - Date.now()));
+    tick();
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, [until]);
+  if (left === 0) return null;
+  const t = left === null ? null : split(left);
+  const urgent = !!t && t.d === 0;
+  const text = !t
+    ? `Скидка до ${discountDateLabel(until)}`
+    : t.d >= 1
+      ? `Скидка ещё ${t.d} ${daysWord(t.d)}`
+      : t.h >= 1
+        ? `Скидка заканчивается сегодня · ${t.h} ${hoursWord(t.h)}`
+        : "Скидка заканчивается через несколько минут";
+  return (
+    <span className={cn("inline-flex items-center gap-1 text-xs", urgent ? "font-medium text-rose-600" : "text-brand-muted", className)}>
+      <Icon name="Timer" size={12} className={urgent ? "text-rose-500" : "text-brand-muted/80"} />
+      {text}
+    </span>
+  );
+}
+
 export default function DiscountTimer({ until, variant = "card", className }: { until: string; variant?: "card" | "page"; className?: string }) {
   const left = useLeft(until);
   if (left === 0) return null;
