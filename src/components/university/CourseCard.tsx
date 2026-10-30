@@ -61,12 +61,12 @@ export function freeLabel(c: DbCourse) {
 
 
 function PriceBlock({ c }: { c: DbCourse }) {
-  if (c.access === "free") return <span className="text-base font-semibold text-emerald-700">Бесплатно</span>;
+  if (c.access === "free") return <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-sm font-semibold text-emerald-700">Бесплатно</span>;
   const p = coursePricing(c);
   return (
     <span className="flex flex-col items-end leading-tight">
       {p.oldPrice > 0 && <s className="text-xs text-brand-muted decoration-brand-muted/60">{formatPrice(p.oldPrice)}</s>}
-      <span className="whitespace-nowrap font-display text-lg font-semibold text-brand-ink">
+      <span className="whitespace-nowrap font-display text-xl font-semibold text-brand-blue">
         {p.price ? (
           <>
             {p.from && <span className="mr-1 text-sm font-normal text-brand-muted">от</span>}
@@ -86,20 +86,22 @@ const discountPercent = (c: DbCourse) => {
   return p.oldPrice > p.price && p.price > 0 ? Math.round(((p.oldPrice - p.price) * 100) / p.oldPrice) : 0;
 };
 
-function PerkBadges({ c, className = "" }: { c: DbCourse; className?: string }) {
+function DiscountBadge({ c, className = "" }: { c: DbCourse; className?: string }) {
   const pct = discountPercent(c);
-  const club = c.access === "paid" ? c.clubMonths ?? 0 : 0;
-  if (!pct && !club) return null;
+  if (!pct) return null;
   return (
-    <span className={"flex flex-wrap gap-1.5 " + className}>
-      {pct > 0 && (
-        <span className="inline-flex items-center rounded-full bg-rose-600 px-2.5 py-1 text-xs font-semibold tabular-nums text-white shadow-sm">−{pct}%</span>
-      )}
-      {club > 0 && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium text-brand-ink shadow-sm ring-1 ring-brand-ink/5">
-          <Icon name="Gift" size={13} className="text-amber-500" />+{clubLabel(club, c.clubUnit)} клуба
-        </span>
-      )}
+    <span className={"inline-flex items-center rounded-full bg-rose-600 px-2.5 py-1 text-xs font-semibold tabular-nums text-white shadow-sm " + className}>
+      −{pct}%
+    </span>
+  );
+}
+
+function ClubBadge({ c, className = "" }: { c: DbCourse; className?: string }) {
+  const club = c.access === "paid" ? c.clubMonths ?? 0 : 0;
+  if (!club) return null;
+  return (
+    <span className={"inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium text-brand-ink shadow-sm ring-1 ring-brand-ink/5 " + className}>
+      <Icon name="Gift" size={13} className="text-amber-500" />+{clubLabel(club, c.clubUnit)} клуба
     </span>
   );
 }
@@ -114,17 +116,29 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
     <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-brand-ink/10 bg-white transition-colors hover:border-brand-blue/40">
       {c.coverUrl && (
         <div className="relative aspect-[16/9] overflow-hidden bg-brand-surface">
-          <PerkBadges c={c} className="absolute left-3 top-3 z-[1]" />
+          <ClubBadge c={c} className="absolute left-3 top-3 z-[1]" />
+          <DiscountBadge c={c} className="absolute right-3 top-3 z-[1]" />
           <img src={c.coverUrl} alt={c.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
         </div>
       )}
       <div className="flex flex-1 flex-col p-6 sm:p-7">
-        {!c.coverUrl && <PerkBadges c={c} className="mb-3" />}
-        <h3 className="font-display text-xl font-semibold leading-snug text-brand-ink">
-          <Link to="/university/$slug" params={{ slug: c.slug }} className="after:absolute after:inset-0 after:content-['']">
-            {c.title}
-          </Link>
-        </h3>
+        {!c.coverUrl && (discountPercent(c) > 0 || (c.access === "paid" && (c.clubMonths ?? 0) > 0)) && (
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <ClubBadge c={c} />
+            <DiscountBadge c={c} className="ml-auto" />
+          </div>
+        )}
+        <div className="flex items-start justify-between gap-4">
+          <h3 className="min-w-0 font-display text-xl font-semibold leading-snug text-brand-ink">
+            <Link to="/university/$slug" params={{ slug: c.slug }} className="after:absolute after:inset-0 after:content-['']">
+              {c.title}
+            </Link>
+          </h3>
+          <span className="mt-0.5 flex shrink-0 flex-col items-end gap-1">
+            <PriceBlock c={c} />
+            {showTimer && <DiscountHint until={c.discountUntil!} />}
+          </span>
+        </div>
         {c.short && <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>}
         <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-6 text-sm text-brand-muted">
           {!c.flatProgram && <span className="inline-flex items-center gap-1.5"><Icon name="Layers" size={15} />{c.modules.length} мод.</span>}
@@ -147,28 +161,23 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
             </div>
           </div>
         )}
-        {showTimer && (
-          <div className="mt-5 flex justify-end border-t border-brand-ink/10 pt-3">
-            <DiscountHint until={c.discountUntil!} />
-          </div>
-        )}
-        <div className={"flex items-end justify-between gap-4 " + (showTimer ? "pt-1.5" : "mt-5 border-t border-brand-ink/10 pt-4")}>
+        <div className="mt-6 flex justify-center border-t border-brand-ink/10 pt-5">
           {c.author?.slug ? (
             <Link
               to="/university/authors/$slug"
               params={{ slug: c.author.slug }}
               title={`Все обучения автора ${c.author.name}`}
-              className="relative z-10 -m-1.5 flex min-w-0 items-center gap-2.5 rounded-lg p-1.5 transition-colors hover:bg-brand-light [&:hover_.author-name]:text-brand-blue"
+              className="relative z-10 -m-1.5 flex min-w-0 items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-brand-light [&:hover_.author-name]:text-brand-blue"
             >
-              <AuthorAvatar name={c.author.name} photoUrl={c.author.photoUrl} className="h-8 w-8 shrink-0" textClassName="text-xs" />
-              <span className="author-name min-w-0 truncate text-sm font-medium text-brand-ink transition-colors">{c.author.name}</span>
+              <AuthorAvatar name={c.author.name} photoUrl={c.author.photoUrl} className="h-10 w-10 shrink-0" textClassName="text-sm" />
+              <span className="min-w-0 text-[15px] leading-snug">
+                <span className="text-brand-muted">Автор: </span>
+                <span className="author-name font-medium text-brand-ink transition-colors">{c.author.name}</span>
+              </span>
             </Link>
           ) : (
             <span className="text-sm text-brand-muted">JETRA University</span>
           )}
-          <span className="shrink-0">
-            <PriceBlock c={c} />
-          </span>
         </div>
       </div>
     </div>
