@@ -4,6 +4,7 @@ import json
 import os
 import re
 import uuid
+from datetime import date, datetime, timedelta, timezone
 
 import boto3
 import psycopg2
@@ -91,7 +92,29 @@ def unique_slug(cur, base: str, exclude_id=None) -> str:
         n += 1
 
 
+MSK = timezone(timedelta(hours=3))
+
+
+def discount_expired(r: dict) -> bool:
+    until = r.get('discount_until')
+    return bool(until) and until < datetime.now(timezone.utc)
+
+
+def public_pricing(r: dict):
+    """Цены для витрины: после окончания скидки показываем полную цену."""
+    price, old, tariffs = r['price'], r.get('old_price') or 0, r.get('tariffs') or []
+    if not discount_expired(r):
+        return price, old, tariffs
+    tariffs = [{**tr, 'price': tr.get('oldPrice') or tr['price'], 'oldPrice': 0} for tr in tariffs]
+    if tariffs:
+        return min(tr['price'] for tr in tariffs), 0, tariffs
+    return (old or price), 0, tariffs
+
+
 def course_out(r: dict, public: bool = False) -> dict:
+    price, old_price, tariffs = public_pricing(r) if public else (r['price'], r.get('old_price') or 0, r.get('tariffs') or [])
+    until = r.get('discount_until')
+    has_discount = bool(old_price) or any(tr.get('oldPrice') for tr in tariffs)
     return {
         'id': r['id'],
         'slug': r['slug'],
@@ -100,9 +123,10 @@ def course_out(r: dict, public: bool = False) -> dict:
         'description': r['description'],
         'categories': r.get('categories') or [],
         'access': r['access'],
-        'price': r['price'],
-        'oldPrice': r.get('old_price') or 0,
-        'tariffs': r.get('tariffs') or [],
+        'price': price,
+        'oldPrice': old_price,
+        'tariffs': tariffs,
+        'discountUntil': until.astimezone(MSK).isoformat() if until and (has_discount or not public) else None,
         'clubMonths': r.get('club_months') or 0,
         'coverUrl': r['cover_url'],
         'published': r['published'],
@@ -306,6 +330,15 @@ def validate(cur, body):
         return None, err(400, 'invalid_club', 'Срок клуба — от 1 до 36 месяцев')
     if access == 'free':
         club_months = 0
+    discount_until = None
+    raw_until = str(body.get('discountUntil') or '').strip()[:10]
+    has_discount = bool(old_price) or any(tr['oldPrice'] for tr in tariffs)
+    if raw_until and has_discount:
+        try:
+            d = date.fromisoformat(raw_until)
+        except ValueError:
+            return None, err(400, 'invalid_discount_date', 'Некорректная дата окончания скидки')
+        discount_until = datetime(d.year, d.month, d.day, 23, 59, 59, tzinfo=MSK)
     author_id = body.get('authorId')
     if author_id in (None, '', 0):
         author_id = None
@@ -323,7 +356,7 @@ def validate(cur, body):
     return {
         'title': title, 'category': category, 'short': short, 'description': description, 'category_ids': cat_ids,
         'access': access, 'price': price, 'old_price': old_price, 'tariffs': json.dumps(tariffs, ensure_ascii=False),
-        'club_months': club_months, 'author_id': author_id, 'cover_url': cover,
+        'club_months': club_months, 'discount_until': discount_until, 'author_id': author_id, 'cover_url': cover,
         'published': bool(body.get('published', True)),
     }, None
 
@@ -417,7 +450,7 @@ def a_save(cur, body, user):
     if problem:
         return problem
     cid = body.get('id')
-    fields = ('title', 'category', 'short', 'description', 'access', 'price', 'old_price', 'tariffs', 'club_months',
+    fields = ('title', 'category', 'short', 'description', 'access', 'price', 'old_price', 'tariffs', 'club_months', 'discount_until',
               'author_id', 'cover_url', 'published')
     values = [data[f] for f in fields]
     if cid:

@@ -1,0 +1,1 @@
+ALTER TABLE courses ADD COLUMN discount_until TIMESTAMPTZ NULL;

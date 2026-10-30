@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/requireAuth";
 import { createFileRoute, getRouteApi, Link, notFound } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
 import { AccessBadge, ClubPerk } from "@/components/university/CourseCard";
+import DiscountTimer from "@/components/university/DiscountTimer";
 import CategoryChips from "@/components/university/CategoryChips";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import Icon from "@/components/ui/icon";
@@ -162,6 +163,7 @@ function CoursePage() {
                     </>
                   )}
                 </div>
+                {course.access === "paid" && course.discountUntil && <DiscountTimer until={course.discountUntil} variant="page" className="mt-4" />}
                 {course.access === "paid" && (course.tariffs?.length ?? 0) > 1 && (
                   <ul className="mt-4 space-y-2.5">
                     {course.tariffs.map((t, i) => (

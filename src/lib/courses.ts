@@ -48,6 +48,7 @@ export type DbCourse = {
   oldPrice: number;
   tariffs: CourseTariff[];
   clubMonths: number;
+  discountUntil: string | null;
   coverUrl: string;
   published: boolean;
   modules: DbModule[];
@@ -67,6 +68,7 @@ export type CourseInput = {
   oldPrice: number;
   tariffs: CourseTariff[];
   clubMonths: number;
+  discountUntil: string;
   authorId: number | null;
   coverUrl: string;
   published: boolean;
@@ -187,6 +189,7 @@ export const saveCourseFn = createServerFn({ method: "POST" })
         };
       }),
       clubMonths: Math.min(36, Math.max(0, Math.round(Number(o.clubMonths) || 0))),
+      discountUntil: /^\d{4}-\d{2}-\d{2}$/.test(String(o.discountUntil ?? "")) ? String(o.discountUntil) : "",
       authorId: Number(o.authorId) || null,
       coverUrl: str(o.coverUrl, 500),
       published: o.published !== false,

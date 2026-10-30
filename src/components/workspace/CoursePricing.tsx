@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { formatPrice, monthsLabel, type CourseInput, type CourseTariff } from "@/lib/courses";
 import { cn } from "@/lib/utils";
@@ -171,12 +171,68 @@ function PriceEditor({
   );
 }
 
+const isoDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function DiscountDeadline({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [today, setToday] = useState("");
+  useEffect(() => setToday(isoDay(new Date())), []);
+  const preset = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    onChange(isoDay(d));
+  };
+  const expired = !!value && !!today && value < today;
+  return (
+    <div className="rounded-lg border border-rose-100 bg-rose-50/50 p-3.5">
+      <div className="flex items-center gap-2 text-sm font-medium text-brand-ink">
+        <Icon name="Timer" size={16} className="text-rose-500" /> Срок действия скидки
+      </div>
+      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+        <input
+          type="date"
+          className={cn(inputCls, "h-10 w-auto")}
+          value={value}
+          min={today || undefined}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {[
+          [3, "3 дня"],
+          [7, "Неделя"],
+          [30, "Месяц"],
+        ].map(([d, l]) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => preset(d as number)}
+            className="rounded-md border border-brand-ink/10 bg-white px-2.5 py-1.5 text-xs font-medium text-brand-muted hover:border-brand-blue/40 hover:text-brand-ink"
+          >
+            {l}
+          </button>
+        ))}
+        {value && (
+          <button type="button" onClick={() => onChange("")} className="text-xs font-medium text-brand-blue hover:underline">
+            Без срока
+          </button>
+        )}
+      </div>
+      <div className={cn("mt-2 text-xs", expired ? "text-red-600" : "text-brand-muted")}>
+        {expired
+          ? "Эта дата уже прошла — скидка на сайте не показывается. Выберите новую дату или «Без срока»."
+          : value
+            ? `Скидка действует до 23:59 (МСК) выбранного дня, на карточке будет таймер. Потом автоматически вернётся полная цена.`
+            : "Срок не задан — скидка действует, пока вы её не уберёте."}
+      </div>
+    </div>
+  );
+}
+
 const newTariff = (): CourseTariff => ({ name: "", price: 0, oldPrice: 0, description: "" });
 
 export default function CoursePricing({ form, onChange }: { form: CourseInput; onChange: (patch: Partial<CourseInput>) => void }) {
   const multi = form.tariffs.length > 0;
   const setTariff = (i: number, patch: Partial<CourseTariff>) =>
     onChange({ tariffs: form.tariffs.map((t, k) => (k === i ? { ...t, ...patch } : t)) });
+  const hasDiscount = multi ? form.tariffs.some((t) => t.oldPrice > t.price && t.price > 0) : form.oldPrice > form.price && form.price > 0;
   const minPrice = multi ? Math.min(...form.tariffs.map((t) => t.price || Infinity)) : 0;
 
   return (
@@ -266,6 +322,8 @@ export default function CoursePricing({ form, onChange }: { form: CourseInput; o
               )}
             </div>
           )}
+
+          {hasDiscount && <DiscountDeadline value={form.discountUntil} onChange={(v) => onChange({ discountUntil: v })} />}
 
           <div className="border-t border-brand-ink/10 pt-4">
             <label className="flex cursor-pointer items-start gap-3">

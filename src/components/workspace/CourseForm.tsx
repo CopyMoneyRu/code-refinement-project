@@ -17,6 +17,7 @@ const EMPTY: CourseInput = {
   oldPrice: 0,
   tariffs: [],
   clubMonths: 0,
+  discountUntil: "",
   authorId: null,
   coverUrl: "",
   published: true,
@@ -34,6 +35,7 @@ const fromCourse = (c: DbCourse): CourseInput => ({
   oldPrice: c.oldPrice ?? 0,
   tariffs: c.tariffs ?? [],
   clubMonths: c.clubMonths ?? 0,
+  discountUntil: c.discountUntil ? c.discountUntil.slice(0, 10) : "",
   authorId: c.author?.id ?? null,
   coverUrl: c.coverUrl,
   published: c.published,
@@ -130,6 +132,7 @@ export default function CourseForm({
         oldPrice: paid && !form.tariffs.length ? form.oldPrice : 0,
         tariffs: paid ? form.tariffs : [],
         clubMonths: paid ? form.clubMonths : 0,
+        discountUntil: paid ? form.discountUntil : "",
       },
     });
     setSaving(false);

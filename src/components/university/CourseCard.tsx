@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import CategoryChips from "@/components/university/CategoryChips";
 import { PROGRESS_TONES } from "@/lib/progressTone";
+import DiscountTimer from "@/components/university/DiscountTimer";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
 import { courseMinutes, coursePricing, formatDuration, formatPrice, monthsLabel, lessonsTotal, type CourseProgress, type DbCourse } from "@/lib/courses";
 
@@ -87,8 +88,9 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
           <span className="mt-0.5 shrink-0"><AccessBadge access={c.access} price={c.price} oldPrice={c.oldPrice} tariffs={c.tariffs} /></span>
         </div>
         <p className="mt-2 text-[15px] leading-relaxed text-brand-muted">{c.short}</p>
-        {((c.clubMonths ?? 0) > 0 || free) && (
+        {((c.clubMonths ?? 0) > 0 || free || c.discountUntil) && (
           <div className="mt-4 flex flex-wrap gap-2">
+            {c.discountUntil && <DiscountTimer until={c.discountUntil} />}
             {(c.clubMonths ?? 0) > 0 && <ClubPerk months={c.clubMonths} />}
             {free && (
               <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">

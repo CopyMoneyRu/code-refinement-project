@@ -12,6 +12,7 @@ import re
 import secrets
 import time
 import uuid
+from datetime import datetime, timezone
 
 import boto3
 import psycopg2
@@ -228,10 +229,20 @@ def done_set(cur, user_id: int, course_id: int) -> set:
     return {r['lesson_id'] for r in cur.fetchall()}
 
 
+def course_price(c) -> int:
+    until = c.get('discount_until')
+    if until and until < datetime.now(timezone.utc):
+        tariffs = c.get('tariffs') or []
+        if tariffs:
+            return min((tr.get('oldPrice') or tr['price']) for tr in tariffs)
+        return c.get('old_price') or c['price']
+    return c['price']
+
+
 def course_head(c) -> dict:
     return {
         'id': c['id'], 'slug': c['slug'], 'title': c['title'], 'short': c['short'], 'coverUrl': c['cover_url'],
-        'access': c['access'], 'price': c['price'], 'priceFrom': len(c.get('tariffs') or []) > 1, 'category': c['category'],
+        'access': c['access'], 'price': course_price(c), 'priceFrom': len(c.get('tariffs') or []) > 1, 'category': c['category'],
         'published': c['published'], 'flat': bool(c.get('flat_program')),
         'author': {'name': c['author_name'], 'slug': c['author_slug']} if c.get('author_name') and c.get('author_published') else None,
     }
