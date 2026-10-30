@@ -21,7 +21,12 @@ export function AccessBadge({
   return (
     <span className="inline-flex flex-col items-end gap-0.5">
       {p.oldPrice > 0 && (
-        <span className="text-xs text-brand-muted line-through decoration-brand-muted/70">{formatPrice(p.oldPrice)}</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="text-xs text-brand-muted line-through decoration-brand-muted/70">{formatPrice(p.oldPrice)}</span>
+          <span className="rounded-md bg-rose-50 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-rose-600">
+            −{Math.round(((p.oldPrice - p.price) * 100) / p.oldPrice)}%
+          </span>
+        </span>
       )}
       <span className="whitespace-nowrap rounded-md bg-brand-blue/15 px-2.5 py-1 text-xs font-medium text-brand-blue">
         {p.price ? `${p.from ? "от " : ""}${formatPrice(p.price)}` : "Платное обучение"}
@@ -34,7 +39,7 @@ export function ClubPerk({ months, className = "" }: { months: number; className
   if (!months) return null;
   return (
     <span className={"inline-flex w-fit items-center gap-1.5 rounded-md border border-amber-200/80 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 " + className}>
-      <Icon name="Gift" size={13} className="text-amber-500" /> Клуб «Капиталист» на {monthsLabel(months)} в подарок
+      <Icon name="Gift" size={13} className="text-amber-500" /> Клуб «CAPITALIST» на {monthsLabel(months)} в подарок
     </span>
   );
 }

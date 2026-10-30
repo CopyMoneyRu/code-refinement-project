@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { formatPrice, monthsLabel, type CourseInput, type CourseTariff } from "@/lib/courses";
 import { cn } from "@/lib/utils";
@@ -44,12 +45,131 @@ function Segmented<T extends string>({ value, options, onChange }: { value: T; o
 
 const DiscountHint = ({ price, oldPrice }: { price: number; oldPrice: number }) =>
   oldPrice > price && price > 0 ? (
-    <div className="mt-1.5 text-xs text-emerald-700">
+    <div className="mt-2 text-xs text-emerald-700">
       Скидка {Math.round(((oldPrice - price) * 100) / oldPrice)}% — в карточке: <s className="text-brand-muted">{formatPrice(oldPrice)}</s> {formatPrice(price)}
     </div>
   ) : oldPrice > 0 && oldPrice <= price ? (
-    <div className="mt-1.5 text-xs text-red-600">Старая цена должна быть больше новой</div>
+    <div className="mt-2 text-xs text-red-600">Цена со скидкой должна быть меньше полной цены</div>
   ) : null;
+
+const pctOf = (price: number, oldPrice: number) => (oldPrice > price && price > 0 ? Math.round(((oldPrice - price) * 100) / oldPrice) : 0);
+
+function PriceEditor({
+  price,
+  oldPrice,
+  onChange,
+  compact,
+}: {
+  price: number;
+  oldPrice: number;
+  onChange: (price: number, oldPrice: number) => void;
+  compact?: boolean;
+}) {
+  const [on, setOn] = useState(oldPrice > 0);
+  const [mode, setMode] = useState<"pct" | "rub">("pct");
+  const [pct, setPct] = useState(pctOf(price, oldPrice));
+  const base = on && oldPrice > 0 ? oldPrice : price;
+  const discounted = on && oldPrice > 0;
+
+  const apply = (b: number, p: number) => (p > 0 && b > 0 ? onChange(Math.max(1, Math.round((b * (100 - p)) / 100)), b) : onChange(b, 0));
+
+  const setBase = (b: number) => {
+    if (!on) return onChange(b, 0);
+    if (mode === "pct") return apply(b, pct);
+    return discounted ? onChange(price, b) : onChange(b, 0);
+  };
+
+  const toggle = () => {
+    if (on) {
+      setOn(false);
+      onChange(base, 0);
+    } else {
+      setOn(true);
+      setPct(0);
+    }
+  };
+
+  return (
+    <div>
+      <div className={cn("grid gap-3", !compact && "sm:grid-cols-2")}>
+        <div>
+          {!compact && <div className="mb-1 text-xs text-brand-muted">{on ? "Полная цена" : "Цена"}</div>}
+          <Rub value={base} onChange={setBase} placeholder={compact ? (on ? "Полная цена" : "Цена") : "1 490"} />
+        </div>
+        {on && (
+          <div>
+            {!compact && <div className="mb-1 text-xs text-brand-muted">Скидка</div>}
+            <div className="flex gap-2">
+              <div className="inline-flex shrink-0 rounded-lg border border-brand-ink/15 bg-white p-1 text-sm">
+                {([
+                  ["pct", "%"],
+                  ["rub", "₽"],
+                ] as const).map(([v, l]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    title={v === "pct" ? "Скидка в процентах" : "Новая цена в рублях"}
+                    onClick={() => {
+                      setMode(v);
+                      if (v === "pct") setPct(pctOf(price, oldPrice));
+                    }}
+                    className={cn("w-9 rounded-md py-1 font-semibold transition-colors", mode === v ? "bg-brand-blue text-white" : "text-brand-muted hover:text-brand-ink")}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+              {mode === "pct" ? (
+                <label className="relative block min-w-0 flex-1">
+                  <input
+                    className={cn(inputCls, "pr-9")}
+                    type="number"
+                    min={1}
+                    max={99}
+                    step={1}
+                    inputMode="numeric"
+                    value={pct || ""}
+                    onChange={(e) => {
+                      const p = Math.min(99, toInt(e.target.value));
+                      setPct(p);
+                      apply(base, p);
+                    }}
+                    placeholder="10"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted">%</span>
+                </label>
+              ) : (
+                <div className="min-w-0 flex-1">
+                  <Rub
+                    value={discounted ? price : 0}
+                    onChange={(n) => (n > 0 ? onChange(n, base) : onChange(base, 0))}
+                    placeholder="Цена со скидкой"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <button type="button" onClick={toggle} className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-blue hover:underline">
+          <Icon name={on ? "X" : "BadgePercent"} size={14} /> {on ? "Убрать скидку" : "Добавить скидку"}
+        </button>
+        {on && mode === "pct" && discounted && (
+          <span className="text-xs text-brand-muted">
+            Цена со скидкой: <span className="font-medium text-brand-ink">{formatPrice(price)}</span>
+          </span>
+        )}
+        {on && mode === "rub" && discounted && price < base && (
+          <span className="text-xs text-brand-muted">
+            Скидка: <span className="font-medium text-brand-ink">{pctOf(price, oldPrice)}%</span>
+          </span>
+        )}
+      </div>
+      {on && <DiscountHint price={price} oldPrice={oldPrice} />}
+    </div>
+  );
+}
 
 const newTariff = (): CourseTariff => ({ name: "", price: 0, oldPrice: 0, description: "" });
 
@@ -85,19 +205,12 @@ export default function CoursePricing({ form, onChange }: { form: CourseInput; o
           </div>
 
           {!multi ? (
-            <div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <div className="mb-1 text-xs text-brand-muted">Цена</div>
-                  <Rub value={form.price} onChange={(v) => onChange({ price: v })} placeholder="990" />
-                </div>
-                <div>
-                  <div className="mb-1 text-xs text-brand-muted">Старая цена (для скидки, необязательно)</div>
-                  <Rub value={form.oldPrice} onChange={(v) => onChange({ oldPrice: v })} placeholder="1 490" />
-                </div>
-              </div>
-              <DiscountHint price={form.price} oldPrice={form.oldPrice} />
-            </div>
+            <PriceEditor
+              key={`single-${form.id ?? "new"}`}
+              price={form.price}
+              oldPrice={form.oldPrice}
+              onChange={(price, oldPrice) => onChange({ price, oldPrice })}
+            />
           ) : (
             <div className="space-y-3">
               {form.tariffs.map((t, i) => (
@@ -122,11 +235,14 @@ export default function CoursePricing({ form, onChange }: { form: CourseInput; o
                       </button>
                     )}
                   </div>
-                  <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
-                    <Rub value={t.price} onChange={(v) => setTariff(i, { price: v })} placeholder="Цена" />
-                    <Rub value={t.oldPrice} onChange={(v) => setTariff(i, { oldPrice: v })} placeholder="Старая цена (необязательно)" />
+                  <div className="mt-2.5">
+                    <PriceEditor
+                      key={`t-${form.id ?? "new"}-${i}-${form.tariffs.length}`}
+                      price={t.price}
+                      oldPrice={t.oldPrice}
+                      onChange={(price, oldPrice) => setTariff(i, { price, oldPrice })}
+                    />
                   </div>
-                  <DiscountHint price={t.price} oldPrice={t.oldPrice} />
                   <textarea
                     className="mt-2.5 min-h-[64px] w-full rounded-lg border border-brand-ink/15 bg-white px-3.5 py-2.5 text-sm text-brand-ink focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/15"
                     value={t.description}
@@ -160,7 +276,7 @@ export default function CoursePricing({ form, onChange }: { form: CourseInput; o
                 onChange={(e) => onChange({ clubMonths: e.target.checked ? 1 : 0 })}
               />
               <span>
-                <span className="block text-sm font-medium text-brand-ink">Подписка на клуб «Капиталист» в подарок</span>
+                <span className="block text-sm font-medium text-brand-ink">Подписка на клуб «CAPITALIST» в подарок</span>
                 <span className="block text-xs text-brand-muted">Покупатель обучения получает доступ в клуб на выбранный срок</span>
               </span>
             </label>
