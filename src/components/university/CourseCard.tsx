@@ -64,12 +64,12 @@ function PriceBlock({ c }: { c: DbCourse }) {
   if (c.access === "free") return <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-sm font-semibold text-emerald-700">Бесплатно</span>;
   const p = coursePricing(c);
   return (
-    <span className="flex flex-col items-end leading-tight">
-      {p.oldPrice > 0 && <s className="text-xs text-brand-muted decoration-brand-muted/60">{formatPrice(p.oldPrice)}</s>}
-      <span className="whitespace-nowrap font-display text-xl font-semibold text-brand-blue">
+    <span className="flex flex-col items-end gap-1 leading-tight">
+      {p.oldPrice > 0 && <s className="pr-1 text-xs text-brand-muted decoration-brand-muted/60">{formatPrice(p.oldPrice)}</s>}
+      <span className="whitespace-nowrap rounded-md bg-brand-blue/10 px-2.5 py-1 font-display text-base font-semibold text-brand-blue">
         {p.price ? (
           <>
-            {p.from && <span className="mr-1 text-sm font-normal text-brand-muted">от</span>}
+            {p.from && <span className="mr-1 text-xs font-normal text-brand-blue/70">от</span>}
             {formatPrice(p.price)}
           </>
         ) : (
