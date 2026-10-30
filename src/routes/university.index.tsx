@@ -96,12 +96,12 @@ function UniversityPage() {
                   aria-pressed={active}
                   className={cn(
                     "inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                    active ? "bg-brand-ink text-white" : "text-brand-muted hover:text-brand-ink",
+                    active ? "bg-brand-blue text-white" : "text-brand-muted hover:text-brand-ink",
                   )}
                 >
                   <Icon name={icon} size={15} />
                   {label}
-                  <span className={cn("text-xs tabular-nums", active ? "text-white/70" : "text-brand-ink/40")}>{count}</span>
+                  <span className={cn("text-xs tabular-nums", active ? "text-white/75" : "text-brand-ink/40")}>{count}</span>
                 </button>
               );
             })}
