@@ -1,7 +1,6 @@
 import { requireAuth } from "@/lib/requireAuth";
 import { createFileRoute, getRouteApi, Link, notFound } from "@tanstack/react-router";
 import PublicLayout from "@/components/site/PublicLayout";
-import { AccessBadge, ClubPerk } from "@/components/university/CourseCard";
 import DiscountTimer from "@/components/university/DiscountTimer";
 import CategoryChips from "@/components/university/CategoryChips";
 import AuthorAvatar from "@/components/university/AuthorAvatar";
@@ -50,7 +49,18 @@ function CoursePage() {
           </Link>
           <div className="mt-8 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
             <div>
-              <div className="flex flex-wrap items-center gap-2"><AccessBadge access={course.access} price={course.price} oldPrice={course.oldPrice} tariffs={course.tariffs} /><ClubPerk months={course.clubMonths ?? 0} unit={course.clubUnit} /></div>
+              <div className="flex flex-wrap items-center gap-2">
+                {course.access === "free" ? (
+                  <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700">Бесплатно</span>
+                ) : (
+                  <span className="rounded-md bg-brand-blue/10 px-2.5 py-1 text-xs font-medium text-brand-blue">Платное обучение</span>
+                )}
+                {course.access === "paid" && (course.clubMonths ?? 0) > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-brand-ink ring-1 ring-brand-ink/10">
+                    <Icon name="Gift" size={13} className="text-amber-500" />+{clubLabel(course.clubMonths, course.clubUnit)} клуба
+                  </span>
+                )}
+              </div>
               <h1 className="mt-5 font-display text-4xl font-light leading-[1.1] text-brand-ink md:text-[52px]">
                 {course.title}
               </h1>
@@ -149,46 +159,63 @@ function CoursePage() {
 
             <aside className="lg:sticky lg:top-8 lg:self-start">
               <div className="rounded-2xl border border-brand-ink/10 bg-white p-7">
-                <div className="text-sm text-brand-muted">Доступ к обучению</div>
-                <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className="font-display text-2xl font-semibold text-brand-ink">
-                    {course.access === "free" ? "Бесплатно" : pricing.price ? `${pricing.from ? "от " : ""}${formatPrice(pricing.price)}` : "Платный доступ"}
-                  </span>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm text-brand-muted">Доступ к обучению</div>
                   {pricing.oldPrice > 0 && (
-                    <>
-                      <s className="text-base text-brand-muted">{formatPrice(pricing.oldPrice)}</s>
-                      <span className="rounded-md bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
-                        −{Math.round(((pricing.oldPrice - pricing.price) * 100) / pricing.oldPrice)}%
-                      </span>
-                    </>
+                    <span className="rounded-full bg-rose-600 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-white">
+                      −{Math.round(((pricing.oldPrice - pricing.price) * 100) / pricing.oldPrice)}%
+                    </span>
                   )}
                 </div>
-                {course.access === "paid" && course.discountUntil && <DiscountTimer until={course.discountUntil} variant="page" className="mt-4" />}
+                <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className={"font-display text-3xl font-semibold " + (course.access === "free" ? "text-emerald-700" : "text-brand-ink")}>
+                    {course.access === "free" ? (
+                      "Бесплатно"
+                    ) : pricing.price ? (
+                      <>
+                        {pricing.from && <span className="mr-1.5 text-lg font-normal text-brand-muted">от</span>}
+                        {formatPrice(pricing.price)}
+                      </>
+                    ) : (
+                      "Платный доступ"
+                    )}
+                  </span>
+                  {pricing.oldPrice > 0 && <s className="text-base text-brand-muted decoration-brand-muted/60">{formatPrice(pricing.oldPrice)}</s>}
+                </div>
+                {course.access === "paid" && course.discountUntil && pricing.oldPrice + course.tariffs.reduce((n, t) => n + t.oldPrice, 0) > 0 && (
+                  <DiscountTimer until={course.discountUntil} variant="page" className="mt-3" />
+                )}
                 {course.access === "paid" && (course.tariffs?.length ?? 0) > 1 && (
-                  <ul className="mt-4 space-y-2.5">
-                    {course.tariffs.map((t, i) => (
-                      <li key={i} className="rounded-lg border border-brand-ink/10 bg-brand-light/60 px-4 py-3">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="font-medium text-brand-ink">{t.name}</span>
-                          <span className="shrink-0 text-right">
-                            {t.oldPrice > t.price && <s className="mr-1.5 text-xs text-brand-muted">{formatPrice(t.oldPrice)}</s>}
-                            <span className="font-semibold text-brand-ink">{formatPrice(t.price)}</span>
-                          </span>
-                        </div>
-                        {t.description && <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-brand-muted">{t.description}</p>}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="mt-5 border-t border-brand-ink/10 pt-4">
+                    <div className="text-xs uppercase tracking-[0.12em] text-brand-muted">Тарифы</div>
+                    <ul className="mt-2 divide-y divide-brand-ink/[0.07]">
+                      {course.tariffs.map((t, i) => (
+                        <li key={i} className="py-2.5">
+                          <div className="flex items-baseline justify-between gap-3">
+                            <span className="font-medium text-brand-ink">{t.name}</span>
+                            <span className="shrink-0 whitespace-nowrap text-right">
+                              {t.oldPrice > t.price && <s className="mr-1.5 text-xs text-brand-muted">{formatPrice(t.oldPrice)}</s>}
+                              <span className="font-semibold text-brand-ink">{formatPrice(t.price)}</span>
+                            </span>
+                          </div>
+                          {t.description && <p className="mt-0.5 whitespace-pre-line text-sm leading-relaxed text-brand-muted">{t.description}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
                 {course.access === "paid" && (course.clubMonths ?? 0) > 0 && (
-                  <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-200/80 bg-amber-50 px-4 py-3">
-                    <Icon name="Gift" size={18} className="mt-0.5 shrink-0 text-amber-500" />
-                    <div className="text-sm leading-relaxed text-amber-900">
-                      <span className="font-medium">Подарок при покупке:</span> подписка на клуб «CAPITALIST» на {clubLabel(course.clubMonths, course.clubUnit)}
+                  <div className="mt-4 flex items-center gap-3 border-t border-brand-ink/10 pt-4">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-500">
+                      <Icon name="Gift" size={17} />
+                    </span>
+                    <div className="text-sm leading-snug text-brand-muted">
+                      <span className="block font-medium text-brand-ink">Клуб «CAPITALIST» в подарок</span>
+                      Доступ на {clubLabel(course.clubMonths, course.clubUnit)} при покупке
                     </div>
                   </div>
                 )}
-                <p className="mt-3 text-sm leading-relaxed text-brand-muted">
+                <p className="mt-5 text-sm leading-relaxed text-brand-muted">
                   {course.access === "free"
                     ? user
                       ? "Проходите уроки в своём темпе — прогресс сохраняется автоматически."

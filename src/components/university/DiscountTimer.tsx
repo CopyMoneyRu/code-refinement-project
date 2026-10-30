@@ -73,25 +73,22 @@ export default function DiscountTimer({ until, variant = "card", className }: { 
 
   if (variant === "page") {
     return (
-      <div className={cn("rounded-xl border border-rose-100 bg-rose-50/70 px-4 py-3.5", className)}>
-        <div className="flex items-center gap-2 text-sm font-medium text-rose-700">
-          <Icon name="Timer" size={16} className="text-rose-500" /> Скидка действует до {date}
-        </div>
-        <div className="mt-2.5 grid grid-cols-4 gap-1.5 text-center">
-          {(
-            [
-              [t?.d, "дн"],
-              [t?.h, "ч"],
-              [t?.m, "мин"],
-              [t?.s, "сек"],
-            ] as const
-          ).map(([v, l]) => (
-            <div key={l} className="rounded-lg bg-white py-1.5 shadow-sm shadow-rose-100">
-              <div className="font-display text-lg font-semibold tabular-nums leading-tight text-brand-ink">{v === undefined ? "—" : l === "дн" ? v : pad(v)}</div>
-              <div className="text-[10px] uppercase tracking-wide text-brand-muted">{l}</div>
-            </div>
-          ))}
-        </div>
+      <div className={cn("flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-sm", className)}>
+        <span className="inline-flex items-center gap-1.5 text-brand-muted">
+          <Icon name="Timer" size={15} className={t && t.d === 0 ? "text-rose-500" : "text-brand-muted/80"} /> Скидка до {date}
+        </span>
+        <span className="inline-flex items-center gap-1 font-medium tabular-nums text-brand-ink">
+          {t ? (
+            <>
+              {t.d > 0 && <span>{t.d} {daysWord(t.d)}</span>}
+              <span className={cn("rounded-md px-1.5 py-0.5", t.d === 0 ? "bg-rose-50 text-rose-700" : "bg-brand-light")}>
+                {pad(t.h)}:{pad(t.m)}:{pad(t.s)}
+              </span>
+            </>
+          ) : (
+            "—"
+          )}
+        </span>
       </div>
     );
   }
