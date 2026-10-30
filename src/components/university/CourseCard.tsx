@@ -161,22 +161,23 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
             </div>
           </div>
         )}
-        <div className="mt-6 flex justify-center border-t border-brand-ink/10 pt-5">
+        <div className="mt-5 flex justify-center">
           {c.author?.slug ? (
             <Link
               to="/university/authors/$slug"
               params={{ slug: c.author.slug }}
               title={`Все обучения автора ${c.author.name}`}
-              className="relative z-10 -m-1.5 flex min-w-0 items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-brand-light [&:hover_.author-name]:text-brand-blue"
+              className="group/author relative z-10 inline-flex max-w-full items-center gap-2 rounded-full border border-brand-ink/10 bg-brand-light/60 py-1 pl-1 pr-3 text-[13px] transition-colors hover:border-brand-blue/40 hover:bg-brand-blue/[0.06]"
             >
-              <AuthorAvatar name={c.author.name} photoUrl={c.author.photoUrl} className="h-10 w-10 shrink-0" textClassName="text-sm" />
-              <span className="min-w-0 text-[15px] leading-snug">
+              <AuthorAvatar name={c.author.name} photoUrl={c.author.photoUrl} className="h-7 w-7 shrink-0" textClassName="text-[10px]" />
+              <span className="min-w-0 truncate">
                 <span className="text-brand-muted">Автор: </span>
-                <span className="author-name font-medium text-brand-ink transition-colors">{c.author.name}</span>
+                <span className="font-medium text-brand-ink transition-colors group-hover/author:text-brand-blue">{c.author.name}</span>
               </span>
+              <Icon name="ChevronRight" size={14} className="shrink-0 text-brand-muted transition-all group-hover/author:translate-x-0.5 group-hover/author:text-brand-blue" />
             </Link>
           ) : (
-            <span className="text-sm text-brand-muted">JETRA University</span>
+            <span className="text-[13px] text-brand-muted">JETRA University</span>
           )}
         </div>
       </div>
