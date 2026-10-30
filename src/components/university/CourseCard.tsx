@@ -161,7 +161,7 @@ export default function CourseCard({ c, progress }: { c: DbCourse; progress?: Co
             </div>
           </div>
         )}
-        <div className="mt-4 flex justify-center border-t border-brand-ink/[0.07] pt-3">
+        <div className="mt-3 flex justify-center">
           {c.author?.slug ? (
             <Link
               to="/university/authors/$slug"
