@@ -66,7 +66,7 @@ export default function SiteFooter() {
             <Link to="/disclaimer" className="underline hover:text-brand-ink">Подробнее</Link>
           </p>
           <p className="mt-3">
-            © JETRA,2025-2026 · {COMPANY.short} · ИНН {COMPANY.inn} · ОГРНИП {COMPANY.ogrnip}
+            © JETRA, 2025-2026 · {COMPANY.short} · ИНН {COMPANY.inn} · ОГРНИП {COMPANY.ogrnip}
           </p>
         </div>
       </div>
