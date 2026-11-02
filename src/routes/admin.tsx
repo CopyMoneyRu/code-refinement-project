@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import WorkspaceLayout, { type NavItem } from "@/components/workspace/WorkspaceLayout";
 import { getMe } from "@/lib/auth";
-import { ADMIN_SECTIONS } from "@/lib/adminSections";
+import { ADMIN_SECTIONS, sectionVisible } from "@/lib/adminSections";
 import { can, isStaff } from "@/lib/permissions";
 
 export const Route = createFileRoute("/admin")({
@@ -19,7 +19,7 @@ function Layout() {
   const { user } = Route.useRouteContext();
   const items: NavItem[] = [
     { to: "/admin", label: "Обзор", icon: "LayoutDashboard", exact: true },
-    ...ADMIN_SECTIONS.filter((s) => can(user, s.perm)),
+    ...ADMIN_SECTIONS.filter((s) => sectionVisible(user, s)),
   ];
   return (
     <WorkspaceLayout section="Администрирование" items={items} user={user}>

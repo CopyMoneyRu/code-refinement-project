@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import StrategiesPage from "@/components/strategies/StrategiesPage";
+import { strategiesCatalogFn } from "@/lib/strategies";
 import { getSiteOrigin } from "@/lib/site-origin";
 
-export const Route = createFileRoute("/strategies")({
-  loader: () => ({ origin: getSiteOrigin() }),
+export const Route = createFileRoute("/strategies/")({
+  loader: async () => ({ ...(await strategiesCatalogFn()), origin: getSiteOrigin() }),
   head: ({ loaderData }) => {
     const image = `${loaderData?.origin ?? ""}/og-strategies.jpg`;
     return {
@@ -20,5 +21,10 @@ export const Route = createFileRoute("/strategies")({
       ],
     };
   },
-  component: StrategiesPage,
+  component: Page,
 });
+
+function Page() {
+  const { strategies, categories } = Route.useLoaderData();
+  return <StrategiesPage strategies={strategies} categories={categories} />;
+}

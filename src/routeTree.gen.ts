@@ -18,7 +18,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as PersonalDataConsentRouteImport } from './routes/personal-data-consent'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
-import { Route as StrategiesRouteImport } from './routes/strategies'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
@@ -28,7 +27,7 @@ import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
 import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
-import { Route as AdminStrategiesRouteImport } from './routes/admin.strategies'
+import { Route as AdminStaffRouteImport } from './routes/admin.staff'
 import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as CabinetIndexRouteImport } from './routes/cabinet.index'
@@ -37,9 +36,14 @@ import { Route as CabinetProgressRouteImport } from './routes/cabinet.progress'
 import { Route as CabinetPurchasesRouteImport } from './routes/cabinet.purchases'
 import { Route as CabinetSettingsRouteImport } from './routes/cabinet.settings'
 import { Route as OauthProviderRouteImport } from './routes/oauth.$provider'
+import { Route as StrategiesIndexRouteImport } from './routes/strategies.index'
+import { Route as StrategiesSlugRouteImport } from './routes/strategies.$slug'
 import { Route as UniversityIndexRouteImport } from './routes/university.index'
 import { Route as UniversitySlugRouteImport } from './routes/university.$slug'
 import { Route as AdminProgramCourseIdRouteImport } from './routes/admin.program.$courseId'
+import { Route as AdminStrategiesIndexRouteImport } from './routes/admin.strategies.index'
+import { Route as AdminStrategiesIdRouteImport } from './routes/admin.strategies.$id'
+import { Route as PreviewStrategyIdRouteImport } from './routes/preview.strategy.$id'
 import { Route as UniversityAuthorsSlugRouteImport } from './routes/university.authors.$slug'
 import { Route as CabinetLearnSlugIndexRouteImport } from './routes/cabinet.learn.$slug.index'
 import { Route as CabinetLearnSlugLessonIdRouteImport } from './routes/cabinet.learn.$slug.$lessonId'
@@ -89,11 +93,6 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StrategiesRoute = StrategiesRouteImport.update({
-  id: '/strategies',
-  path: '/strategies',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -139,9 +138,9 @@ const AdminPurchasesRoute = AdminPurchasesRouteImport.update({
   path: '/purchases',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminStrategiesRoute = AdminStrategiesRouteImport.update({
-  id: '/strategies',
-  path: '/strategies',
+const AdminStaffRoute = AdminStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminTeachersRoute = AdminTeachersRouteImport.update({
@@ -184,6 +183,16 @@ const OauthProviderRoute = OauthProviderRouteImport.update({
   path: '/oauth/$provider',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StrategiesIndexRoute = StrategiesIndexRouteImport.update({
+  id: '/strategies/',
+  path: '/strategies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StrategiesSlugRoute = StrategiesSlugRouteImport.update({
+  id: '/strategies/$slug',
+  path: '/strategies/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UniversityIndexRoute = UniversityIndexRouteImport.update({
   id: '/university/',
   path: '/university/',
@@ -198,6 +207,21 @@ const AdminProgramCourseIdRoute = AdminProgramCourseIdRouteImport.update({
   id: '/program/$courseId',
   path: '/program/$courseId',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminStrategiesIndexRoute = AdminStrategiesIndexRouteImport.update({
+  id: '/strategies/',
+  path: '/strategies/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStrategiesIdRoute = AdminStrategiesIdRouteImport.update({
+  id: '/strategies/$id',
+  path: '/strategies/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const PreviewStrategyIdRoute = PreviewStrategyIdRouteImport.update({
+  id: '/preview/strategy/$id',
+  path: '/preview/strategy/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const UniversityAuthorsSlugRoute = UniversityAuthorsSlugRouteImport.update({
   id: '/university/authors/$slug',
@@ -226,7 +250,6 @@ export interface FileRoutesByFullPath {
   '/personal-data-consent': typeof PersonalDataConsentRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
-  '/strategies': typeof StrategiesRoute
   '/terms': typeof TermsRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -235,7 +258,7 @@ export interface FileRoutesByFullPath {
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
-  '/admin/strategies': typeof AdminStrategiesRoute
+  '/admin/staff': typeof AdminStaffRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
@@ -243,12 +266,17 @@ export interface FileRoutesByFullPath {
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/strategies/$slug': typeof StrategiesSlugRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
+  '/strategies/': typeof StrategiesIndexRoute
   '/university/': typeof UniversityIndexRoute
   '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
+  '/admin/strategies/$id': typeof AdminStrategiesIdRoute
+  '/preview/strategy/$id': typeof PreviewStrategyIdRoute
   '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
+  '/admin/strategies/': typeof AdminStrategiesIndexRoute
   '/cabinet/learn/$slug/$lessonId': typeof CabinetLearnSlugLessonIdRoute
   '/cabinet/learn/$slug/': typeof CabinetLearnSlugIndexRoute
 }
@@ -260,7 +288,6 @@ export interface FileRoutesByTo {
   '/personal-data-consent': typeof PersonalDataConsentRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
-  '/strategies': typeof StrategiesRoute
   '/terms': typeof TermsRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -269,7 +296,7 @@ export interface FileRoutesByTo {
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
-  '/admin/strategies': typeof AdminStrategiesRoute
+  '/admin/staff': typeof AdminStaffRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
@@ -277,12 +304,17 @@ export interface FileRoutesByTo {
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/strategies/$slug': typeof StrategiesSlugRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin': typeof AdminIndexRoute
   '/cabinet': typeof CabinetIndexRoute
+  '/strategies': typeof StrategiesIndexRoute
   '/university': typeof UniversityIndexRoute
   '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
+  '/admin/strategies/$id': typeof AdminStrategiesIdRoute
+  '/preview/strategy/$id': typeof PreviewStrategyIdRoute
   '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
+  '/admin/strategies': typeof AdminStrategiesIndexRoute
   '/cabinet/learn/$slug/$lessonId': typeof CabinetLearnSlugLessonIdRoute
   '/cabinet/learn/$slug': typeof CabinetLearnSlugIndexRoute
 }
@@ -297,7 +329,6 @@ export interface FileRoutesById {
   '/personal-data-consent': typeof PersonalDataConsentRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
-  '/strategies': typeof StrategiesRoute
   '/terms': typeof TermsRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -306,7 +337,7 @@ export interface FileRoutesById {
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/purchases': typeof AdminPurchasesRoute
-  '/admin/strategies': typeof AdminStrategiesRoute
+  '/admin/staff': typeof AdminStaffRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
   '/cabinet/courses': typeof CabinetCoursesRoute
@@ -314,12 +345,17 @@ export interface FileRoutesById {
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/strategies/$slug': typeof StrategiesSlugRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
+  '/strategies/': typeof StrategiesIndexRoute
   '/university/': typeof UniversityIndexRoute
   '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
+  '/admin/strategies/$id': typeof AdminStrategiesIdRoute
+  '/preview/strategy/$id': typeof PreviewStrategyIdRoute
   '/university/authors/$slug': typeof UniversityAuthorsSlugRoute
+  '/admin/strategies/': typeof AdminStrategiesIndexRoute
   '/cabinet/learn/$slug/$lessonId': typeof CabinetLearnSlugLessonIdRoute
   '/cabinet/learn/$slug/': typeof CabinetLearnSlugIndexRoute
 }
@@ -335,7 +371,6 @@ export interface FileRouteTypes {
     | '/personal-data-consent'
     | '/privacy'
     | '/register'
-    | '/strategies'
     | '/terms'
     | '/admin/access'
     | '/admin/analytics'
@@ -344,7 +379,7 @@ export interface FileRouteTypes {
     | '/admin/courses'
     | '/admin/lessons'
     | '/admin/purchases'
-    | '/admin/strategies'
+    | '/admin/staff'
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
@@ -352,12 +387,17 @@ export interface FileRouteTypes {
     | '/cabinet/purchases'
     | '/cabinet/settings'
     | '/oauth/$provider'
+    | '/strategies/$slug'
     | '/university/$slug'
     | '/admin/'
     | '/cabinet/'
+    | '/strategies/'
     | '/university/'
     | '/admin/program/$courseId'
+    | '/admin/strategies/$id'
+    | '/preview/strategy/$id'
     | '/university/authors/$slug'
+    | '/admin/strategies/'
     | '/cabinet/learn/$slug/$lessonId'
     | '/cabinet/learn/$slug/'
   fileRoutesByTo: FileRoutesByTo
@@ -369,7 +409,6 @@ export interface FileRouteTypes {
     | '/personal-data-consent'
     | '/privacy'
     | '/register'
-    | '/strategies'
     | '/terms'
     | '/admin/access'
     | '/admin/analytics'
@@ -378,7 +417,7 @@ export interface FileRouteTypes {
     | '/admin/courses'
     | '/admin/lessons'
     | '/admin/purchases'
-    | '/admin/strategies'
+    | '/admin/staff'
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
@@ -386,12 +425,17 @@ export interface FileRouteTypes {
     | '/cabinet/purchases'
     | '/cabinet/settings'
     | '/oauth/$provider'
+    | '/strategies/$slug'
     | '/university/$slug'
     | '/admin'
     | '/cabinet'
+    | '/strategies'
     | '/university'
     | '/admin/program/$courseId'
+    | '/admin/strategies/$id'
+    | '/preview/strategy/$id'
     | '/university/authors/$slug'
+    | '/admin/strategies'
     | '/cabinet/learn/$slug/$lessonId'
     | '/cabinet/learn/$slug'
   id:
@@ -405,7 +449,6 @@ export interface FileRouteTypes {
     | '/personal-data-consent'
     | '/privacy'
     | '/register'
-    | '/strategies'
     | '/terms'
     | '/admin/access'
     | '/admin/analytics'
@@ -414,7 +457,7 @@ export interface FileRouteTypes {
     | '/admin/courses'
     | '/admin/lessons'
     | '/admin/purchases'
-    | '/admin/strategies'
+    | '/admin/staff'
     | '/admin/teachers'
     | '/admin/users'
     | '/cabinet/courses'
@@ -422,12 +465,17 @@ export interface FileRouteTypes {
     | '/cabinet/purchases'
     | '/cabinet/settings'
     | '/oauth/$provider'
+    | '/strategies/$slug'
     | '/university/$slug'
     | '/admin/'
     | '/cabinet/'
+    | '/strategies/'
     | '/university/'
     | '/admin/program/$courseId'
+    | '/admin/strategies/$id'
+    | '/preview/strategy/$id'
     | '/university/authors/$slug'
+    | '/admin/strategies/'
     | '/cabinet/learn/$slug/$lessonId'
     | '/cabinet/learn/$slug/'
   fileRoutesById: FileRoutesById
@@ -442,11 +490,13 @@ export interface RootRouteChildren {
   PersonalDataConsentRoute: typeof PersonalDataConsentRoute
   PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
-  StrategiesRoute: typeof StrategiesRoute
   TermsRoute: typeof TermsRoute
   OauthProviderRoute: typeof OauthProviderRoute
+  StrategiesSlugRoute: typeof StrategiesSlugRoute
   UniversitySlugRoute: typeof UniversitySlugRoute
+  StrategiesIndexRoute: typeof StrategiesIndexRoute
   UniversityIndexRoute: typeof UniversityIndexRoute
+  PreviewStrategyIdRoute: typeof PreviewStrategyIdRoute
   UniversityAuthorsSlugRoute: typeof UniversityAuthorsSlugRoute
 }
 
@@ -515,13 +565,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/strategies': {
-      id: '/strategies'
-      path: '/strategies'
-      fullPath: '/strategies'
-      preLoaderRoute: typeof StrategiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -585,11 +628,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPurchasesRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/strategies': {
-      id: '/admin/strategies'
-      path: '/strategies'
-      fullPath: '/admin/strategies'
-      preLoaderRoute: typeof AdminStrategiesRouteImport
+    '/admin/staff': {
+      id: '/admin/staff'
+      path: '/staff'
+      fullPath: '/admin/staff'
+      preLoaderRoute: typeof AdminStaffRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/teachers': {
@@ -648,6 +691,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthProviderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/strategies/': {
+      id: '/strategies/'
+      path: '/strategies'
+      fullPath: '/strategies/'
+      preLoaderRoute: typeof StrategiesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/strategies/$slug': {
+      id: '/strategies/$slug'
+      path: '/strategies/$slug'
+      fullPath: '/strategies/$slug'
+      preLoaderRoute: typeof StrategiesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/university/': {
       id: '/university/'
       path: '/university'
@@ -668,6 +725,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/program/$courseId'
       preLoaderRoute: typeof AdminProgramCourseIdRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/strategies/': {
+      id: '/admin/strategies/'
+      path: '/strategies'
+      fullPath: '/admin/strategies/'
+      preLoaderRoute: typeof AdminStrategiesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/strategies/$id': {
+      id: '/admin/strategies/$id'
+      path: '/strategies/$id'
+      fullPath: '/admin/strategies/$id'
+      preLoaderRoute: typeof AdminStrategiesIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/preview/strategy/$id': {
+      id: '/preview/strategy/$id'
+      path: '/preview/strategy/$id'
+      fullPath: '/preview/strategy/$id'
+      preLoaderRoute: typeof PreviewStrategyIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/university/authors/$slug': {
       id: '/university/authors/$slug'
@@ -701,11 +779,13 @@ interface AdminRouteChildren {
   AdminCoursesRoute: typeof AdminCoursesRoute
   AdminLessonsRoute: typeof AdminLessonsRoute
   AdminPurchasesRoute: typeof AdminPurchasesRoute
-  AdminStrategiesRoute: typeof AdminStrategiesRoute
+  AdminStaffRoute: typeof AdminStaffRoute
   AdminTeachersRoute: typeof AdminTeachersRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminProgramCourseIdRoute: typeof AdminProgramCourseIdRoute
+  AdminStrategiesIdRoute: typeof AdminStrategiesIdRoute
+  AdminStrategiesIndexRoute: typeof AdminStrategiesIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -716,11 +796,13 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCoursesRoute: AdminCoursesRoute,
   AdminLessonsRoute: AdminLessonsRoute,
   AdminPurchasesRoute: AdminPurchasesRoute,
-  AdminStrategiesRoute: AdminStrategiesRoute,
+  AdminStaffRoute: AdminStaffRoute,
   AdminTeachersRoute: AdminTeachersRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminProgramCourseIdRoute: AdminProgramCourseIdRoute,
+  AdminStrategiesIdRoute: AdminStrategiesIdRoute,
+  AdminStrategiesIndexRoute: AdminStrategiesIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
@@ -758,11 +840,13 @@ const rootRouteChildren: RootRouteChildren = {
   PersonalDataConsentRoute: PersonalDataConsentRoute,
   PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
-  StrategiesRoute: StrategiesRoute,
   TermsRoute: TermsRoute,
   OauthProviderRoute: OauthProviderRoute,
+  StrategiesSlugRoute: StrategiesSlugRoute,
   UniversitySlugRoute: UniversitySlugRoute,
+  StrategiesIndexRoute: StrategiesIndexRoute,
   UniversityIndexRoute: UniversityIndexRoute,
+  PreviewStrategyIdRoute: PreviewStrategyIdRoute,
   UniversityAuthorsSlugRoute: UniversityAuthorsSlugRoute,
 }
 export const routeTree = rootRouteImport

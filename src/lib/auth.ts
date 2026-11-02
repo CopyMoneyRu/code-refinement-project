@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import type { Permission, Role } from "./permissions";
+import type { Permission, Role, StaffGrant } from "./permissions";
 
 export type { Permission, Role } from "./permissions";
 
@@ -12,6 +12,7 @@ export type AuthUser = {
   emailVerified: boolean;
   hasPassword: boolean;
   createdAt: string | null;
+  grants?: StaffGrant[];
   viewAs?: "user";
 };
 

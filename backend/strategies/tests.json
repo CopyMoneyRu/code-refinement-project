@@ -1,0 +1,8 @@
+{
+  "tests": [
+    {"name": "CORS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "Public catalog", "method": "POST", "path": "/", "body": {"action": "catalog"}, "expectedStatus": 200, "expectedBody": {"ok": true}, "bodyMatcher": "partial"},
+    {"name": "Detail requires login", "method": "POST", "path": "/", "body": {"action": "get", "slug": "x"}, "expectedStatus": 401, "expectedBody": {"ok": false, "error": "unauthorized"}, "bodyMatcher": "partial"},
+    {"name": "Admin requires login", "method": "POST", "path": "/", "body": {"action": "admin_list"}, "expectedStatus": 401, "expectedBody": {"ok": false}, "bodyMatcher": "partial"}
+  ]
+}

@@ -102,6 +102,19 @@ def has_perm(user, perm: str) -> bool:
     return user['role'] == 'admin' and perm in perms
 
 
+def strategies_editor(cur, user) -> bool:
+    if user['role'] == 'superadmin':
+        return True
+    if user['role'] != 'admin':
+        return False
+    cur.execute(
+        f"""SELECT 1 FROM {t('staff_permissions')} WHERE user_id = %s AND revoked_at IS NULL
+            AND permission IN ('strategies.create', 'strategies.edit') LIMIT 1""",
+        (user['id'],),
+    )
+    return cur.fetchone() is not None
+
+
 def can_preview(user) -> bool:
     return has_perm(user, 'lessons') or has_perm(user, 'courses')
 
@@ -1052,6 +1065,8 @@ def handler(event: dict, context) -> dict:
             if not user:
                 return err(401, 'unauthorized', 'Требуется вход')
             perm, fn = ADMIN[action]
+            if action == 'upload_start' and not has_perm(user, perm) and strategies_editor(cur, user):
+                return fn(cur, body, user)
             if not has_perm(user, perm):
                 return err(403, 'forbidden', 'Недостаточно прав для этого раздела')
             return fn(cur, body, user)

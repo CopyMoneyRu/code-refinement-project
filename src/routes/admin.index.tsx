@@ -1,5 +1,5 @@
 import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router";
-import { ADMIN_SECTIONS } from "@/lib/adminSections";
+import { ADMIN_SECTIONS, sectionVisible } from "@/lib/adminSections";
 import { can, ROLE_LABEL } from "@/lib/permissions";
 import Icon from "@/components/ui/icon";
 import { WsCard, WsTitle } from "@/components/workspace/WorkspaceLayout";
@@ -15,7 +15,7 @@ const adminApi = getRouteApi("/admin");
 
 function AdminHome() {
   const { user } = adminApi.useRouteContext();
-  const sections = ADMIN_SECTIONS.filter((s) => can(user, s.perm));
+  const sections = ADMIN_SECTIONS.filter((s) => sectionVisible(user, s));
   const overview = Route.useLoaderData();
   return (
     <>

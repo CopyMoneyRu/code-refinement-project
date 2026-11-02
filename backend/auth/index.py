@@ -388,7 +388,15 @@ def a_me(cur, _body, token):
     if not user:
         return resp(200, {'ok': True, 'user': None})
     user = ensure_superadmin(cur, user)
-    return resp(200, {'ok': True, 'user': public_user(user)})
+    out = public_user(user)
+    out['grants'] = []
+    if user['role'] == 'admin':
+        cur.execute(
+            f"SELECT permission, strategy_id FROM {t('staff_permissions')} WHERE user_id = %s AND revoked_at IS NULL",
+            (user['id'],),
+        )
+        out['grants'] = [{'permission': r['permission'], 'strategyId': r['strategy_id']} for r in cur.fetchall()]
+    return resp(200, {'ok': True, 'user': out})
 
 
 def a_logout(cur, _body, token):
@@ -496,7 +504,7 @@ def a_admin_users(cur, _body, token):
 
 def a_admin_set_role(cur, body, token):
     """Только супер администратор: назначить роль и набор прав."""
-    _, denied = require_superadmin(cur, token)
+    admin, denied = require_superadmin(cur, token)
     if denied:
         return denied
     role = body.get('role')
@@ -520,7 +528,17 @@ def a_admin_set_role(cur, body, token):
         f"UPDATE {t('users')} SET role = %s, permissions = %s, updated_at = NOW() WHERE id = %s RETURNING *",
         (role, ','.join(perms), uid),
     )
-    return resp(200, {'ok': True, 'user': public_user(cur.fetchone())})
+    updated = cur.fetchone()
+    if role != 'admin':
+        cur.execute(
+            f"UPDATE {t('staff_permissions')} SET revoked_at = NOW(), revoked_by = %s WHERE user_id = %s AND revoked_at IS NULL",
+            (admin['id'], uid),
+        )
+    cur.execute(
+        f"INSERT INTO {t('audit_log')} (actor_id, action, entity, entity_id, details) VALUES (%s, 'user.role', 'user', %s, %s)",
+        (admin['id'], uid, json.dumps({'role': role, 'permissions': perms, 'from': target['role']}, ensure_ascii=False)),
+    )
+    return resp(200, {'ok': True, 'user': public_user(updated)})
 
 
 def a_admin_delete_user(cur, body, token):

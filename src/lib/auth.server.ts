@@ -1,7 +1,7 @@
 import "@tanstack/react-start/server-only";
 import { deleteCookie, getCookie, getRequestHeader, getRequestIP, setCookie } from "@tanstack/react-start/server";
 import func2url from "../../backend/func2url.json";
-import type { Permission, Role } from "./permissions";
+import type { Permission, Role, StaffGrant } from "./permissions";
 
 export const SESSION_COOKIE = "__Host-jetra_session";
 export const VIEW_COOKIE = "__Host-jetra_view";
@@ -15,6 +15,7 @@ export type AuthUser = {
   emailVerified: boolean;
   hasPassword: boolean;
   createdAt: string | null;
+  grants?: StaffGrant[];
   viewAs?: "user";
 };
 
@@ -65,7 +66,7 @@ export async function currentUser(): Promise<AuthUser | null> {
   if (!r.ok) return null;
   if (!r.user) clearSession();
   if (r.user && r.user.role === "superadmin" && getCookie(VIEW_COOKIE) === "user") {
-    return { ...r.user, role: "user", permissions: [], viewAs: "user" };
+    return { ...r.user, role: "user", permissions: [], grants: [], viewAs: "user" };
   }
   return r.user;
 }

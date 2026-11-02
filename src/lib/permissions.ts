@@ -22,5 +22,23 @@ export const isStaff = (role: Role) => role === "admin" || role === "superadmin"
 
 export type SectionPerm = Permission | "any";
 
-export const can = (u: { role: Role; permissions: Permission[] }, p: SectionPerm) =>
-  u.role === "superadmin" || (u.role === "admin" && (p === "any" || u.permissions.includes(p)));
+export type StaffGrant = { permission: string; strategyId: number | null };
+
+type PermUser = { role: Role; permissions: Permission[]; grants?: StaffGrant[] };
+
+const hasStrategyGrant = (u: PermUser) => (u.grants ?? []).some((g) => g.permission.startsWith("strategies.") || g.permission.startsWith("trades."));
+
+export const can = (u: PermUser, p: SectionPerm) =>
+  u.role === "superadmin" ||
+  (u.role === "admin" && (p === "any" || u.permissions.includes(p) || (p === "strategies" && hasStrategyGrant(u))));
+
+export const hasGrant = (u: PermUser, perm: string, strategyId?: number) =>
+  u.role === "superadmin" ||
+  (u.role === "admin" && (u.grants ?? []).some((g) => g.permission === perm && (g.strategyId === null || g.strategyId === strategyId)));
+
+export const STAFF_PERMISSION_GROUPS: { title: string; items: string[] }[] = [
+  { title: "Стратегии", items: ["strategies.create", "strategies.edit", "strategies.publish", "strategies.tariffs", "strategies.access"] },
+  { title: "Торговля", items: ["trades.create", "trades.edit", "trades.close", "risk.override"] },
+  { title: "Платформа", items: ["analytics.view", "finance.manage", "users.manage", "staff.manage", "settings.global"] },
+  { title: "Только супер администратор", items: ["emergency.close", "trading.live"] },
+];
