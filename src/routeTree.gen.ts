@@ -25,8 +25,9 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminArchiveRouteImport } from './routes/admin.archive'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
+import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
-import { Route as AdminPurchasesRouteImport } from './routes/admin.purchases'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStaffRouteImport } from './routes/admin.staff'
 import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -35,11 +36,15 @@ import { Route as CabinetCoursesRouteImport } from './routes/cabinet.courses'
 import { Route as CabinetProgressRouteImport } from './routes/cabinet.progress'
 import { Route as CabinetPurchasesRouteImport } from './routes/cabinet.purchases'
 import { Route as CabinetSettingsRouteImport } from './routes/cabinet.settings'
+import { Route as CabinetStrategiesRouteImport } from './routes/cabinet.strategies'
 import { Route as OauthProviderRouteImport } from './routes/oauth.$provider'
+import { Route as PayOrderIdRouteImport } from './routes/pay.$orderId'
+import { Route as PayResultRouteImport } from './routes/pay.result'
 import { Route as StrategiesIndexRouteImport } from './routes/strategies.index'
 import { Route as StrategiesSlugRouteImport } from './routes/strategies.$slug'
 import { Route as UniversityIndexRouteImport } from './routes/university.index'
 import { Route as UniversitySlugRouteImport } from './routes/university.$slug'
+import { Route as AdminFinanceOrderIdRouteImport } from './routes/admin.finance.$orderId'
 import { Route as AdminProgramCourseIdRouteImport } from './routes/admin.program.$courseId'
 import { Route as AdminStrategiesIndexRouteImport } from './routes/admin.strategies.index'
 import { Route as AdminStrategiesIdRouteImport } from './routes/admin.strategies.$id'
@@ -128,14 +133,19 @@ const AdminCoursesRoute = AdminCoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLessonsRoute = AdminLessonsRouteImport.update({
   id: '/lessons',
   path: '/lessons',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminPurchasesRoute = AdminPurchasesRouteImport.update({
-  id: '/purchases',
-  path: '/purchases',
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminStaffRoute = AdminStaffRouteImport.update({
@@ -178,9 +188,24 @@ const CabinetSettingsRoute = CabinetSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => CabinetRoute,
 } as any)
+const CabinetStrategiesRoute = CabinetStrategiesRouteImport.update({
+  id: '/strategies',
+  path: '/strategies',
+  getParentRoute: () => CabinetRoute,
+} as any)
 const OauthProviderRoute = OauthProviderRouteImport.update({
   id: '/oauth/$provider',
   path: '/oauth/$provider',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayOrderIdRoute = PayOrderIdRouteImport.update({
+  id: '/pay/$orderId',
+  path: '/pay/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayResultRoute = PayResultRouteImport.update({
+  id: '/pay/result',
+  path: '/pay/result',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StrategiesIndexRoute = StrategiesIndexRouteImport.update({
@@ -202,6 +227,11 @@ const UniversitySlugRoute = UniversitySlugRouteImport.update({
   id: '/university/$slug',
   path: '/university/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminFinanceOrderIdRoute = AdminFinanceOrderIdRouteImport.update({
+  id: '/$orderId',
+  path: '/$orderId',
+  getParentRoute: () => AdminFinanceRoute,
 } as any)
 const AdminProgramCourseIdRoute = AdminProgramCourseIdRouteImport.update({
   id: '/program/$courseId',
@@ -256,8 +286,9 @@ export interface FileRoutesByFullPath {
   '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
+  '/admin/finance': typeof AdminFinanceRouteWithChildren
   '/admin/lessons': typeof AdminLessonsRoute
-  '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
@@ -265,13 +296,17 @@ export interface FileRoutesByFullPath {
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
+  '/cabinet/strategies': typeof CabinetStrategiesRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/pay/$orderId': typeof PayOrderIdRoute
+  '/pay/result': typeof PayResultRoute
   '/strategies/$slug': typeof StrategiesSlugRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
   '/strategies/': typeof StrategiesIndexRoute
   '/university/': typeof UniversityIndexRoute
+  '/admin/finance/$orderId': typeof AdminFinanceOrderIdRoute
   '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
   '/admin/strategies/$id': typeof AdminStrategiesIdRoute
   '/preview/strategy/$id': typeof PreviewStrategyIdRoute
@@ -294,8 +329,9 @@ export interface FileRoutesByTo {
   '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
+  '/admin/finance': typeof AdminFinanceRouteWithChildren
   '/admin/lessons': typeof AdminLessonsRoute
-  '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
@@ -303,13 +339,17 @@ export interface FileRoutesByTo {
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
+  '/cabinet/strategies': typeof CabinetStrategiesRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/pay/$orderId': typeof PayOrderIdRoute
+  '/pay/result': typeof PayResultRoute
   '/strategies/$slug': typeof StrategiesSlugRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin': typeof AdminIndexRoute
   '/cabinet': typeof CabinetIndexRoute
   '/strategies': typeof StrategiesIndexRoute
   '/university': typeof UniversityIndexRoute
+  '/admin/finance/$orderId': typeof AdminFinanceOrderIdRoute
   '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
   '/admin/strategies/$id': typeof AdminStrategiesIdRoute
   '/preview/strategy/$id': typeof PreviewStrategyIdRoute
@@ -335,8 +375,9 @@ export interface FileRoutesById {
   '/admin/archive': typeof AdminArchiveRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/courses': typeof AdminCoursesRoute
+  '/admin/finance': typeof AdminFinanceRouteWithChildren
   '/admin/lessons': typeof AdminLessonsRoute
-  '/admin/purchases': typeof AdminPurchasesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/users': typeof AdminUsersRoute
@@ -344,13 +385,17 @@ export interface FileRoutesById {
   '/cabinet/progress': typeof CabinetProgressRoute
   '/cabinet/purchases': typeof CabinetPurchasesRoute
   '/cabinet/settings': typeof CabinetSettingsRoute
+  '/cabinet/strategies': typeof CabinetStrategiesRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/pay/$orderId': typeof PayOrderIdRoute
+  '/pay/result': typeof PayResultRoute
   '/strategies/$slug': typeof StrategiesSlugRoute
   '/university/$slug': typeof UniversitySlugRoute
   '/admin/': typeof AdminIndexRoute
   '/cabinet/': typeof CabinetIndexRoute
   '/strategies/': typeof StrategiesIndexRoute
   '/university/': typeof UniversityIndexRoute
+  '/admin/finance/$orderId': typeof AdminFinanceOrderIdRoute
   '/admin/program/$courseId': typeof AdminProgramCourseIdRoute
   '/admin/strategies/$id': typeof AdminStrategiesIdRoute
   '/preview/strategy/$id': typeof PreviewStrategyIdRoute
@@ -377,8 +422,9 @@ export interface FileRouteTypes {
     | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
+    | '/admin/finance'
     | '/admin/lessons'
-    | '/admin/purchases'
+    | '/admin/settings'
     | '/admin/staff'
     | '/admin/teachers'
     | '/admin/users'
@@ -386,13 +432,17 @@ export interface FileRouteTypes {
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
+    | '/cabinet/strategies'
     | '/oauth/$provider'
+    | '/pay/$orderId'
+    | '/pay/result'
     | '/strategies/$slug'
     | '/university/$slug'
     | '/admin/'
     | '/cabinet/'
     | '/strategies/'
     | '/university/'
+    | '/admin/finance/$orderId'
     | '/admin/program/$courseId'
     | '/admin/strategies/$id'
     | '/preview/strategy/$id'
@@ -415,8 +465,9 @@ export interface FileRouteTypes {
     | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
+    | '/admin/finance'
     | '/admin/lessons'
-    | '/admin/purchases'
+    | '/admin/settings'
     | '/admin/staff'
     | '/admin/teachers'
     | '/admin/users'
@@ -424,13 +475,17 @@ export interface FileRouteTypes {
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
+    | '/cabinet/strategies'
     | '/oauth/$provider'
+    | '/pay/$orderId'
+    | '/pay/result'
     | '/strategies/$slug'
     | '/university/$slug'
     | '/admin'
     | '/cabinet'
     | '/strategies'
     | '/university'
+    | '/admin/finance/$orderId'
     | '/admin/program/$courseId'
     | '/admin/strategies/$id'
     | '/preview/strategy/$id'
@@ -455,8 +510,9 @@ export interface FileRouteTypes {
     | '/admin/archive'
     | '/admin/categories'
     | '/admin/courses'
+    | '/admin/finance'
     | '/admin/lessons'
-    | '/admin/purchases'
+    | '/admin/settings'
     | '/admin/staff'
     | '/admin/teachers'
     | '/admin/users'
@@ -464,13 +520,17 @@ export interface FileRouteTypes {
     | '/cabinet/progress'
     | '/cabinet/purchases'
     | '/cabinet/settings'
+    | '/cabinet/strategies'
     | '/oauth/$provider'
+    | '/pay/$orderId'
+    | '/pay/result'
     | '/strategies/$slug'
     | '/university/$slug'
     | '/admin/'
     | '/cabinet/'
     | '/strategies/'
     | '/university/'
+    | '/admin/finance/$orderId'
     | '/admin/program/$courseId'
     | '/admin/strategies/$id'
     | '/preview/strategy/$id'
@@ -492,6 +552,8 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   TermsRoute: typeof TermsRoute
   OauthProviderRoute: typeof OauthProviderRoute
+  PayOrderIdRoute: typeof PayOrderIdRoute
+  PayResultRoute: typeof PayResultRoute
   StrategiesSlugRoute: typeof StrategiesSlugRoute
   UniversitySlugRoute: typeof UniversitySlugRoute
   StrategiesIndexRoute: typeof StrategiesIndexRoute
@@ -614,6 +676,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCoursesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/lessons': {
       id: '/admin/lessons'
       path: '/lessons'
@@ -621,11 +690,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLessonsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/purchases': {
-      id: '/admin/purchases'
-      path: '/purchases'
-      fullPath: '/admin/purchases'
-      preLoaderRoute: typeof AdminPurchasesRouteImport
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/staff': {
@@ -684,11 +753,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CabinetSettingsRouteImport
       parentRoute: typeof CabinetRoute
     }
+    '/cabinet/strategies': {
+      id: '/cabinet/strategies'
+      path: '/strategies'
+      fullPath: '/cabinet/strategies'
+      preLoaderRoute: typeof CabinetStrategiesRouteImport
+      parentRoute: typeof CabinetRoute
+    }
     '/oauth/$provider': {
       id: '/oauth/$provider'
       path: '/oauth/$provider'
       fullPath: '/oauth/$provider'
       preLoaderRoute: typeof OauthProviderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$orderId': {
+      id: '/pay/$orderId'
+      path: '/pay/$orderId'
+      fullPath: '/pay/$orderId'
+      preLoaderRoute: typeof PayOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/result': {
+      id: '/pay/result'
+      path: '/pay/result'
+      fullPath: '/pay/result'
+      preLoaderRoute: typeof PayResultRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/strategies/': {
@@ -718,6 +808,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/university/$slug'
       preLoaderRoute: typeof UniversitySlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/finance/$orderId': {
+      id: '/admin/finance/$orderId'
+      path: '/$orderId'
+      fullPath: '/admin/finance/$orderId'
+      preLoaderRoute: typeof AdminFinanceOrderIdRouteImport
+      parentRoute: typeof AdminFinanceRoute
     }
     '/admin/program/$courseId': {
       id: '/admin/program/$courseId'
@@ -771,14 +868,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminFinanceRouteChildren {
+  AdminFinanceOrderIdRoute: typeof AdminFinanceOrderIdRoute
+}
+
+const AdminFinanceRouteChildren: AdminFinanceRouteChildren = {
+  AdminFinanceOrderIdRoute: AdminFinanceOrderIdRoute,
+}
+
+const AdminFinanceRouteWithChildren = AdminFinanceRoute._addFileChildren(
+  AdminFinanceRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminAccessRoute: typeof AdminAccessRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminArchiveRoute: typeof AdminArchiveRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCoursesRoute: typeof AdminCoursesRoute
+  AdminFinanceRoute: typeof AdminFinanceRouteWithChildren
   AdminLessonsRoute: typeof AdminLessonsRoute
-  AdminPurchasesRoute: typeof AdminPurchasesRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStaffRoute: typeof AdminStaffRoute
   AdminTeachersRoute: typeof AdminTeachersRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -794,8 +904,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminArchiveRoute: AdminArchiveRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCoursesRoute: AdminCoursesRoute,
+  AdminFinanceRoute: AdminFinanceRouteWithChildren,
   AdminLessonsRoute: AdminLessonsRoute,
-  AdminPurchasesRoute: AdminPurchasesRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminStaffRoute: AdminStaffRoute,
   AdminTeachersRoute: AdminTeachersRoute,
   AdminUsersRoute: AdminUsersRoute,
@@ -812,6 +923,7 @@ interface CabinetRouteChildren {
   CabinetProgressRoute: typeof CabinetProgressRoute
   CabinetPurchasesRoute: typeof CabinetPurchasesRoute
   CabinetSettingsRoute: typeof CabinetSettingsRoute
+  CabinetStrategiesRoute: typeof CabinetStrategiesRoute
   CabinetIndexRoute: typeof CabinetIndexRoute
   CabinetLearnSlugLessonIdRoute: typeof CabinetLearnSlugLessonIdRoute
   CabinetLearnSlugIndexRoute: typeof CabinetLearnSlugIndexRoute
@@ -822,6 +934,7 @@ const CabinetRouteChildren: CabinetRouteChildren = {
   CabinetProgressRoute: CabinetProgressRoute,
   CabinetPurchasesRoute: CabinetPurchasesRoute,
   CabinetSettingsRoute: CabinetSettingsRoute,
+  CabinetStrategiesRoute: CabinetStrategiesRoute,
   CabinetIndexRoute: CabinetIndexRoute,
   CabinetLearnSlugLessonIdRoute: CabinetLearnSlugLessonIdRoute,
   CabinetLearnSlugIndexRoute: CabinetLearnSlugIndexRoute,
@@ -842,6 +955,8 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   TermsRoute: TermsRoute,
   OauthProviderRoute: OauthProviderRoute,
+  PayOrderIdRoute: PayOrderIdRoute,
+  PayResultRoute: PayResultRoute,
   StrategiesSlugRoute: StrategiesSlugRoute,
   UniversitySlugRoute: UniversitySlugRoute,
   StrategiesIndexRoute: StrategiesIndexRoute,

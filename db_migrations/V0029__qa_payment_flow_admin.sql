@@ -1,0 +1,5 @@
+UPDATE users SET role = 'admin', permissions = 'purchases' WHERE id = 1 AND email = 'jetra-test-1df79403@maxxspace.com';
+INSERT INTO strategies (slug, title, status, kind, risk_level) VALUES ('qa-upgrade', 'QA апгрейд', 'active', 'generic', 3);
+INSERT INTO strategy_content_blocks (strategy_id, stage, position, type, data) SELECT id, 'published', 0, 'text', '{"text": "QA"}'::jsonb FROM strategies WHERE slug = 'qa-upgrade';
+INSERT INTO strategy_tariffs (strategy_id, name, kind, price, period_value, period_unit, position) SELECT id, 'Месяц', 'subscription', 1000, 1, 'month', 0 FROM strategies WHERE slug = 'qa-upgrade';
+INSERT INTO strategy_tariffs (strategy_id, name, kind, price, period_value, period_unit, position) SELECT id, 'Год', 'subscription', 10000, 12, 'month', 1 FROM strategies WHERE slug = 'qa-upgrade';

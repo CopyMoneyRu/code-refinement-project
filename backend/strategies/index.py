@@ -692,9 +692,13 @@ STAFF = {
 
 
 def handler(event: dict, context) -> dict:
-    """JETRA Strategies: каталог стратегий, страницы, редактор содержимого, статусы, метки и разрешения сотрудников."""
+    """JETRA Strategies: каталог, страницы, редактор, статусы, метки, разрешения, тарифы, заказы, оплаты, подписки и доступы."""
     if event.get('httpMethod') == 'OPTIONS':
-        return {'statusCode': 200, 'headers': CORS, 'body': ''}
+        return {'statusCode': 200, 'headers': {**CORS, 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                                               'Access-Control-Allow-Headers': 'Content-Type, X-Session-Token, X-Cron-Key'}, 'body': ''}
+    import billing
+    if (event.get('queryStringParameters') or {}).get('action') in ('robokassa_result', 'cron_renewals'):
+        return billing.handle(event)
     if event.get('httpMethod') != 'POST':
         return err(405, 'method_not_allowed', 'Метод не поддерживается')
     try:
@@ -704,6 +708,8 @@ def handler(event: dict, context) -> dict:
     if not isinstance(body, dict):
         return err(400, 'bad_json', 'Некорректный запрос')
     action = body.get('action')
+    if action in billing.USER or action in billing.STAFF:
+        return billing.handle(event)
     headers = {k.lower(): v for k, v in (event.get('headers') or {}).items()}
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
     try:

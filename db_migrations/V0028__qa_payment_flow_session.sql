@@ -1,0 +1,5 @@
+INSERT INTO sessions (user_id, token_hash, expires_at) VALUES (1, '517e01962726708d7130c150a8a455073c078070664a8f9d42242c996478e6a9', NOW() + INTERVAL '2 hours');
+INSERT INTO strategies (slug, title, short, status, kind, risk_level) VALUES ('qa-test-strategy', 'QA тестовая стратегия', 'Служебная для проверки оплат', 'active', 'generic', 3);
+INSERT INTO strategy_content_blocks (strategy_id, stage, position, type, data) SELECT id, 'published', 0, 'text', '{"text": "QA"}'::jsonb FROM strategies WHERE slug = 'qa-test-strategy';
+INSERT INTO strategy_tariffs (strategy_id, name, kind, price, period_value, period_unit, trial_days, auto_renew, position) SELECT id, '1 месяц', 'subscription', 1000, 1, 'month', 7, TRUE, 0 FROM strategies WHERE slug = 'qa-test-strategy';
+INSERT INTO strategy_tariffs (strategy_id, name, kind, price, period_value, period_unit, trial_days, auto_renew, position) SELECT id, '3 месяца', 'subscription', 2700, 3, 'month', 0, FALSE, 1 FROM strategies WHERE slug = 'qa-test-strategy';

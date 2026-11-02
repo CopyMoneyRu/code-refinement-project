@@ -81,8 +81,8 @@ def period_stats(cur, states, start: datetime, end: datetime) -> dict:
             WHERE u.role = 'user' AND p.completed_at >= %s AND p.completed_at < %s""", (start, end)),
         'activeLearners': count(cur, f"""SELECT COUNT(DISTINCT p.user_id) FROM {t('lesson_progress')} p JOIN {users} u ON u.id = p.user_id
             WHERE u.role = 'user' AND p.completed_at >= %s AND p.completed_at < %s""", (start, end)),
-        'payments': count(cur, f"SELECT COUNT(*) FROM {t('purchases')} WHERE status = 'paid' AND paid_at >= %s AND paid_at < %s", (start, end)),
-        'revenue': count(cur, f"SELECT COALESCE(SUM(amount), 0) FROM {t('purchases')} WHERE status = 'paid' AND paid_at >= %s AND paid_at < %s", (start, end)),
+        'payments': count(cur, f"SELECT COUNT(*) FROM {t('orders')} WHERE status IN ('paid', 'partially_refunded', 'refunded') AND NOT is_test AND amount > 0 AND paid_at >= %s AND paid_at < %s", (start, end)),
+        'revenue': count(cur, f"SELECT COALESCE(SUM(amount - refunded_amount), 0) FROM {t('orders')} WHERE status IN ('paid', 'partially_refunded', 'refunded') AND NOT is_test AND amount > 0 AND paid_at >= %s AND paid_at < %s", (start, end)),
         'accessGranted': count(cur, f"SELECT COUNT(*) FROM {t('course_access')} WHERE created_at >= %s AND created_at < %s", (start, end)),
     }
 
@@ -102,8 +102,8 @@ def totals(cur, states) -> dict:
         'learners': len({s['user_id'] for s in states}),
         'startedCourses': len(states),
         'completedCourses': sum(1 for s in states if s['finished']),
-        'payments': count(cur, f"SELECT COUNT(*) FROM {t('purchases')} WHERE status = 'paid'"),
-        'revenue': count(cur, f"SELECT COALESCE(SUM(amount), 0) FROM {t('purchases')} WHERE status = 'paid'"),
+        'payments': count(cur, f"SELECT COUNT(*) FROM {t('orders')} WHERE status IN ('paid', 'partially_refunded', 'refunded') AND NOT is_test AND amount > 0"),
+        'revenue': count(cur, f"SELECT COALESCE(SUM(amount - refunded_amount), 0) FROM {t('orders')} WHERE status IN ('paid', 'partially_refunded', 'refunded') AND NOT is_test AND amount > 0"),
         'accessGrants': count(cur, f"SELECT COUNT(*) FROM {t('course_access')}"),
         'marketingConsents': count(cur, f"SELECT COUNT(*) FROM {users} WHERE role = 'user' AND archived_at IS NULL AND marketing_consent"),
     }
@@ -132,8 +132,8 @@ def series(cur, states, start: date, end: date) -> list:
         'newUsers': grouped(f"SELECT created_at AS d, 1 AS v FROM {users} WHERE role = 'user' AND created_at >= %s AND created_at < %s"),
         'lessonsCompleted': grouped(f"""SELECT p.completed_at AS d, 1 AS v FROM {t('lesson_progress')} p JOIN {users} u ON u.id = p.user_id
             WHERE u.role = 'user' AND p.completed_at >= %s AND p.completed_at < %s"""),
-        'payments': grouped(f"SELECT paid_at AS d, 1 AS v FROM {t('purchases')} WHERE status = 'paid' AND paid_at >= %s AND paid_at < %s"),
-        'revenue': grouped(f"SELECT paid_at AS d, amount AS v FROM {t('purchases')} WHERE status = 'paid' AND paid_at >= %s AND paid_at < %s"),
+        'payments': grouped(f"SELECT paid_at AS d, 1 AS v FROM {t('orders')} WHERE status IN ('paid', 'partially_refunded', 'refunded') AND NOT is_test AND amount > 0 AND paid_at >= %s AND paid_at < %s"),
+        'revenue': grouped(f"SELECT paid_at AS d, amount - refunded_amount AS v FROM {t('orders')} WHERE status IN ('paid', 'partially_refunded', 'refunded') AND NOT is_test AND amount > 0 AND paid_at >= %s AND paid_at < %s"),
     }
     raw['startedCourses'] = [(s['started_at'].date(), 1) for s in states]
     raw['completedCourses'] = [(s['last_at'].date(), 1) for s in states if s['finished']]
@@ -150,8 +150,8 @@ def top_courses(cur, states, start: datetime, end: datetime) -> list:
     cur.execute(f"SELECT id, title, access, price FROM {t('courses')} WHERE archived_at IS NULL")
     courses = {r['id']: dict(r) for r in cur.fetchall()}
     cur.execute(
-        f"""SELECT course_id, COUNT(*) AS n, COALESCE(SUM(amount), 0) AS s FROM {t('purchases')}
-            WHERE status = 'paid' AND paid_at >= %s AND paid_at < %s GROUP BY course_id""",
+        f"""SELECT course_id, COUNT(*) AS n, COALESCE(SUM(amount - refunded_amount), 0) AS s FROM {t('orders')} WHERE status IN ('paid', 'partially_refunded', 'refunded') AND NOT is_test AND amount > 0
+            AND product_type = 'course' AND paid_at >= %s AND paid_at < %s GROUP BY course_id""",
         (start, end),
     )
     pay = {r['course_id']: r for r in cur.fetchall()}

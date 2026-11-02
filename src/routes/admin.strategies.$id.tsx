@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
 import Icon from "@/components/ui/icon";
 import ConfirmDelete from "@/components/workspace/ConfirmDelete";
 import { WsCard } from "@/components/workspace/WorkspaceLayout";
 import ContentEditor from "@/components/strategies/admin/ContentEditor";
 import StrategySettingsForm from "@/components/strategies/admin/StrategySettingsForm";
 import StrategyHistory from "@/components/strategies/admin/StrategyHistory";
+import TariffsEditor from "@/components/strategies/admin/TariffsEditor";
+import AccessManager from "@/components/strategies/admin/AccessManager";
+import { hasGrant } from "@/lib/permissions";
 import { Notice } from "@/components/strategies/admin/fields";
 import { requirePermission } from "@/lib/adminGuard";
 import { cn } from "@/lib/utils";
@@ -25,7 +28,7 @@ export const Route = createFileRoute("/admin/strategies/$id")({
   component: StrategyEdit,
 });
 
-type Tab = "content" | "settings" | "history";
+type Tab = "content" | "settings" | "tariffs" | "access" | "history";
 
 function StrategyEdit() {
   const data = Route.useLoaderData();
@@ -41,9 +44,13 @@ function StrategyEdit() {
   return <Editor data={data} />;
 }
 
+const adminApi = getRouteApi("/admin");
+
 function Editor({ data }: { data: Exclude<ReturnType<typeof Route.useLoaderData>, { denied: string }> }) {
   const router = useRouter();
   const navigate = useNavigate();
+  const { user } = adminApi.useRouteContext();
+  const canAccess = hasGrant(user, "strategies.access", data.strategy.id) || user.permissions.includes("access");
   const [s, setS] = useState<AdminStrategy>(data.strategy);
   const [tab, setTab] = useState<Tab>("content");
   const [busy, setBusy] = useState(false);
@@ -126,18 +133,20 @@ function Editor({ data }: { data: Exclude<ReturnType<typeof Route.useLoaderData>
       {error && <Notice kind="error">{error}</Notice>}
       {notice && <Notice kind="ok">{notice}</Notice>}
 
-      <div className="mb-5 flex gap-1 border-b border-brand-ink/10">
+      <div className="mb-5 flex gap-1 overflow-x-auto border-b border-brand-ink/10">
         {(
           [
             ["content", "Страница", "LayoutTemplate"],
             ["settings", "Настройки и карточка", "SlidersHorizontal"],
-            ["history", "История изменений", "History"],
+            ["tariffs", "Тарифы", "Wallet"],
+            ...(canAccess ? ([["access", "Доступы", "KeyRound"]] as const) : []),
+            ["history", "История", "History"],
           ] as const
         ).map(([id, l, ic]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={cn("-mb-px inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium", tab === id ? "border-brand-blue text-brand-ink" : "border-transparent text-brand-muted hover:text-brand-ink")}
+            className={cn("-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium", tab === id ? "border-brand-blue text-brand-ink" : "border-transparent text-brand-muted hover:text-brand-ink")}
           >
             <Icon name={ic} size={15} /> {l}
           </button>
@@ -150,6 +159,8 @@ function Editor({ data }: { data: Exclude<ReturnType<typeof Route.useLoaderData>
       <div className={tab === "settings" ? "" : "hidden"}>
         <StrategySettingsForm strategy={s} categories={data.categories} labels={data.labels} onSaved={(x) => { setS(x); router.invalidate(); }} />
       </div>
+      {tab === "tariffs" && <TariffsEditor strategyId={s.id} />}
+      {tab === "access" && <AccessManager strategyId={s.id} />}
       {tab === "history" && <StrategyHistory items={data.history} />}
 
       <ConfirmDelete

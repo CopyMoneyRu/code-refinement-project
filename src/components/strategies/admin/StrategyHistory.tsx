@@ -29,6 +29,18 @@ export function describe(h: HistoryItem): { icon: string; text: string } {
       return { icon: "Trash2", text: "Стратегия удалена" };
     case "strategy.restore":
       return { icon: "RotateCcw", text: "Стратегия восстановлена" };
+    case "tariff.create":
+      return { icon: "Wallet", text: `Добавлен тариф «${d.name}» — ${d.price} ₽` };
+    case "tariff.update":
+      return { icon: "Wallet", text: `Изменён тариф «${d.name}»${d.oldPrice !== d.price ? `: ${d.oldPrice} → ${d.price} ₽` : ""}` };
+    case "tariff.archive":
+      return { icon: "Wallet", text: `Убран тариф «${d.name}»` };
+    case "access.grant":
+      return { icon: "Gift", text: `Выдан доступ ${d.email} на ${d.days} дн.` };
+    case "access.revoke":
+      return { icon: "KeyRound", text: `Отозван доступ: ${d.reason}` };
+    case "access.trial":
+      return { icon: "Sparkles", text: `Клиент начал пробный период (${d.days} дн.)` };
     default:
       return { icon: "Dot", text: h.action };
   }

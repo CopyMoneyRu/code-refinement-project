@@ -10,9 +10,10 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { to: "/admin/categories", label: "Категории", icon: "Tags", perm: "courses", text: "Категории обучений университета" },
   { to: "/admin/lessons", label: "Уроки", icon: "PlayCircle", perm: "lessons", text: "Модули, видео и дополнительные файлы" },
   { to: "/admin/teachers", label: "Авторы", icon: "UserRound", perm: "authors", text: "Профили авторов обучений" },
-  { to: "/admin/purchases", label: "Покупки", icon: "Receipt", perm: "purchases", text: "Платежи и их статусы" },
+  { to: "/admin/finance", label: "Бухгалтерия", icon: "Receipt", perm: "purchases", text: "Заказы, платежи, подписки и возвраты" },
   { to: "/admin/access", label: "Доступы", icon: "KeyRound", perm: "access", text: "Выдача и отзыв доступа к обучениям" },
   { to: "/admin/staff", label: "Сотрудники", icon: "ShieldCheck", perm: "any", grant: "staff.manage", text: "Разрешения сотрудников и журнал изменений прав" },
+  { to: "/admin/settings", label: "Настройки", icon: "Settings", perm: "any", grant: "settings.global", text: "Платёжные провайдеры и режим оплаты" },
   { to: "/admin/archive", label: "Архив", icon: "Archive", perm: "any", text: "Удалённые записи: восстановить или удалить навсегда" },
 ];
 

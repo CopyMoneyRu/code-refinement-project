@@ -24,7 +24,15 @@ PER_STRATEGY = {
 
 SUPER_ONLY = {'emergency.close', 'trading.live'}
 
-LEGACY = {'strategies.create', 'strategies.edit', 'strategies.publish'}
+LEGACY = {
+    'strategies.create': 'strategies', 'strategies.edit': 'strategies', 'strategies.publish': 'strategies',
+    'strategies.tariffs': 'strategies', 'strategies.access': 'access', 'finance.manage': 'purchases',
+}
+
+
+def legacy_ok(user, perm):
+    old = LEGACY.get(perm)
+    return bool(old) and old in (user.get('permissions') or '').split(',')
 
 
 def load_grants(cur, t, user_id: int):
@@ -42,7 +50,7 @@ def can(cur, t, user, perm: str, strategy_id=None) -> bool:
         return True
     if user['role'] != 'admin' or perm in SUPER_ONLY:
         return False
-    if perm in LEGACY and 'strategies' in (user.get('permissions') or '').split(','):
+    if legacy_ok(user, perm):
         return True
     if 'grants' not in user:
         user['grants'] = load_grants(cur, t, user['id'])
@@ -61,7 +69,7 @@ def can_any_strategy(cur, t, user, perm: str) -> bool:
         return True
     if user['role'] != 'admin':
         return False
-    if perm in LEGACY and 'strategies' in (user.get('permissions') or '').split(','):
+    if legacy_ok(user, perm):
         return True
     if 'grants' not in user:
         user['grants'] = load_grants(cur, t, user['id'])

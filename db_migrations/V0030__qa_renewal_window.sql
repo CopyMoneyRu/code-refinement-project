@@ -1,0 +1,2 @@
+UPDATE strategy_access SET starts_at = NOW() - INTERVAL '6 days', ends_at = NOW() + INTERVAL '5 hours' WHERE user_id = 1 AND source = 'trial';
+UPDATE strategy_access SET starts_at = NOW() - INTERVAL '20 days', ends_at = NOW() - INTERVAL '6 days' WHERE user_id = 1 AND source = 'payment' AND revoked_at IS NULL AND strategy_id = (SELECT id FROM strategies WHERE slug = 'qa-test-strategy');

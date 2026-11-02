@@ -30,10 +30,24 @@ const hasStrategyGrant = (u: PermUser) => (u.grants ?? []).some((g) => g.permiss
 
 export const can = (u: PermUser, p: SectionPerm) =>
   u.role === "superadmin" ||
-  (u.role === "admin" && (p === "any" || u.permissions.includes(p) || (p === "strategies" && hasStrategyGrant(u))));
+  (u.role === "admin" &&
+    (p === "any" ||
+      u.permissions.includes(p) ||
+      (p === "strategies" && hasStrategyGrant(u)) ||
+      (p === "purchases" && (u.grants ?? []).some((g) => g.permission === "finance.manage"))));
+
+const LEGACY: Record<string, Permission> = {
+  "strategies.create": "strategies",
+  "strategies.edit": "strategies",
+  "strategies.publish": "strategies",
+  "strategies.tariffs": "strategies",
+  "strategies.access": "access",
+  "finance.manage": "purchases",
+};
 
 export const hasGrant = (u: PermUser, perm: string, strategyId?: number) =>
   u.role === "superadmin" ||
+  (u.role === "admin" && !!LEGACY[perm] && u.permissions.includes(LEGACY[perm])) ||
   (u.role === "admin" && (u.grants ?? []).some((g) => g.permission === perm && (g.strategyId === null || g.strategyId === strategyId)));
 
 export const STAFF_PERMISSION_GROUPS: { title: string; items: string[] }[] = [

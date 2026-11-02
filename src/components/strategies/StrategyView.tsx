@@ -4,8 +4,9 @@ import BlockRenderer from "@/components/strategies/BlockRenderer";
 import RiskMeter from "@/components/strategies/RiskMeter";
 import { StrategyLabels, cardRows } from "@/components/strategies/StrategyCard";
 import type { Block, Strategy } from "@/lib/strategies";
+import type { ReactNode } from "react";
 
-export default function StrategyView({ s, blocks, preview = false }: { s: Strategy; blocks: Block[]; preview?: boolean }) {
+export default function StrategyView({ s, blocks, preview = false, join }: { s: Strategy; blocks: Block[]; preview?: boolean; join?: ReactNode }) {
   const rows = cardRows(s);
   return (
     <section className="pb-16 pt-10 md:pt-14">
@@ -58,14 +59,11 @@ export default function StrategyView({ s, blocks, preview = false }: { s: Strate
                 <p className="mt-4 text-xs leading-relaxed text-brand-ink/45">Прогнозная доходность не гарантирована и не является обещанием результата.</p>
               )}
               {s.accessNote && <p className="mt-5 whitespace-pre-line border-t border-brand-ink/10 pt-5 text-sm leading-relaxed text-brand-muted">{s.accessNote}</p>}
-              <button
-                type="button"
-                disabled
-                className="mt-6 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-brand-blue/60 py-3.5 font-medium text-white"
-                title="Подключение откроется после запуска тарифов"
-              >
-                <Icon name="Clock" size={17} /> {s.status === "paused" ? "Набор приостановлен" : "Подключение скоро откроется"}
-              </button>
+              {join ?? (
+                <button type="button" disabled className="mt-6 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-brand-blue/60 py-3.5 font-medium text-white">
+                  <Icon name="Eye" size={17} /> Предпросмотр: подключение недоступно
+                </button>
+              )}
             </div>
             <p className="mt-4 px-1 text-xs leading-relaxed text-brand-ink/45">
               Материалы носят информационный характер и не являются индивидуальной инвестиционной рекомендацией. Инвестиции связаны с риском потери капитала.

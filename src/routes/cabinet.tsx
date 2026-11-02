@@ -4,6 +4,7 @@ import { getMe } from "@/lib/auth";
 
 const CABINET_NAV: NavItem[] = [
   { to: "/cabinet", label: "Главная", icon: "LayoutDashboard", exact: true },
+  { to: "/cabinet/strategies", label: "Мои стратегии", icon: "LineChart" },
   { to: "/cabinet/courses", label: "Мои обучения", icon: "GraduationCap" },
   { to: "/cabinet/progress", label: "Прогресс", icon: "BarChart3" },
   { to: "/cabinet/purchases", label: "История покупок", icon: "Receipt" },
